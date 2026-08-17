@@ -4,8 +4,16 @@
 ```
 .website-operations-support-assistant/
 ├── .venv/
+├── data/
+│   └── monitoring.db
+├── database/
+│   ├── __init__.py
+│   ├── db.py
+│   └── repository.py
 ├── docs/
-│   └── RULE_BUILD_TOOLS.md
+│   ├── RULE_BUILD_TOOLS.md
+│   ├── RULE_DESIGN_DB.md
+│   └── db-diagram.png
 ├── tools/
 │   ├── dns_checker.py
 │   ├── http_checker.py
