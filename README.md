@@ -1,4 +1,4 @@
-# website-operations-support-assistant
+# Website Operations Support Assistant
 
 ## Structure
 ```
