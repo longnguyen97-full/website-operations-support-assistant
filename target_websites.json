@@ -1,0 +1,24 @@
+{
+  "websites": [
+    {
+      "name": "Example Domain",
+      "url": "https://example.com",
+      "domain": "example.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": ["93.184.216.34"],
+        "aaaa": [],
+        "cname": null,
+        "mx": [],
+        "txt": []
+      }
+    },
+    {
+      "name": "Python Website",
+      "url": "https://www.python.org",
+      "domain": "python.org",
+      "expected_status": 200,
+      "baseline_dns": {}
+    }
+  ]
+}
