@@ -1,12 +1,15 @@
 import time
 import dns.resolver
+from typing import Optional, Dict, Any
 
-def check_dns(domain: str, baseline: dict = None) -> dict:
+def check_dns(domain: str, baseline: Optional[dict] = None, timeout: float = 3.0) -> dict:
     """
     Kiểm tra hệ thống tên miền DNS dựa trên RFC 1035.
+    Hỗ trợ phân giải A, AAAA, CNAME, MX, TXT, trích xuất TTL và phát hiện Load Balancing.
     """
+    clean_domain = domain.strip().rstrip('.')
     result = {
-        "domain": domain,
+        "domain": clean_domain,
         "resolved": False,
         "resolution_time_ms": 0.0,
         "a": [],
@@ -14,67 +17,125 @@ def check_dns(domain: str, baseline: dict = None) -> dict:
         "cname": None,
         "mx": [],
         "txt": [],
-        "changes_detected": {}
+        "ttl": {},
+        "records_status": {},
+        "changes_detected": {},
+        "is_load_balancing_suspected": False,
+        "error": None
     }
     
     resolver = dns.resolver.Resolver()
+    resolver.timeout = timeout
+    resolver.lifetime = timeout
     start_time = time.time()
     
-    try:
-        # Bản ghi A (IPv4)
+    # Hàm helper query từng record an toàn
+    def query_record(rdtype: str):
         try:
-            answers = resolver.resolve(domain, 'A')
-            result["a"] = sorted([str(r) for r in answers])
-            result["resolved"] = True
-        except Exception:
-            pass
+            answers = resolver.resolve(clean_domain, rdtype)
+            ttl = answers.rrset.ttl if answers.rrset else None
+            return answers, ttl, None
+        except dns.resolver.NXDOMAIN:
+            return None, None, "NXDOMAIN"
+        except dns.resolver.NoAnswer:
+            return None, None, "NO_ANSWER"
+        except dns.resolver.Timeout:
+            return None, None, "TIMEOUT"
+        except Exception as e:
+            return None, None, str(e)
 
-        # Bản ghi AAAA (IPv6)
-        try:
-            answers = resolver.resolve(domain, 'AAAA')
-            result["aaaa"] = sorted([str(r) for r in answers])
-            result["resolved"] = True
-        except Exception:
-            pass
+    # 1. Bản ghi A (IPv4)
+    a_answers, a_ttl, a_err = query_record('A')
+    if a_answers:
+        result["a"] = sorted([str(r) for r in a_answers])
+        result["ttl"]["a"] = a_ttl
+        result["records_status"]["a"] = "OK"
+        result["resolved"] = True
+    else:
+        result["records_status"]["a"] = a_err
 
-        # Bản ghi CNAME
-        try:
-            answers = resolver.resolve(domain, 'CNAME')
-            result["cname"] = str(answers[0].target).rstrip('.')
-            result["resolved"] = True
-        except Exception:
-            pass
+    # 2. Bản ghi AAAA (IPv6)
+    aaaa_answers, aaaa_ttl, aaaa_err = query_record('AAAA')
+    if aaaa_answers:
+        result["aaaa"] = sorted([str(r) for r in aaaa_answers])
+        result["ttl"]["aaaa"] = aaaa_ttl
+        result["records_status"]["aaaa"] = "OK"
+        result["resolved"] = True
+    else:
+        result["records_status"]["aaaa"] = aaaa_err
 
-        # Bản ghi MX
-        try:
-            answers = resolver.resolve(domain, 'MX')
-            result["mx"] = sorted([f"{r.preference} {str(r.exchange).rstrip('.')}" for r in answers])
-            result["resolved"] = True
-        except Exception:
-            pass
+    # 3. Bản ghi CNAME
+    cname_answers, cname_ttl, cname_err = query_record('CNAME')
+    if cname_answers:
+        result["cname"] = str(cname_answers[0].target).rstrip('.')
+        result["ttl"]["cname"] = cname_ttl
+        result["records_status"]["cname"] = "OK"
+        result["resolved"] = True
+    else:
+        result["records_status"]["cname"] = cname_err
 
-        # Bản ghi TXT
-        try:
-            answers = resolver.resolve(domain, 'TXT')
-            result["txt"] = sorted([r.to_text().strip('"') for r in answers])
-            result["resolved"] = True
-        except Exception:
-            pass
+    # 4. Bản ghi MX (Mail Exchange)
+    mx_answers, mx_ttl, mx_err = query_record('MX')
+    if mx_answers:
+        result["mx"] = sorted([f"{r.preference} {str(r.exchange).rstrip('.')}" for r in mx_answers])
+        result["ttl"]["mx"] = mx_ttl
+        result["records_status"]["mx"] = "OK"
+        result["resolved"] = True
+    else:
+        result["records_status"]["mx"] = mx_err
 
-    except Exception as e:
-        result["error"] = str(e)
-    
+    # 5. Bản ghi TXT
+    txt_answers, txt_ttl, txt_err = query_record('TXT')
+    if txt_answers:
+        result["txt"] = sorted([r.to_text().strip('"') for r in txt_answers])
+        result["ttl"]["txt"] = txt_ttl
+        result["records_status"]["txt"] = "OK"
+        result["resolved"] = True
+    else:
+        result["records_status"]["txt"] = txt_err
+
+    # Tính tổng thời gian phân giải
     end_time = time.time()
     result["resolution_time_ms"] = round((end_time - start_time) * 1000, 2)
 
-    # So sánh giá trị bản ghi so với baseline
+    # Nếu tất cả query đều gặp lỗi NXDOMAIN hoặc TIMEOUT
+    if not result["resolved"]:
+        all_errs = list(result["records_status"].values())
+        if "NXDOMAIN" in all_errs:
+            result["error"] = f"Domain '{clean_domain}' does not exist (NXDOMAIN)."
+        elif "TIMEOUT" in all_errs:
+            result["error"] = f"DNS query timed out for domain '{clean_domain}'."
+        else:
+            result["error"] = f"Failed to resolve DNS records for '{clean_domain}'."
+
+    # 6. So sánh với baseline & Phân biệt Load Balancing vs Thay đổi ngoài dự kiến
     if baseline:
         changes = {}
         for field in ["a", "aaaa", "cname", "mx", "txt"]:
             current_val = result.get(field)
             baseline_val = baseline.get(field)
-            if current_val != baseline_val:
+            if baseline_val is not None and current_val != baseline_val:
                 changes[field] = {"baseline": baseline_val, "current": current_val}
+
+        # Cơ chế phát hiện Load Balancing / Multi-IP Round-Robin
+        is_lb = False
+        if "a" in changes:
+            curr_a_set = set(result["a"])
+            base_a_set = set(baseline.get("a") or [])
+            # Nếu tập IP giống nhau nhưng thứ tự khác, hoặc giao nhau (subset/superset/multi-ip pool)
+            if curr_a_set == base_a_set:
+                is_lb = True
+            elif len(curr_a_set & base_a_set) > 0:
+                is_lb = True
+            elif len(curr_a_set) > 1:
+                # Có nhiều IP trả về từ CDN / Load Balancer
+                is_lb = True
+                
+        if len(result["a"]) > 1 or len(result["aaaa"]) > 1:
+            result["is_load_balancing_suspected"] = True
+        elif is_lb:
+            result["is_load_balancing_suspected"] = True
+
         result["changes_detected"] = changes
 
     return result
