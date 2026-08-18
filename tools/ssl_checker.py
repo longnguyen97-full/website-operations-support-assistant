@@ -1,6 +1,6 @@
 import ssl
 import socket
-from datetime import datetime
+from datetime import datetime, timezone
 from urllib.parse import urlparse
 from config import TZ_VN, SSL_TIMEOUT_SECONDS
 
