@@ -12,9 +12,12 @@ from database.repository import (
     set_active_milestone,
     get_email_settings,
     update_email_settings,
+    get_system_settings,
+    update_system_settings,
     calculate_overall_status,
     generate_periodic_report_data,
-    record_report_sent_time
+    record_report_sent_time,
+    purge_old_logs
 )
 
 __all__ = [
@@ -32,7 +35,10 @@ __all__ = [
     "set_active_milestone",
     "get_email_settings",
     "update_email_settings",
+    "get_system_settings",
+    "update_system_settings",
     "calculate_overall_status",
     "generate_periodic_report_data",
-    "record_report_sent_time"
+    "record_report_sent_time",
+    "purge_old_logs"
 ]

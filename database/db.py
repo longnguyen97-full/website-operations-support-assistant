@@ -21,7 +21,10 @@ from config import (
     DEFAULT_NOTIFY_RECOVERY,
     DEFAULT_COOLDOWN_MINUTES,
     DEFAULT_ENABLE_DAILY_REPORT,
-    DEFAULT_DAILY_REPORT_TIME
+    DEFAULT_DAILY_REPORT_TIME,
+    DEFAULT_SCHEDULER_INTERVAL_SECONDS,
+    DATA_RETENTION_DAYS,
+    SSL_EXPIRY_WARNING_DAYS
 )
 
 def get_db_connection() -> sqlite3.Connection:
@@ -90,10 +93,11 @@ def init_db() -> None:
     );
     """)
 
-    # 4. Bảng email_settings (Cấu hình gửi email cảnh báo & báo cáo định kỳ)
+    # 4. Bảng system_settings (Cấu hình động: Email, Scheduler, Báo cáo & Lưu trữ)
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS email_settings (
+    CREATE TABLE IF NOT EXISTS system_settings (
         id INTEGER PRIMARY KEY CHECK (id = 1),
+        -- Cấu hình Email & SMTP (Dynamic)
         smtp_server TEXT DEFAULT 'smtp.gmail.com',
         smtp_port INTEGER DEFAULT 587,
         sender_email TEXT DEFAULT '',
@@ -105,34 +109,44 @@ def init_db() -> None:
         notify_on_warning BOOLEAN DEFAULT 1,
         notify_on_recovery BOOLEAN DEFAULT 1,
         cooldown_minutes INTEGER DEFAULT 15,
+        -- Cấu hình Báo cáo Định kỳ (Dynamic)
         enable_daily_report BOOLEAN DEFAULT 0,
         daily_report_time TEXT DEFAULT '08:00',
         last_report_sent_at TEXT,
+        -- Cấu hình Scheduler & Vận hành (Dynamic)
+        scheduler_interval_seconds INTEGER DEFAULT 60,
+        data_retention_days INTEGER DEFAULT 30,
+        ssl_warning_days INTEGER DEFAULT 14,
         updated_at TEXT
     );
     """)
 
-    # Tự động thêm cột mới nếu nâng cấp từ phiên bản cũ (Migration)
+    # Tự động đồng bộ và di chuyển cột mới nếu nâng cấp từ email_settings cũ
+    cursor.execute("CREATE TABLE IF NOT EXISTS email_settings AS SELECT * FROM system_settings WHERE 0;")
     for col, col_type in [
         ("enable_daily_report", "BOOLEAN DEFAULT 0"),
         ("daily_report_time", "TEXT DEFAULT '08:00'"),
-        ("last_report_sent_at", "TEXT")
+        ("last_report_sent_at", "TEXT"),
+        ("scheduler_interval_seconds", "INTEGER DEFAULT 60"),
+        ("data_retention_days", "INTEGER DEFAULT 30"),
+        ("ssl_warning_days", "INTEGER DEFAULT 14")
     ]:
         try:
-            cursor.execute(f"ALTER TABLE email_settings ADD COLUMN {col} {col_type};")
+            cursor.execute(f"ALTER TABLE system_settings ADD COLUMN {col} {col_type};")
         except sqlite3.OperationalError:
             pass
 
-    # Tạo bản ghi email_settings mặc định nếu chưa tồn tại
-    cursor.execute("SELECT COUNT(*) FROM email_settings WHERE id = 1;")
+    # Tạo bản ghi system_settings mặc định nếu chưa tồn tại
+    cursor.execute("SELECT COUNT(*) FROM system_settings WHERE id = 1;")
     if cursor.fetchone()[0] == 0:
         cursor.execute("""
-            INSERT INTO email_settings (
+            INSERT INTO system_settings (
                 id, smtp_server, smtp_port, sender_email, sender_password,
                 recipient_emails, use_tls, is_enabled, 
                 notify_on_critical, notify_on_warning, notify_on_recovery, 
-                cooldown_minutes, enable_daily_report, daily_report_time
-            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                cooldown_minutes, enable_daily_report, daily_report_time,
+                scheduler_interval_seconds, data_retention_days, ssl_warning_days
+            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """, (
             DEFAULT_SMTP_SERVER,
             DEFAULT_SMTP_PORT,
@@ -146,7 +160,10 @@ def init_db() -> None:
             1 if DEFAULT_NOTIFY_RECOVERY else 0,
             DEFAULT_COOLDOWN_MINUTES,
             1 if DEFAULT_ENABLE_DAILY_REPORT else 0,
-            DEFAULT_DAILY_REPORT_TIME
+            DEFAULT_DAILY_REPORT_TIME,
+            DEFAULT_SCHEDULER_INTERVAL_SECONDS,
+            DATA_RETENTION_DAYS,
+            14
         ))
 
     # Tạo indexes để tăng tốc truy vấn lịch sử theo website và thời gian

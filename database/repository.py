@@ -1,6 +1,6 @@
 import json
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 from database.db import get_db_connection
 from config import (
@@ -292,14 +292,17 @@ def set_active_milestone(milestone_id: int, website_id: int) -> bool:
     conn.close()
     return success
 
-# ==================== 4. QUẢN LÝ CẤU HÌNH EMAIL (EMAIL SETTINGS) ====================
+# ==================== 4. QUẢN LÝ CẤU HÌNH HỆ THỐNG (SYSTEM & EMAIL SETTINGS) ====================
 
-def get_email_settings() -> Dict[str, Any]:
-    """Lấy thông tin cấu hình Email cảnh báo từ CSDL (kèm fallback từ config.py/.env)."""
+def get_system_settings() -> Dict[str, Any]:
+    """Lấy thông tin cấu hình động từ CSDL (kèm fallback từ config.py/.env)."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM email_settings WHERE id = 1;")
-    row = cursor.fetchone()
+    try:
+        cursor.execute("SELECT * FROM system_settings WHERE id = 1;")
+        row = cursor.fetchone()
+    except Exception:
+        row = None
     conn.close()
     if row:
         return dict(row)
@@ -318,21 +321,28 @@ def get_email_settings() -> Dict[str, Any]:
         "cooldown_minutes": DEFAULT_COOLDOWN_MINUTES,
         "enable_daily_report": 1 if DEFAULT_ENABLE_DAILY_REPORT else 0,
         "daily_report_time": DEFAULT_DAILY_REPORT_TIME,
+        "scheduler_interval_seconds": DEFAULT_SCHEDULER_INTERVAL_SECONDS,
+        "data_retention_days": DATA_RETENTION_DAYS,
+        "ssl_warning_days": SSL_EXPIRY_WARNING_DAYS,
         "last_report_sent_at": None
     }
 
-def update_email_settings(settings: Dict[str, Any]) -> bool:
-    """Cập nhật thông tin cấu hình Email cảnh báo và báo cáo định kỳ."""
+get_email_settings = get_system_settings
+
+def update_system_settings(settings: Dict[str, Any]) -> bool:
+    """Cập nhật thông tin cấu hình động hệ thống vào CSDL."""
     updated_at = datetime.now(TZ_VN).isoformat()
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT INTO email_settings (
+        INSERT INTO system_settings (
             id, smtp_server, smtp_port, sender_email, sender_password,
             recipient_emails, use_tls, is_enabled, notify_on_critical,
             notify_on_warning, notify_on_recovery, cooldown_minutes,
-            enable_daily_report, daily_report_time, updated_at
-        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            enable_daily_report, daily_report_time,
+            scheduler_interval_seconds, data_retention_days, ssl_warning_days,
+            updated_at
+        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             smtp_server = excluded.smtp_server,
             smtp_port = excluded.smtp_port,
@@ -347,27 +357,35 @@ def update_email_settings(settings: Dict[str, Any]) -> bool:
             cooldown_minutes = excluded.cooldown_minutes,
             enable_daily_report = excluded.enable_daily_report,
             daily_report_time = excluded.daily_report_time,
+            scheduler_interval_seconds = excluded.scheduler_interval_seconds,
+            data_retention_days = excluded.data_retention_days,
+            ssl_warning_days = excluded.ssl_warning_days,
             updated_at = excluded.updated_at;
     """, (
-        settings.get("smtp_server", "smtp.gmail.com"),
-        int(settings.get("smtp_port", 587)),
-        settings.get("sender_email", "").strip(),
-        settings.get("sender_password", "").strip(),
-        settings.get("recipient_emails", "").strip(),
-        1 if settings.get("use_tls", True) else 0,
-        1 if settings.get("is_enabled", False) else 0,
-        1 if settings.get("notify_on_critical", True) else 0,
-        1 if settings.get("notify_on_warning", True) else 0,
-        1 if settings.get("notify_on_recovery", True) else 0,
-        int(settings.get("cooldown_minutes", 15)),
-        1 if settings.get("enable_daily_report", False) else 0,
-        settings.get("daily_report_time", "08:00").strip(),
+        settings.get("smtp_server", DEFAULT_SMTP_SERVER),
+        int(settings.get("smtp_port", DEFAULT_SMTP_PORT)),
+        str(settings.get("sender_email", DEFAULT_SENDER_EMAIL)).strip(),
+        str(settings.get("sender_password", DEFAULT_SENDER_PASSWORD)).strip(),
+        str(settings.get("recipient_emails", DEFAULT_RECIPIENT_EMAILS)).strip(),
+        1 if settings.get("use_tls", DEFAULT_USE_TLS) else 0,
+        1 if settings.get("is_enabled", DEFAULT_EMAIL_ENABLED) else 0,
+        1 if settings.get("notify_on_critical", DEFAULT_NOTIFY_CRITICAL) else 0,
+        1 if settings.get("notify_on_warning", DEFAULT_NOTIFY_WARNING) else 0,
+        1 if settings.get("notify_on_recovery", DEFAULT_NOTIFY_RECOVERY) else 0,
+        int(settings.get("cooldown_minutes", DEFAULT_COOLDOWN_MINUTES)),
+        1 if settings.get("enable_daily_report", DEFAULT_ENABLE_DAILY_REPORT) else 0,
+        str(settings.get("daily_report_time", DEFAULT_DAILY_REPORT_TIME)).strip(),
+        int(settings.get("scheduler_interval_seconds", DEFAULT_SCHEDULER_INTERVAL_SECONDS)),
+        int(settings.get("data_retention_days", DATA_RETENTION_DAYS)),
+        int(settings.get("ssl_warning_days", SSL_EXPIRY_WARNING_DAYS)),
         updated_at
     ))
     conn.commit()
     success = cursor.rowcount > 0
     conn.close()
     return success
+
+update_email_settings = update_system_settings
 
 # ==================== 5. BÁO CÁO ĐỊNH KỲ (PERIODIC HEALTH REPORT) ====================
 
@@ -466,7 +484,7 @@ def record_report_sent_time():
     now_iso = datetime.now(TZ_VN).isoformat()
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("UPDATE email_settings SET last_report_sent_at = ? WHERE id = 1;", (now_iso,))
+    cursor.execute("UPDATE system_settings SET last_report_sent_at = ? WHERE id = 1;", (now_iso,))
     conn.commit()
     conn.close()
 

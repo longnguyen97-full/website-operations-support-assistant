@@ -20,6 +20,8 @@
 ├── notifications/
 │   ├── __init__.py
 │   └── email_service.py
+├── pages/
+│   └── configuration.py
 ├── scheduler/
 │   ├── __init__.py
 │   └── monitor_scheduler.py

@@ -314,12 +314,11 @@ def render_email_settings_tab():
                 st.error("❌ " + msg)
 
 def render_dashboard(selected_site, http_res=None, dns_res=None, ssl_res=None):
-    """Giao diện Dashboard phân chia theo 4 Tabs chuyên biệt."""
-    tab1, tab2, tab3, tab4 = st.tabs([
+    """Giao diện Dashboard Giám sát phân chia theo 3 Tabs chuyên biệt."""
+    tab1, tab2, tab3 = st.tabs([
         "📊 Giám sát Thời gian thực", 
         "📈 Lịch sử & Xu hướng", 
-        "🏷️ Quản lý Mốc chuẩn",
-        "📧 Báo cáo & Cảnh báo Email"
+        "🏷️ Quản lý Mốc chuẩn"
     ])
     
     with tab1:
@@ -338,7 +337,4 @@ def render_dashboard(selected_site, http_res=None, dns_res=None, ssl_res=None):
         render_history_tab(selected_site)
         
     with tab3:
-        render_milestones_tab(selected_site)
-
-    with tab4:
-        render_email_settings_tab()
+        render_milestones_tab(selected_site)
