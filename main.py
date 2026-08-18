@@ -10,13 +10,29 @@ from database import (
     save_monitoring_log,
     add_or_update_website
 )
+from scheduler import (
+    start_background_scheduler,
+    stop_background_scheduler,
+    update_scheduler_interval,
+    run_monitors_now,
+    get_scheduler_info
+)
+from scheduler.monitor_scheduler import resume_background_scheduler
 
 # --- Cấu hình trang ---
 st.set_page_config(layout="wide", page_title="Agentic AI Monitoring Dashboard", page_icon="🛡️")
 
-def main():
-    # 1. Khởi tạo CSDL SQLite (tự động tạo tables và seed dữ liệu ban đầu nếu trống)
+@st.cache_resource
+def setup_background_monitoring():
+    """Khởi chạy Background Scheduler 1 lần duy nhất trong vòng đời ứng dụng."""
     init_db()
+    start_background_scheduler(interval_seconds=60)
+    return True
+
+def main():
+    # 1. Khởi tạo CSDL SQLite & APScheduler
+    init_db()
+    setup_background_monitoring()
     
     st.title("🛡️ Agentic AI Monitoring Dashboard")
     
@@ -28,7 +44,7 @@ def main():
     else:
         site_names = [w["name"] for w in websites]
 
-    # 3. Sidebar selection & Thêm website mới
+    # 3. Sidebar: Quản lý Website
     st.sidebar.header("⚙️ Quản lý Giám sát")
     if site_names:
         selected_name = st.sidebar.selectbox("Chọn Website:", site_names)
@@ -49,7 +65,46 @@ def main():
                 st.success(f"Đã thêm '{new_name}' vào CSDL thành công!")
                 st.rerun()
 
-    # 4. Execution logic & Dashboard Rendering
+    # 4. Sidebar: Điều khiển APScheduler
+    st.sidebar.markdown("---")
+    st.sidebar.header("⏱️ Background Scheduler (APScheduler)")
+    sched_info = get_scheduler_info()
+    
+    status_badge = "🟢 Đang Chạy Tự Động" if sched_info["is_running"] else "🔴 Đang Tạm Dừng"
+    st.sidebar.markdown(f"**Trạng thái:** {status_badge}")
+    if sched_info.get("next_run_time"):
+        st.sidebar.caption(f"🕒 Lần quét kế: `{sched_info['next_run_time']}`")
+    if sched_info.get("last_run_time"):
+        st.sidebar.caption(f"✅ Lần quét trước: `{sched_info['last_run_time'][:19]}` ({sched_info['total_runs']} lần quét)")
+
+    # Tần suất quét
+    new_interval = st.sidebar.select_slider(
+        "Tần suất quét định kỳ:",
+        options=[30, 60, 120, 300, 600],
+        value=sched_info["interval_seconds"],
+        format_func=lambda x: f"{x} giây" if x < 60 else f"{x//60} phút"
+    )
+    if new_interval != sched_info["interval_seconds"]:
+        update_scheduler_interval(new_interval)
+        st.sidebar.success(f"Đã đổi chu kỳ quét thành {new_interval}s!")
+
+    col_btn1, col_btn2 = st.sidebar.columns(2)
+    if sched_info["is_running"]:
+        if col_btn1.button("⏸️ Tạm dừng", use_container_width=True):
+            stop_background_scheduler()
+            st.rerun()
+    else:
+        if col_btn1.button("▶️ Tiếp tục", use_container_width=True):
+            resume_background_scheduler()
+            st.rerun()
+
+    if col_btn2.button("⚡ Quét ngay tất cả", use_container_width=True):
+        with st.spinner("Đang chạy quét định kỳ toàn bộ website..."):
+            run_monitors_now()
+            st.toast("Đã hoàn tất quét tất cả website và lưu CSDL!", icon="⚡")
+            st.rerun()
+
+    # 5. Execution logic & Dashboard Rendering
     if selected_site:
         # Lấy active baseline từ DB nếu có
         active_baseline_record = get_active_baseline(selected_site["id"])
@@ -64,7 +119,7 @@ def main():
         if "last_scan" not in st.session_state:
             st.session_state["last_scan"] = {}
 
-        if st.sidebar.button("🚀 Kiểm tra ngay", use_container_width=True, type="primary"):
+        if st.sidebar.button("🚀 Kiểm tra thủ công website này", use_container_width=True, type="primary"):
             with st.spinner(f"Đang chạy các công cụ giám sát cho '{selected_site['name']}'..."):
                 # 1. Gọi các Tools
                 http_res = check_http(selected_site["url"], expected_status=expected_status)
