@@ -275,3 +275,182 @@ def set_active_milestone(milestone_id: int, website_id: int) -> bool:
     success = cursor.rowcount > 0
     conn.close()
     return success
+
+# ==================== 4. QUẢN LÝ CẤU HÌNH EMAIL (EMAIL SETTINGS) ====================
+
+def get_email_settings() -> Dict[str, Any]:
+    """Lấy thông tin cấu hình Email cảnh báo từ CSDL."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM email_settings WHERE id = 1;")
+    row = cursor.fetchone()
+    conn.close()
+    if row:
+        return dict(row)
+    return {
+        "id": 1,
+        "smtp_server": "smtp.gmail.com",
+        "smtp_port": 587,
+        "sender_email": "",
+        "sender_password": "",
+        "recipient_emails": "",
+        "use_tls": 1,
+        "is_enabled": 0,
+        "notify_on_critical": 1,
+        "notify_on_warning": 1,
+        "notify_on_recovery": 1,
+        "cooldown_minutes": 15,
+        "enable_daily_report": 0,
+        "daily_report_time": "08:00",
+        "last_report_sent_at": None
+    }
+
+def update_email_settings(settings: Dict[str, Any]) -> bool:
+    """Cập nhật thông tin cấu hình Email cảnh báo và báo cáo định kỳ."""
+    updated_at = datetime.now(TZ_VN).isoformat()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO email_settings (
+            id, smtp_server, smtp_port, sender_email, sender_password,
+            recipient_emails, use_tls, is_enabled, notify_on_critical,
+            notify_on_warning, notify_on_recovery, cooldown_minutes,
+            enable_daily_report, daily_report_time, updated_at
+        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            smtp_server = excluded.smtp_server,
+            smtp_port = excluded.smtp_port,
+            sender_email = excluded.sender_email,
+            sender_password = excluded.sender_password,
+            recipient_emails = excluded.recipient_emails,
+            use_tls = excluded.use_tls,
+            is_enabled = excluded.is_enabled,
+            notify_on_critical = excluded.notify_on_critical,
+            notify_on_warning = excluded.notify_on_warning,
+            notify_on_recovery = excluded.notify_on_recovery,
+            cooldown_minutes = excluded.cooldown_minutes,
+            enable_daily_report = excluded.enable_daily_report,
+            daily_report_time = excluded.daily_report_time,
+            updated_at = excluded.updated_at;
+    """, (
+        settings.get("smtp_server", "smtp.gmail.com"),
+        int(settings.get("smtp_port", 587)),
+        settings.get("sender_email", "").strip(),
+        settings.get("sender_password", "").strip(),
+        settings.get("recipient_emails", "").strip(),
+        1 if settings.get("use_tls", True) else 0,
+        1 if settings.get("is_enabled", False) else 0,
+        1 if settings.get("notify_on_critical", True) else 0,
+        1 if settings.get("notify_on_warning", True) else 0,
+        1 if settings.get("notify_on_recovery", True) else 0,
+        int(settings.get("cooldown_minutes", 15)),
+        1 if settings.get("enable_daily_report", False) else 0,
+        settings.get("daily_report_time", "08:00").strip(),
+        updated_at
+    ))
+    conn.commit()
+    success = cursor.rowcount > 0
+    conn.close()
+    return success
+
+# ==================== 5. BÁO CÁO ĐỊNH KỲ (PERIODIC HEALTH REPORT) ====================
+
+def generate_periodic_report_data(hours: int = 24) -> Dict[str, Any]:
+    """Tổng hợp dữ liệu giám sát trong `hours` giờ qua để tạo báo cáo định kỳ."""
+    cutoff_time = (datetime.now(TZ_VN) - timedelta(hours=hours)).isoformat()
+    now_str = datetime.now(TZ_VN).strftime("%Y-%m-%d %H:%M:%S")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # 1. Danh sách website
+    websites = get_all_websites()
+    
+    # 2. Truy vấn logs trong khoảng thời gian
+    cursor.execute("""
+        SELECT * FROM monitoring_logs
+        WHERE timestamp >= ?
+        ORDER BY id DESC;
+    """, (cutoff_time,))
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+
+    total_scans = len(rows)
+    healthy_scans = len([r for r in rows if r.get("overall_status") == "HEALTHY"])
+    warning_scans = len([r for r in rows if r.get("overall_status") == "WARNING"])
+    critical_scans = len([r for r in rows if r.get("overall_status") == "CRITICAL"])
+    overall_health_rate = round((healthy_scans / total_scans) * 100, 1) if total_scans > 0 else 100.0
+
+    # 3. Phân tích theo từng website
+    site_summaries = []
+    for site in websites:
+        site_rows = [r for r in rows if r.get("website_id") == site["id"]]
+        site_total = len(site_rows)
+        site_healthy = len([r for r in site_rows if r.get("overall_status") == "HEALTHY"])
+        site_critical = len([r for r in site_rows if r.get("overall_status") == "CRITICAL"])
+        site_warning = len([r for r in site_rows if r.get("overall_status") == "WARNING"])
+        
+        avg_http = round(sum([r.get("http_latency_ms") or 0 for r in site_rows]) / site_total, 2) if site_total > 0 else 0.0
+        avg_dns = round(sum([r.get("dns_latency_ms") or 0 for r in site_rows]) / site_total, 2) if site_total > 0 else 0.0
+        site_health_rate = round((site_healthy / site_total) * 100, 1) if site_total > 0 else 100.0
+        
+        # Lấy thông tin probe mới nhất
+        latest_row = site_rows[0] if site_rows else None
+        current_status = latest_row.get("overall_status") if latest_row else "UNKNOWN"
+        ssl_days = latest_row.get("ssl_days_remaining") if latest_row else 0
+        ssl_valid = bool(latest_row.get("ssl_is_valid")) if latest_row else True
+        http_code = latest_row.get("http_status_code") if latest_row else None
+        
+        site_summaries.append({
+            "website_id": site["id"],
+            "name": site["name"],
+            "url": site["url"],
+            "domain": site["domain"],
+            "current_status": current_status,
+            "total_scans": site_total,
+            "health_rate": site_health_rate,
+            "avg_http_latency_ms": avg_http,
+            "avg_dns_latency_ms": avg_dns,
+            "ssl_days_remaining": ssl_days,
+            "ssl_is_valid": ssl_valid,
+            "latest_http_code": http_code,
+            "critical_count": site_critical,
+            "warning_count": site_warning
+        })
+
+    # 4. Danh sách các sự cố trong khoảng thời gian (Top 10)
+    incidents = [
+        {
+            "timestamp": r["timestamp"],
+            "website_name": r["website_name"],
+            "status": r["overall_status"],
+            "http_code": r["http_status_code"],
+            "dns_resolved": r["dns_resolved"],
+            "ssl_valid": r["ssl_is_valid"],
+            "ssl_days": r["ssl_days_remaining"]
+        }
+        for r in rows if r.get("overall_status") in ["CRITICAL", "WARNING"]
+    ][:10]
+
+    return {
+        "report_generated_at": now_str,
+        "period_hours": hours,
+        "total_websites": len(websites),
+        "total_scans": total_scans,
+        "overall_health_rate": overall_health_rate,
+        "healthy_scans": healthy_scans,
+        "warning_scans": warning_scans,
+        "critical_scans": critical_scans,
+        "sites": site_summaries,
+        "incidents": incidents
+    }
+
+def record_report_sent_time():
+    """Ghi nhận thời điểm gửi báo cáo gần nhất vào CSDL."""
+    now_iso = datetime.now(TZ_VN).isoformat()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("UPDATE email_settings SET last_report_sent_at = ? WHERE id = 1;", (now_iso,))
+    conn.commit()
+    conn.close()
+

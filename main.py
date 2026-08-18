@@ -8,8 +8,10 @@ from database import (
     get_all_websites,
     get_active_baseline,
     save_monitoring_log,
+    calculate_overall_status,
     add_or_update_website
 )
+from notifications import check_and_send_alert
 from scheduler import (
     start_background_scheduler,
     stop_background_scheduler,
@@ -136,6 +138,13 @@ def main():
                     ssl_res=ssl_res
                 )
                 
+                # 3. Kích hoạt cảnh báo Email nếu có sự cố
+                overall_status = calculate_overall_status(http_res, dns_res, ssl_res)
+                try:
+                    check_and_send_alert(selected_site, overall_status, http_res, dns_res, ssl_res)
+                except Exception:
+                    pass
+
                 # Lưu vào session để duy trì hiển thị
                 st.session_state["last_scan"][selected_site["id"]] = {
                     "http": http_res,

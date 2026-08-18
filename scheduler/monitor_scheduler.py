@@ -11,8 +11,10 @@ from database.repository import (
     get_all_websites,
     get_active_baseline,
     save_monitoring_log,
+    calculate_overall_status,
     purge_old_logs
 )
+from notifications.email_service import check_and_send_alert
 
 JOB_ID = "website_periodic_monitoring_job"
 TZ_VN = timezone(timedelta(hours=7))
@@ -50,10 +52,18 @@ def execute_single_website_check(site: dict) -> dict:
         ssl_res=ssl_res
     )
 
+    # 3. Kích hoạt cảnh báo Email nếu có sự cố hoặc phục hồi
+    overall_status = calculate_overall_status(http_res, dns_res, ssl_res)
+    try:
+        check_and_send_alert(site, overall_status, http_res, dns_res, ssl_res)
+    except Exception as e:
+        print(f"Warning: Lỗi gửi email alert cho {site['name']}: {e}")
+
     return {
         "website_id": site["id"],
         "name": site["name"],
         "log_id": log_id,
+        "overall_status": overall_status,
         "http_ok": http_res.get("is_expected_status", False),
         "dns_ok": dns_res.get("resolved", False),
         "ssl_ok": ssl_res.get("is_valid", False)
@@ -90,6 +100,32 @@ def run_all_monitors_job():
 
     _scheduler_state["last_run_summary"] = f"Đã quét thành công {len(results)} website lúc {now_iso}."
 
+REPORT_JOB_ID = "daily_report_checker_job"
+
+def check_and_send_scheduled_reports_job():
+    """Kiểm tra và gửi báo cáo định kỳ theo giờ cấu hình trong email_settings."""
+    from database.repository import get_email_settings
+    from notifications.email_service import send_periodic_report_email
+
+    settings = get_email_settings()
+    if not settings.get("is_enabled") or not settings.get("enable_daily_report"):
+        return
+
+    report_time_str = settings.get("daily_report_time", "08:00").strip()
+    now = datetime.now(TZ_VN)
+    current_hm = now.strftime("%H:%M")
+    
+    # Kiểm tra xem đã đến giờ gửi chưa
+    if current_hm == report_time_str:
+        last_sent = settings.get("last_report_sent_at")
+        # Kiểm tra xem hôm nay đã gửi chưa
+        today_str = now.strftime("%Y-%m-%d")
+        if not last_sent or not str(last_sent).startswith(today_str):
+            try:
+                send_periodic_report_email(hours=24, settings=settings)
+            except Exception as e:
+                print(f"Warning: Lỗi gửi báo cáo định kỳ: {e}")
+
 def get_scheduler() -> BackgroundScheduler:
     """Khởi tạo hoặc lấy đối tượng Singleton BackgroundScheduler với Timezone UTC+7."""
     global _scheduler
@@ -102,7 +138,7 @@ def start_background_scheduler(interval_seconds: int = 60):
     sched = get_scheduler()
     _scheduler_state["interval_seconds"] = interval_seconds
 
-    # Thêm hoặc cập nhật job
+    # 1. Thêm hoặc cập nhật job quét probes định kỳ
     trigger = IntervalTrigger(seconds=interval_seconds, timezone=TZ_VN)
     if sched.get_job(JOB_ID):
         sched.reschedule_job(JOB_ID, trigger=trigger)
@@ -112,6 +148,16 @@ def start_background_scheduler(interval_seconds: int = 60):
             trigger=trigger,
             id=JOB_ID,
             name="Website Periodic Probes Monitoring",
+            replace_existing=True
+        )
+
+    # 2. Thêm job kiểm tra gửi Báo cáo Định kỳ hàng ngày (quét mỗi phút)
+    if not sched.get_job(REPORT_JOB_ID):
+        sched.add_job(
+            check_and_send_scheduled_reports_job,
+            trigger=IntervalTrigger(minutes=1, timezone=TZ_VN),
+            id=REPORT_JOB_ID,
+            name="Daily Scheduled Health Report Check",
             replace_existing=True
         )
 
@@ -142,6 +188,11 @@ def update_scheduler_interval(interval_seconds: int):
 def run_monitors_now():
     """Kích hoạt quét toàn bộ website ngay lập tức ngoài chu kỳ."""
     run_all_monitors_job()
+
+def send_periodic_report_now(hours: int = 24):
+    """Kích hoạt tổng hợp và gửi Báo cáo Định kỳ ngay lập tức."""
+    from notifications.email_service import send_periodic_report_email
+    return send_periodic_report_email(hours=hours)
 
 def get_scheduler_info() -> Dict[str, Any]:
     """Trả về trạng thái hiện tại của Scheduler theo giờ UTC+7."""

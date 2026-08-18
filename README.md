@@ -11,9 +11,15 @@
 │   ├── db.py
 │   └── repository.py
 ├── docs/
+│   ├── FEATURE-DATABASE.md
+│   ├── FEATURE-EMAIL-NOTIFICATION.md
+│   ├── FEATURE-SCHEDULER.md
 │   ├── RULE_BUILD_TOOLS.md
 │   ├── RULE_DESIGN_DB.md
 │   └── db-diagram.png
+├── notifications/
+│   ├── __init__.py
+│   └── email_service.py
 ├── scheduler/
 │   ├── __init__.py
 │   └── monitor_scheduler.py

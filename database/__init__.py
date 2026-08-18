@@ -9,7 +9,12 @@ from database.repository import (
     save_milestone_baseline,
     get_active_baseline,
     get_all_milestones,
-    set_active_milestone
+    set_active_milestone,
+    get_email_settings,
+    update_email_settings,
+    calculate_overall_status,
+    generate_periodic_report_data,
+    record_report_sent_time
 )
 
 __all__ = [
@@ -24,5 +29,10 @@ __all__ = [
     "save_milestone_baseline",
     "get_active_baseline",
     "get_all_milestones",
-    "set_active_milestone"
+    "set_active_milestone",
+    "get_email_settings",
+    "update_email_settings",
+    "calculate_overall_status",
+    "generate_periodic_report_data",
+    "record_report_sent_time"
 ]

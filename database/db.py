@@ -74,6 +74,50 @@ def init_db() -> None:
     );
     """)
 
+    # 4. Bảng email_settings (Cấu hình gửi email cảnh báo & báo cáo định kỳ)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS email_settings (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        smtp_server TEXT DEFAULT 'smtp.gmail.com',
+        smtp_port INTEGER DEFAULT 587,
+        sender_email TEXT DEFAULT '',
+        sender_password TEXT DEFAULT '',
+        recipient_emails TEXT DEFAULT '',
+        use_tls BOOLEAN DEFAULT 1,
+        is_enabled BOOLEAN DEFAULT 0,
+        notify_on_critical BOOLEAN DEFAULT 1,
+        notify_on_warning BOOLEAN DEFAULT 1,
+        notify_on_recovery BOOLEAN DEFAULT 1,
+        cooldown_minutes INTEGER DEFAULT 15,
+        enable_daily_report BOOLEAN DEFAULT 0,
+        daily_report_time TEXT DEFAULT '08:00',
+        last_report_sent_at TEXT,
+        updated_at TEXT
+    );
+    """)
+
+    # Tự động thêm cột mới nếu nâng cấp từ phiên bản cũ (Migration)
+    for col, col_type in [
+        ("enable_daily_report", "BOOLEAN DEFAULT 0"),
+        ("daily_report_time", "TEXT DEFAULT '08:00'"),
+        ("last_report_sent_at", "TEXT")
+    ]:
+        try:
+            cursor.execute(f"ALTER TABLE email_settings ADD COLUMN {col} {col_type};")
+        except sqlite3.OperationalError:
+            pass
+
+    # Tạo bản ghi email_settings mặc định nếu chưa tồn tại
+    cursor.execute("SELECT COUNT(*) FROM email_settings WHERE id = 1;")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("""
+            INSERT INTO email_settings (
+                id, smtp_server, smtp_port, is_enabled, 
+                notify_on_critical, notify_on_warning, notify_on_recovery, 
+                cooldown_minutes, enable_daily_report, daily_report_time
+            ) VALUES (1, 'smtp.gmail.com', 587, 0, 1, 1, 1, 15, 0, '08:00');
+        """)
+
     # Tạo indexes để tăng tốc truy vấn lịch sử theo website và thời gian
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_logs_website_id ON monitoring_logs(website_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON monitoring_logs(timestamp);")

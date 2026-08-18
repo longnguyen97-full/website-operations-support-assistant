@@ -171,6 +171,29 @@ def render_history_tab(selected_site):
     ]
     st.dataframe(display_df, use_container_width=True)
 
+    # 4. Tóm tắt Báo cáo Sức khỏe Toàn hệ thống (24h qua)
+    from database.repository import generate_periodic_report_data
+    report_data = generate_periodic_report_data(hours=24)
+    with st.expander("📊 Xem Bản tóm tắt Báo cáo Sức khỏe Hệ thống (24h qua)"):
+        st.markdown(f"**Khởi tạo lúc:** `{report_data['report_generated_at']} (UTC+7)` | **Tỷ lệ Healthy toàn hệ thống:** **`{report_data['overall_health_rate']}%`**")
+        
+        rep_sites_df = pd.DataFrame(report_data["sites"])
+        if not rep_sites_df.empty:
+            rep_sites_df = rep_sites_df[[
+                "name", "current_status", "health_rate", 
+                "avg_http_latency_ms", "avg_dns_latency_ms", "ssl_days_remaining", "total_scans"
+            ]]
+            rep_sites_df.columns = [
+                "Website", "Hiện tại", "Healthy %", 
+                "Độ trễ HTTP (ms)", "Độ trễ DNS (ms)", "Hạn SSL (ngày)", "Số lần quét"
+            ]
+            st.dataframe(rep_sites_df, use_container_width=True)
+            
+        if report_data["incidents"]:
+            st.warning(f"⚠️ Trong 24h qua có {len(report_data['incidents'])} sự cố/cảnh báo được ghi nhận.")
+        else:
+            st.success("🎉 Không ghi nhận sự cố gián đoạn dịch vụ nào trong 24 giờ qua!")
+
 def render_milestones_tab(selected_site):
     """Quản lý các mốc chuẩn hệ thống."""
     st.subheader(f"🏷️ Danh sách Mốc chuẩn (Baselines / Milestones): {selected_site['name']}")
@@ -191,15 +214,111 @@ def render_milestones_tab(selected_site):
             if not m["is_active"]:
                 if st.button(f"🎯 Kích hoạt mốc #{m['id']} làm Baseline chuẩn", key=f"activate_{m['id']}"):
                     set_active_milestone(m["id"], selected_site["id"])
-                    st.success(f"Đã kích hoạt mốc #{m['id']} thành công!")
+                    st.toast(f"Đã kích hoạt mốc #{m['id']} thành công!", icon="🎯")
                     st.rerun()
 
+def render_email_settings_tab():
+    """Giao diện cấu hình Email thông báo và gửi thử nghiệm."""
+    from database.repository import get_email_settings, update_email_settings
+    from notifications.email_service import send_test_email
+    
+    st.subheader("📧 Cấu hình Báo cáo Định kỳ & Cảnh báo qua Email")
+    st.markdown("Hệ thống ưu tiên tự động gửi **Báo cáo Sức khỏe Hệ thống Định kỳ (Daily Health Digest)** và hỗ trợ phát **Cảnh báo tức thời** khi xảy ra sự cố gián đoạn dịch vụ.")
+
+    settings = get_email_settings()
+
+    with st.expander("ℹ️ Hướng dẫn lấy Mật khẩu ứng dụng (App Password) cho Gmail"):
+        st.markdown("""
+        1. Bật **Xác thực 2 bước (2-Step Verification)** trên tài khoản Google.
+        2. Truy cập: [Google App Passwords](https://myaccount.google.com/apppasswords).
+        3. Tạo mật khẩu ứng dụng mới với tên `Website Monitor`.
+        4. Sao chép chuỗi mật khẩu 16 ký tự vào ô **Mật khẩu ứng dụng (App Password)** bên dưới.
+        """)
+
+    with st.form("email_config_form"):
+        st.markdown("#### 1. Thông số Máy chủ SMTP")
+        is_enabled = st.toggle("🔔 Kích hoạt tính năng Dịch vụ Email (Báo cáo & Cảnh báo)", value=bool(settings.get("is_enabled", 0)))
+        
+        c1, c2, c3 = st.columns([2, 1, 1])
+        smtp_server = c1.text_input("SMTP Server:", value=settings.get("smtp_server", "smtp.gmail.com"))
+        smtp_port = c2.number_input("Port:", min_value=1, max_value=65535, value=int(settings.get("smtp_port", 587)))
+        use_tls = c3.checkbox("Sử dụng TLS/STARTTLS", value=bool(settings.get("use_tls", 1)))
+
+        st.markdown("#### 2. Thông tin Tài khoản Gửi & Người nhận")
+        c4, c5 = st.columns(2)
+        sender_email = c4.text_input("Sender Email (Email gửi):", value=settings.get("sender_email", ""), placeholder="admin@gmail.com")
+        sender_password = c5.text_input("App Password (Mật khẩu ứng dụng):", value=settings.get("sender_password", ""), type="password", placeholder="16 ký tự app password")
+        
+        recipient_emails = st.text_area(
+            "Danh sách Email Người nhận Báo cáo & Cảnh báo (phân cách bởi dấu phẩy):", 
+            value=settings.get("recipient_emails", ""),
+            placeholder="devops@company.com, admin@company.com"
+        )
+
+        st.markdown("#### 3. 📊 Báo cáo Sức khỏe Định kỳ Hàng ngày (Daily Health Digest - Ưu tiên)")
+        c9, c10 = st.columns([2, 1])
+        enable_daily_report = c9.checkbox("✅ Bật tự động gửi Báo cáo Tổng hợp Sức khỏe hàng ngày qua Email", value=bool(settings.get("enable_daily_report", 0)))
+        daily_report_time = c10.text_input("Khung giờ gửi (HH:MM):", value=settings.get("daily_report_time", "08:00"), placeholder="08:00")
+        st.caption("ℹ️ Hệ thống sẽ tự động tổng kết Uptime %, độ trễ trung bình, hạn chứng chỉ SSL và các sự cố trong 24 giờ qua vào khung giờ này.")
+
+        st.markdown("#### 4. 🚨 Cảnh báo Sự cố Tức thời (Incident Alerts)")
+        c6, c7, c8 = st.columns(3)
+        notify_critical = c6.checkbox("🚨 Lỗi CRITICAL (Website Down, SSL Expired, DNS Failed)", value=bool(settings.get("notify_on_critical", 1)))
+        notify_warning = c7.checkbox("⚠️ Cảnh báo WARNING (SSL sắp hết hạn <= 14 ngày)", value=bool(settings.get("notify_on_warning", 1)))
+        notify_recovery = c8.checkbox("✅ Thông báo PHỤC HỒI (Recovery)", value=bool(settings.get("notify_on_recovery", 1)))
+
+        cooldown = st.number_input("Thời gian chờ giữa các lần cảnh báo lặp lại (Cooldown phút):", min_value=1, max_value=1440, value=int(settings.get("cooldown_minutes", 15)))
+
+        btn_save = st.form_submit_button("💾 Lưu Cấu hình Email & Báo cáo", type="primary")
+        if btn_save:
+            updated_data = {
+                "smtp_server": smtp_server,
+                "smtp_port": smtp_port,
+                "sender_email": sender_email,
+                "sender_password": sender_password,
+                "recipient_emails": recipient_emails,
+                "use_tls": use_tls,
+                "is_enabled": is_enabled,
+                "notify_on_critical": notify_critical,
+                "notify_on_warning": notify_warning,
+                "notify_on_recovery": notify_recovery,
+                "cooldown_minutes": cooldown,
+                "enable_daily_report": enable_daily_report,
+                "daily_report_time": daily_report_time
+            }
+            update_email_settings(updated_data)
+            st.success("✅ Đã cập nhật và lưu cấu hình Email & Báo cáo thành công vào CSDL!")
+            st.toast("Đã lưu cấu hình Email thành công!", icon="💾")
+
+    # Thao tác gửi email: Đặt Báo cáo định kỳ lên hàng đầu
+    st.markdown("#### 5. Thao tác Gửi Email")
+    col_action1, col_action2 = st.columns(2)
+    if col_action1.button("📊 Gửi Báo Cáo Định Kỳ 24h Ngay", type="primary", use_container_width=True):
+        from notifications.email_service import send_periodic_report_email
+        current_cfg = get_email_settings()
+        with st.spinner("Đang tổng hợp dữ liệu 24h qua và gửi báo cáo định kỳ..."):
+            success, msg = send_periodic_report_email(hours=24, settings=current_cfg)
+            if success:
+                st.success("🎉 " + msg)
+            else:
+                st.error("❌ " + msg)
+
+    if col_action2.button("🧪 Gửi Email Thử Nghiệm Kết Nối", use_container_width=True):
+        current_cfg = get_email_settings()
+        with st.spinner("Đang kết nối SMTP và gửi email thử nghiệm..."):
+            success, msg = send_test_email(current_cfg)
+            if success:
+                st.success("🎉 " + msg)
+            else:
+                st.error("❌ " + msg)
+
 def render_dashboard(selected_site, http_res=None, dns_res=None, ssl_res=None):
-    """Giao diện Dashboard phân chia theo 3 Tabs chuyên biệt."""
-    tab1, tab2, tab3 = st.tabs([
+    """Giao diện Dashboard phân chia theo 4 Tabs chuyên biệt."""
+    tab1, tab2, tab3, tab4 = st.tabs([
         "📊 Giám sát Thời gian thực", 
         "📈 Lịch sử & Xu hướng", 
-        "🏷️ Quản lý Mốc chuẩn"
+        "🏷️ Quản lý Mốc chuẩn",
+        "📧 Báo cáo & Cảnh báo Email"
     ])
     
     with tab1:
@@ -218,4 +337,7 @@ def render_dashboard(selected_site, http_res=None, dns_res=None, ssl_res=None):
         render_history_tab(selected_site)
         
     with tab3:
-        render_milestones_tab(selected_site)
+        render_milestones_tab(selected_site)
+
+    with tab4:
+        render_email_settings_tab()
