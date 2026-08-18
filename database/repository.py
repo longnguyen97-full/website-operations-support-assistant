@@ -19,7 +19,8 @@ from config import (
     DEFAULT_NOTIFY_RECOVERY,
     DEFAULT_COOLDOWN_MINUTES,
     DEFAULT_ENABLE_DAILY_REPORT,
-    DEFAULT_DAILY_REPORT_TIME
+    DEFAULT_DAILY_REPORT_TIME,
+    DEFAULT_SCHEDULER_INTERVAL_SECONDS
 )
 
 def calculate_overall_status(http_res: dict, dns_res: dict, ssl_res: dict) -> str:
@@ -295,7 +296,7 @@ def set_active_milestone(milestone_id: int, website_id: int) -> bool:
 # ==================== 4. QUẢN LÝ CẤU HÌNH HỆ THỐNG (SYSTEM & EMAIL SETTINGS) ====================
 
 def get_system_settings() -> Dict[str, Any]:
-    """Lấy thông tin cấu hình động từ CSDL (kèm fallback từ config.py/.env)."""
+    """Lấy thông tin cấu hình động từ CSDL (tự động Fallback sang .env/config.py nếu trường trong DB rỗng)."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -304,30 +305,62 @@ def get_system_settings() -> Dict[str, Any]:
     except Exception:
         row = None
     conn.close()
-    if row:
-        return dict(row)
+    
+    settings = dict(row) if row else {}
+    
+    # Áp dụng cơ chế Fallback thông minh: nếu trường trong DB rỗng thì lấy từ .env/config.py
     return {
         "id": 1,
-        "smtp_server": DEFAULT_SMTP_SERVER,
-        "smtp_port": DEFAULT_SMTP_PORT,
-        "sender_email": DEFAULT_SENDER_EMAIL,
-        "sender_password": DEFAULT_SENDER_PASSWORD,
-        "recipient_emails": DEFAULT_RECIPIENT_EMAILS,
-        "use_tls": 1 if DEFAULT_USE_TLS else 0,
-        "is_enabled": 1 if DEFAULT_EMAIL_ENABLED else 0,
-        "notify_on_critical": 1 if DEFAULT_NOTIFY_CRITICAL else 0,
-        "notify_on_warning": 1 if DEFAULT_NOTIFY_WARNING else 0,
-        "notify_on_recovery": 1 if DEFAULT_NOTIFY_RECOVERY else 0,
-        "cooldown_minutes": DEFAULT_COOLDOWN_MINUTES,
-        "enable_daily_report": 1 if DEFAULT_ENABLE_DAILY_REPORT else 0,
-        "daily_report_time": DEFAULT_DAILY_REPORT_TIME,
-        "scheduler_interval_seconds": DEFAULT_SCHEDULER_INTERVAL_SECONDS,
-        "data_retention_days": DATA_RETENTION_DAYS,
-        "ssl_warning_days": SSL_EXPIRY_WARNING_DAYS,
-        "last_report_sent_at": None
+        "smtp_server": settings.get("smtp_server") or DEFAULT_SMTP_SERVER,
+        "smtp_port": settings.get("smtp_port") or DEFAULT_SMTP_PORT,
+        "sender_email": settings.get("sender_email") or DEFAULT_SENDER_EMAIL,
+        "sender_password": settings.get("sender_password") or DEFAULT_SENDER_PASSWORD,
+        "recipient_emails": settings.get("recipient_emails") or DEFAULT_RECIPIENT_EMAILS,
+        "use_tls": settings.get("use_tls", 1 if DEFAULT_USE_TLS else 0),
+        "is_enabled": settings.get("is_enabled", 1 if DEFAULT_EMAIL_ENABLED else 0),
+        "notify_on_critical": settings.get("notify_on_critical", 1 if DEFAULT_NOTIFY_CRITICAL else 0),
+        "notify_on_warning": settings.get("notify_on_warning", 1 if DEFAULT_NOTIFY_WARNING else 0),
+        "notify_on_recovery": settings.get("notify_on_recovery", 1 if DEFAULT_NOTIFY_RECOVERY else 0),
+        "cooldown_minutes": settings.get("cooldown_minutes") or DEFAULT_COOLDOWN_MINUTES,
+        "enable_daily_report": settings.get("enable_daily_report", 1 if DEFAULT_ENABLE_DAILY_REPORT else 0),
+        "daily_report_time": settings.get("daily_report_time") or DEFAULT_DAILY_REPORT_TIME,
+        "scheduler_interval_seconds": settings.get("scheduler_interval_seconds") or DEFAULT_SCHEDULER_INTERVAL_SECONDS,
+        "data_retention_days": settings.get("data_retention_days") or DATA_RETENTION_DAYS,
+        "ssl_warning_days": settings.get("ssl_warning_days") or SSL_EXPIRY_WARNING_DAYS,
+        "last_report_sent_at": settings.get("last_report_sent_at")
     }
 
 get_email_settings = get_system_settings
+
+def sync_settings_from_env() -> Dict[str, Any]:
+    """Nạp và đồng bộ lại toàn bộ thông số từ file .env / config.py vào CSDL SQLite."""
+    import importlib
+    import config
+    from dotenv import load_dotenv
+    if (config.BASE_DIR / ".env").exists():
+        load_dotenv(dotenv_path=config.BASE_DIR / ".env", override=True)
+    importlib.reload(config)
+
+    env_settings = {
+        "smtp_server": config.DEFAULT_SMTP_SERVER,
+        "smtp_port": config.DEFAULT_SMTP_PORT,
+        "sender_email": config.DEFAULT_SENDER_EMAIL,
+        "sender_password": config.DEFAULT_SENDER_PASSWORD,
+        "recipient_emails": config.DEFAULT_RECIPIENT_EMAILS,
+        "use_tls": config.DEFAULT_USE_TLS,
+        "is_enabled": config.DEFAULT_EMAIL_ENABLED,
+        "notify_on_critical": config.DEFAULT_NOTIFY_CRITICAL,
+        "notify_on_warning": config.DEFAULT_NOTIFY_WARNING,
+        "notify_on_recovery": config.DEFAULT_NOTIFY_RECOVERY,
+        "cooldown_minutes": config.DEFAULT_COOLDOWN_MINUTES,
+        "enable_daily_report": config.DEFAULT_ENABLE_DAILY_REPORT,
+        "daily_report_time": config.DEFAULT_DAILY_REPORT_TIME,
+        "scheduler_interval_seconds": config.DEFAULT_SCHEDULER_INTERVAL_SECONDS,
+        "data_retention_days": config.DATA_RETENTION_DAYS,
+        "ssl_warning_days": config.SSL_EXPIRY_WARNING_DAYS
+    }
+    update_system_settings(env_settings)
+    return env_settings
 
 def update_system_settings(settings: Dict[str, Any]) -> bool:
     """Cập nhật thông tin cấu hình động hệ thống vào CSDL."""

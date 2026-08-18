@@ -9,7 +9,8 @@ from database import (
     add_or_update_website,
     delete_website,
     get_system_settings,
-    update_system_settings
+    update_system_settings,
+    sync_settings_from_env
 )
 from notifications.email_service import (
     send_test_email,
@@ -141,7 +142,14 @@ def render_configuration_page():
     # ==========================================
     # PHẦN 3: CẤU HÌNH EMAIL, BÁO CÁO & THAM SỐ
     # ==========================================
-    st.markdown("## 📧 3. Cấu hình Email, Báo cáo Định kỳ & Cảnh báo")
+    col_hdr1, col_hdr2 = st.columns([3, 1])
+    with col_hdr1:
+        st.markdown("## 📧 3. Cấu hình Email, Báo cáo Định kỳ & Cảnh báo")
+    with col_hdr2:
+        if st.button("📥 Nạp Lại từ File .env", use_container_width=True):
+            sync_settings_from_env()
+            st.toast("Đã nạp toàn bộ cấu hình từ file .env vào Database!", icon="📥")
+            st.rerun()
 
     with st.expander("ℹ️ Hướng dẫn lấy Mật khẩu ứng dụng (App Password) cho Gmail"):
         st.markdown("""
