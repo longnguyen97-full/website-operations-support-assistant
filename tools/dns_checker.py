@@ -1,8 +1,9 @@
 import time
 import dns.resolver
 from typing import Optional, Dict, Any
+from config import DNS_TIMEOUT_SECONDS
 
-def check_dns(domain: str, baseline: Optional[dict] = None, timeout: float = 3.0) -> dict:
+def check_dns(domain: str, baseline: Optional[dict] = None, timeout: float = DNS_TIMEOUT_SECONDS) -> dict:
     """
     Kiểm tra hệ thống tên miền DNS dựa trên RFC 1035.
     Hỗ trợ phân giải A, AAAA, CNAME, MX, TXT, trích xuất TTL và phát hiện Load Balancing.

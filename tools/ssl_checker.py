@@ -1,9 +1,8 @@
 import ssl
 import socket
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from urllib.parse import urlparse
-
-TZ_VN = timezone(timedelta(hours=7))
+from config import TZ_VN, SSL_TIMEOUT_SECONDS
 
 def _extract_rdn(rdn_tuples) -> dict:
     """Bóc tách Relative Distinguished Names (RDN) thành dictionary key-value."""
@@ -15,7 +14,7 @@ def _extract_rdn(rdn_tuples) -> dict:
             res[key] = value
     return res
 
-def check_ssl(url_or_host: str, timeout: float = 5.0) -> dict:
+def check_ssl(url_or_host: str, timeout: float = SSL_TIMEOUT_SECONDS) -> dict:
     """
     Kiểm tra chứng chỉ SSL/TLS dựa trên RFC 5280 (X.509 Certificate Profile) và RFC 8446 (TLS 1.3).
     Hỗ trợ phát hiện self-signed, expired, untrusted CA, hostname mismatch và bóc tách SAN/Issuer.

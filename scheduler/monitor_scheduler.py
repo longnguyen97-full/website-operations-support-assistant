@@ -1,5 +1,5 @@
 import time
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from typing import Optional, Dict, Any
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -15,14 +15,14 @@ from database.repository import (
     purge_old_logs
 )
 from notifications.email_service import check_and_send_alert
+from config import TZ_VN, DEFAULT_SCHEDULER_INTERVAL_SECONDS, DATA_RETENTION_DAYS
 
 JOB_ID = "website_periodic_monitoring_job"
-TZ_VN = timezone(timedelta(hours=7))
 
 # Global state tracker
 _scheduler: Optional[BackgroundScheduler] = None
 _scheduler_state = {
-    "interval_seconds": 60,
+    "interval_seconds": DEFAULT_SCHEDULER_INTERVAL_SECONDS,
     "last_run_time": None,
     "last_run_summary": None,
     "total_runs": 0
@@ -92,9 +92,9 @@ def run_all_monitors_job():
                 "error": str(e)
             })
 
-    # Định kỳ dọn log cũ hơn 30 ngày (Data Retention Policy)
+    # Định kỳ dọn log cũ hơn số ngày quy định (Data Retention Policy)
     try:
-        purge_old_logs(days_to_keep=30)
+        purge_old_logs(days_to_keep=DATA_RETENTION_DAYS)
     except Exception:
         pass
 

@@ -1,11 +1,17 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any, Tuple
 from database.repository import get_email_settings
-
-TZ_VN = timezone(timedelta(hours=7))
+from config import (
+    TZ_VN,
+    DEFAULT_SMTP_SERVER,
+    DEFAULT_SMTP_PORT,
+    DEFAULT_USE_TLS,
+    DEFAULT_COOLDOWN_MINUTES,
+    SSL_EXPIRY_WARNING_DAYS
+)
 
 # Lưu vết thời điểm gửi alert gần nhất cho từng website_id để áp dụng Cooldown
 # Format: { website_id: { "last_alert_time": datetime, "last_status": str } }
@@ -31,9 +37,9 @@ def send_email(
 
     sender_email = settings.get("sender_email", "").strip()
     sender_password = settings.get("sender_password", "").strip()
-    smtp_server = settings.get("smtp_server", "smtp.gmail.com").strip()
-    smtp_port = int(settings.get("smtp_port", 587))
-    use_tls = bool(settings.get("use_tls", True))
+    smtp_server = settings.get("smtp_server", DEFAULT_SMTP_SERVER).strip()
+    smtp_port = int(settings.get("smtp_port", DEFAULT_SMTP_PORT))
+    use_tls = bool(settings.get("use_tls", DEFAULT_USE_TLS))
 
     if not sender_email or not sender_password:
         return False, "Chưa cấu hình Sender Email hoặc Mật khẩu ứng dụng (App Password)."
@@ -167,8 +173,8 @@ def build_incident_alert_html(
 
     if not ssl_res.get("is_valid"):
         issues.append(f"<b>SSL/TLS Invalid:</b> {ssl_res.get('error') or 'Chứng chỉ không hợp lệ / Hết hạn'}")
-    elif ssl_res.get("days_remaining", 0) <= 14:
-        issues.append(f"<b>SSL Expiring Soon:</b> Chứng chỉ số chỉ còn lại <b>{ssl_res.get('days_remaining')} ngày</b> hiệu lực.")
+    elif ssl_res.get("days_remaining", 0) <= SSL_EXPIRY_WARNING_DAYS:
+        issues.append(f"<b>SSL Expiring Soon:</b> Chứng chỉ số chỉ còn lại <b>{ssl_res.get('days_remaining')} ngày</b> hiệu lực (ngưỡng cảnh báo: $\\le$ {SSL_EXPIRY_WARNING_DAYS} ngày).")
 
     issues_html = "".join([f"<li style='margin-bottom: 6px;'>{issue}</li>" for issue in issues]) if issues else "<li>Không ghi nhận bất thường.</li>"
 
@@ -244,7 +250,7 @@ def check_and_send_alert(
     site_name = site["name"]
     site_url = site["url"]
     now = datetime.now(TZ_VN)
-    cooldown_delta = timedelta(minutes=int(settings.get("cooldown_minutes", 15)))
+    cooldown_delta = timedelta(minutes=int(settings.get("cooldown_minutes", DEFAULT_COOLDOWN_MINUTES)))
 
     # Kiểm tra loại cảnh báo được phép gửi
     if overall_status == "CRITICAL" and not settings.get("notify_on_critical", True):

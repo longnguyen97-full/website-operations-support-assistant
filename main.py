@@ -21,6 +21,8 @@ from scheduler import (
 )
 from scheduler.monitor_scheduler import resume_background_scheduler
 
+from config import DEFAULT_SCHEDULER_INTERVAL_SECONDS
+
 # --- Cấu hình trang ---
 st.set_page_config(layout="wide", page_title="Agentic AI Monitoring Dashboard", page_icon="🛡️")
 
@@ -28,7 +30,7 @@ st.set_page_config(layout="wide", page_title="Agentic AI Monitoring Dashboard", 
 def setup_background_monitoring():
     """Khởi chạy Background Scheduler 1 lần duy nhất trong vòng đời ứng dụng."""
     init_db()
-    start_background_scheduler(interval_seconds=60)
+    start_background_scheduler(interval_seconds=DEFAULT_SCHEDULER_INTERVAL_SECONDS)
     return True
 
 def main():

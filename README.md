@@ -27,6 +27,8 @@
 │   ├── dns_checker.py
 │   ├── http_checker.py
 │   └── ssl_checker.py
+├── .env.example
+├── config.py
 ├── main.py
 ├── pyproject.toml
 ├── README.md

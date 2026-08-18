@@ -1,10 +1,26 @@
 import json
 import sqlite3
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from typing import Optional, List, Dict, Any
 from database.db import get_db_connection
-
-TZ_VN = timezone(timedelta(hours=7))
+from config import (
+    TZ_VN,
+    SSL_EXPIRY_WARNING_DAYS,
+    DATA_RETENTION_DAYS,
+    DEFAULT_SMTP_SERVER,
+    DEFAULT_SMTP_PORT,
+    DEFAULT_SENDER_EMAIL,
+    DEFAULT_SENDER_PASSWORD,
+    DEFAULT_RECIPIENT_EMAILS,
+    DEFAULT_USE_TLS,
+    DEFAULT_EMAIL_ENABLED,
+    DEFAULT_NOTIFY_CRITICAL,
+    DEFAULT_NOTIFY_WARNING,
+    DEFAULT_NOTIFY_RECOVERY,
+    DEFAULT_COOLDOWN_MINUTES,
+    DEFAULT_ENABLE_DAILY_REPORT,
+    DEFAULT_DAILY_REPORT_TIME
+)
 
 def calculate_overall_status(http_res: dict, dns_res: dict, ssl_res: dict) -> str:
     """Xác định trạng thái tổng thể: HEALTHY, WARNING, hoặc CRITICAL."""
@@ -14,8 +30,8 @@ def calculate_overall_status(http_res: dict, dns_res: dict, ssl_res: dict) -> st
        not ssl_res.get("is_valid"):
         return "CRITICAL"
     
-    # Nếu chứng chỉ sắp hết hạn trong 14 ngày hoặc mã HTTP không đúng như mong đợi (nhưng vẫn có response)
-    if (ssl_res.get("days_remaining", 0) <= 14) or \
+    # Nếu chứng chỉ sắp hết hạn trong ngưỡng cảnh báo hoặc mã HTTP không đúng như mong đợi (nhưng vẫn có response)
+    if (ssl_res.get("days_remaining", 0) <= SSL_EXPIRY_WARNING_DAYS) or \
        (not http_res.get("is_expected_status")):
         return "WARNING"
         
@@ -279,7 +295,7 @@ def set_active_milestone(milestone_id: int, website_id: int) -> bool:
 # ==================== 4. QUẢN LÝ CẤU HÌNH EMAIL (EMAIL SETTINGS) ====================
 
 def get_email_settings() -> Dict[str, Any]:
-    """Lấy thông tin cấu hình Email cảnh báo từ CSDL."""
+    """Lấy thông tin cấu hình Email cảnh báo từ CSDL (kèm fallback từ config.py/.env)."""
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM email_settings WHERE id = 1;")
@@ -289,19 +305,19 @@ def get_email_settings() -> Dict[str, Any]:
         return dict(row)
     return {
         "id": 1,
-        "smtp_server": "smtp.gmail.com",
-        "smtp_port": 587,
-        "sender_email": "",
-        "sender_password": "",
-        "recipient_emails": "",
-        "use_tls": 1,
-        "is_enabled": 0,
-        "notify_on_critical": 1,
-        "notify_on_warning": 1,
-        "notify_on_recovery": 1,
-        "cooldown_minutes": 15,
-        "enable_daily_report": 0,
-        "daily_report_time": "08:00",
+        "smtp_server": DEFAULT_SMTP_SERVER,
+        "smtp_port": DEFAULT_SMTP_PORT,
+        "sender_email": DEFAULT_SENDER_EMAIL,
+        "sender_password": DEFAULT_SENDER_PASSWORD,
+        "recipient_emails": DEFAULT_RECIPIENT_EMAILS,
+        "use_tls": 1 if DEFAULT_USE_TLS else 0,
+        "is_enabled": 1 if DEFAULT_EMAIL_ENABLED else 0,
+        "notify_on_critical": 1 if DEFAULT_NOTIFY_CRITICAL else 0,
+        "notify_on_warning": 1 if DEFAULT_NOTIFY_WARNING else 0,
+        "notify_on_recovery": 1 if DEFAULT_NOTIFY_RECOVERY else 0,
+        "cooldown_minutes": DEFAULT_COOLDOWN_MINUTES,
+        "enable_daily_report": 1 if DEFAULT_ENABLE_DAILY_REPORT else 0,
+        "daily_report_time": DEFAULT_DAILY_REPORT_TIME,
         "last_report_sent_at": None
     }
 

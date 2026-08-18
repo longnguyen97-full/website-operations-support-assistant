@@ -1,5 +1,6 @@
 import httpx
 from typing import Optional
+from config import HTTP_TIMEOUT_SECONDS, DEFAULT_USER_AGENT
 
 def get_status_category(status_code: Optional[int]) -> Optional[str]:
     """Phân loại mã trạng thái theo RFC 9110."""
@@ -17,7 +18,7 @@ def get_status_category(status_code: Optional[int]) -> Optional[str]:
         return "5xx Server Error"
     return "Unknown"
 
-def check_http(url: str, method: str = "GET", expected_status: int = 200, timeout: float = 10.0) -> dict:
+def check_http(url: str, method: str = "GET", expected_status: int = 200, timeout: float = HTTP_TIMEOUT_SECONDS) -> dict:
     """
     Kiểm tra trạng thái HTTP dựa trên RFC 9110.
     """

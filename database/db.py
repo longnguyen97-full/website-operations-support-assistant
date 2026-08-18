@@ -2,16 +2,32 @@ import os
 import json
 import sqlite3
 from typing import Optional
+from datetime import datetime
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-DB_PATH = os.path.join(DATA_DIR, "monitoring.db")
-CONFIG_PATH = os.path.join(BASE_DIR, "target_websites.json")
+from config import (
+    DATA_DIR,
+    DB_PATH,
+    TARGET_WEBSITES_FILE,
+    TZ_VN,
+    DEFAULT_SMTP_SERVER,
+    DEFAULT_SMTP_PORT,
+    DEFAULT_SENDER_EMAIL,
+    DEFAULT_SENDER_PASSWORD,
+    DEFAULT_RECIPIENT_EMAILS,
+    DEFAULT_USE_TLS,
+    DEFAULT_EMAIL_ENABLED,
+    DEFAULT_NOTIFY_CRITICAL,
+    DEFAULT_NOTIFY_WARNING,
+    DEFAULT_NOTIFY_RECOVERY,
+    DEFAULT_COOLDOWN_MINUTES,
+    DEFAULT_ENABLE_DAILY_REPORT,
+    DEFAULT_DAILY_REPORT_TIME
+)
 
 def get_db_connection() -> sqlite3.Connection:
     """Tạo kết nối tới cơ sở dữ liệu SQLite với row_factory hỗ trợ truy xuất theo tên cột."""
     os.makedirs(DATA_DIR, exist_ok=True)
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(str(DB_PATH))
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
@@ -112,11 +128,26 @@ def init_db() -> None:
     if cursor.fetchone()[0] == 0:
         cursor.execute("""
             INSERT INTO email_settings (
-                id, smtp_server, smtp_port, is_enabled, 
+                id, smtp_server, smtp_port, sender_email, sender_password,
+                recipient_emails, use_tls, is_enabled, 
                 notify_on_critical, notify_on_warning, notify_on_recovery, 
                 cooldown_minutes, enable_daily_report, daily_report_time
-            ) VALUES (1, 'smtp.gmail.com', 587, 0, 1, 1, 1, 15, 0, '08:00');
-        """)
+            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        """, (
+            DEFAULT_SMTP_SERVER,
+            DEFAULT_SMTP_PORT,
+            DEFAULT_SENDER_EMAIL,
+            DEFAULT_SENDER_PASSWORD,
+            DEFAULT_RECIPIENT_EMAILS,
+            1 if DEFAULT_USE_TLS else 0,
+            1 if DEFAULT_EMAIL_ENABLED else 0,
+            1 if DEFAULT_NOTIFY_CRITICAL else 0,
+            1 if DEFAULT_NOTIFY_WARNING else 0,
+            1 if DEFAULT_NOTIFY_RECOVERY else 0,
+            DEFAULT_COOLDOWN_MINUTES,
+            1 if DEFAULT_ENABLE_DAILY_REPORT else 0,
+            DEFAULT_DAILY_REPORT_TIME
+        ))
 
     # Tạo indexes để tăng tốc truy vấn lịch sử theo website và thời gian
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_logs_website_id ON monitoring_logs(website_id);")
@@ -125,13 +156,11 @@ def init_db() -> None:
 
     # Seed dữ liệu ban đầu nếu chưa có website nào trong DB
     cursor.execute("SELECT COUNT(*) FROM websites;")
-    if cursor.fetchone()[0] == 0 and os.path.exists(CONFIG_PATH):
+    if cursor.fetchone()[0] == 0 and os.path.exists(str(TARGET_WEBSITES_FILE)):
         try:
-            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            with open(str(TARGET_WEBSITES_FILE), "r", encoding="utf-8") as f:
                 config_data = json.load(f)
                 
-            from datetime import datetime, timezone, timedelta
-            TZ_VN = timezone(timedelta(hours=7))
             now_iso = datetime.now(TZ_VN).isoformat()
             
             for site in config_data.get("websites", []):
