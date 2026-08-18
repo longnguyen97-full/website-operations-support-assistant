@@ -73,9 +73,10 @@ def main():
     status_badge = "🟢 Đang Chạy Tự Động" if sched_info["is_running"] else "🔴 Đang Tạm Dừng"
     st.sidebar.markdown(f"**Trạng thái:** {status_badge}")
     if sched_info.get("next_run_time"):
-        st.sidebar.caption(f"🕒 Lần quét kế: `{sched_info['next_run_time']}`")
+        st.sidebar.caption(f"🕒 Lần quét kế (UTC+7): `{sched_info['next_run_time']}`")
     if sched_info.get("last_run_time"):
-        st.sidebar.caption(f"✅ Lần quét trước: `{sched_info['last_run_time'][:19]}` ({sched_info['total_runs']} lần quét)")
+        last_t = str(sched_info['last_run_time']).replace('T', ' ')[:19]
+        st.sidebar.caption(f"✅ Lần quét trước: `{last_t}` ({sched_info['total_runs']} lần quét)")
 
     # Tần suất quét
     new_interval = st.sidebar.select_slider(

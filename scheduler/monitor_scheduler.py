@@ -1,5 +1,5 @@
 import time
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -15,6 +15,7 @@ from database.repository import (
 )
 
 JOB_ID = "website_periodic_monitoring_job"
+TZ_VN = timezone(timedelta(hours=7))
 
 # Global state tracker
 _scheduler: Optional[BackgroundScheduler] = None
@@ -60,7 +61,7 @@ def execute_single_website_check(site: dict) -> dict:
 
 def run_all_monitors_job():
     """Hàm tác vụ được APScheduler gọi định kỳ để quét toàn bộ website trong CSDL."""
-    now_iso = datetime.now(timezone.utc).isoformat()
+    now_iso = datetime.now(TZ_VN).isoformat()
     _scheduler_state["last_run_time"] = now_iso
     _scheduler_state["total_runs"] += 1
     
@@ -90,10 +91,10 @@ def run_all_monitors_job():
     _scheduler_state["last_run_summary"] = f"Đã quét thành công {len(results)} website lúc {now_iso}."
 
 def get_scheduler() -> BackgroundScheduler:
-    """Khởi tạo hoặc lấy đối tượng Singleton BackgroundScheduler."""
+    """Khởi tạo hoặc lấy đối tượng Singleton BackgroundScheduler với Timezone UTC+7."""
     global _scheduler
     if _scheduler is None:
-        _scheduler = BackgroundScheduler(daemon=True)
+        _scheduler = BackgroundScheduler(daemon=True, timezone=TZ_VN)
     return _scheduler
 
 def start_background_scheduler(interval_seconds: int = 60):
@@ -102,7 +103,7 @@ def start_background_scheduler(interval_seconds: int = 60):
     _scheduler_state["interval_seconds"] = interval_seconds
 
     # Thêm hoặc cập nhật job
-    trigger = IntervalTrigger(seconds=interval_seconds)
+    trigger = IntervalTrigger(seconds=interval_seconds, timezone=TZ_VN)
     if sched.get_job(JOB_ID):
         sched.reschedule_job(JOB_ID, trigger=trigger)
     else:
@@ -136,21 +137,21 @@ def update_scheduler_interval(interval_seconds: int):
     _scheduler_state["interval_seconds"] = interval_seconds
     sched = get_scheduler()
     if sched.get_job(JOB_ID):
-        sched.reschedule_job(JOB_ID, trigger=IntervalTrigger(seconds=interval_seconds))
+        sched.reschedule_job(JOB_ID, trigger=IntervalTrigger(seconds=interval_seconds, timezone=TZ_VN))
 
 def run_monitors_now():
     """Kích hoạt quét toàn bộ website ngay lập tức ngoài chu kỳ."""
     run_all_monitors_job()
 
 def get_scheduler_info() -> Dict[str, Any]:
-    """Trả về trạng thái hiện tại của Scheduler."""
+    """Trả về trạng thái hiện tại của Scheduler theo giờ UTC+7."""
     sched = get_scheduler()
     job = sched.get_job(JOB_ID) if sched else None
     
     is_active = sched.running and (job is not None)
     next_run = None
     if job and job.next_run_time:
-        next_run = job.next_run_time.strftime("%Y-%m-%d %H:%M:%S %Z")
+        next_run = job.next_run_time.astimezone(TZ_VN).strftime("%Y-%m-%d %H:%M:%S")
 
     return {
         "is_running": is_active,

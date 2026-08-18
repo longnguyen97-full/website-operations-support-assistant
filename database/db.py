@@ -86,8 +86,9 @@ def init_db() -> None:
             with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                 config_data = json.load(f)
                 
-            from datetime import datetime, timezone
-            now_iso = datetime.now(timezone.utc).isoformat()
+            from datetime import datetime, timezone, timedelta
+            TZ_VN = timezone(timedelta(hours=7))
+            now_iso = datetime.now(TZ_VN).isoformat()
             
             for site in config_data.get("websites", []):
                 cursor.execute("""

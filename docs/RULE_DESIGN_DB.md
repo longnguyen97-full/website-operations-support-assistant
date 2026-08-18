@@ -6,7 +6,7 @@ Quy định kỹ thuật và chuẩn thiết kế Cơ sở dữ liệu (Database
 
 * **Hệ quản trị CSDL:** SQLite (sử dụng module chuẩn `sqlite3` của Python), lưu trữ tại thư mục chuyên biệt `data/monitoring.db`.
 * **Mô hình hóa dữ liệu:** Kết hợp giữa dữ liệu quan hệ (Relational data) cho việc quản lý cấu hình, định danh website và dữ liệu bán cấu trúc (Semi-structured/JSON) để lưu trữ linh hoạt kết quả chi tiết từ các công cụ kiểm tra (HTTP, DNS, SSL/TLS).
-* **Quy chuẩn mã hóa:** Toàn bộ dữ liệu văn bản sử dụng chuẩn mã hóa **UTF-8**, định dạng thời gian lưu trữ theo chuẩn **ISO 8601 (UTC)**.
+* **Quy chuẩn mã hóa:** Toàn bộ dữ liệu văn bản sử dụng chuẩn mã hóa **UTF-8**, định dạng thời gian lưu trữ theo chuẩn **ISO 8601 (UTC+7)**.
 
 ---
 

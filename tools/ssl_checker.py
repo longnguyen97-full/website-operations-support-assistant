@@ -1,7 +1,9 @@
 import ssl
 import socket
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from urllib.parse import urlparse
+
+TZ_VN = timezone(timedelta(hours=7))
 
 def _extract_rdn(rdn_tuples) -> dict:
     """Bóc tách Relative Distinguished Names (RDN) thành dictionary key-value."""
@@ -51,12 +53,12 @@ def check_ssl(url_or_host: str, timeout: float = 5.0) -> dict:
         not_before_str = cert.get('notBefore')
         not_after_str = cert.get('notAfter')
         if not_before_str and not_after_str:
-            not_before = datetime.strptime(not_before_str, '%b %d %H:%M:%S %Y %Z').replace(tzinfo=timezone.utc)
-            not_after = datetime.strptime(not_after_str, '%b %d %H:%M:%S %Y %Z').replace(tzinfo=timezone.utc)
+            not_before = datetime.strptime(not_before_str, '%b %d %H:%M:%S %Y %Z').replace(tzinfo=timezone.utc).astimezone(TZ_VN)
+            not_after = datetime.strptime(not_after_str, '%b %d %H:%M:%S %Y %Z').replace(tzinfo=timezone.utc).astimezone(TZ_VN)
             result["not_before"] = not_before.isoformat()
             result["not_after"] = not_after.isoformat()
             
-            now = datetime.now(timezone.utc)
+            now = datetime.now(TZ_VN)
             result["days_remaining"] = (not_after - now).days
             if now > not_after or now < not_before:
                 result["is_expired"] = True

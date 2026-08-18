@@ -4,6 +4,8 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, List, Dict, Any
 from database.db import get_db_connection
 
+TZ_VN = timezone(timedelta(hours=7))
+
 def calculate_overall_status(http_res: dict, dns_res: dict, ssl_res: dict) -> str:
     """Xác định trạng thái tổng thể: HEALTHY, WARNING, hoặc CRITICAL."""
     # Nếu có lỗi nghiêm trọng (HTTP không kết nối, DNS thất bại, hoặc SSL không hợp lệ)
@@ -87,7 +89,7 @@ def save_monitoring_log(
 ) -> int:
     """Lưu trữ một bản ghi kết quả kiểm tra giám sát vào bảng monitoring_logs."""
     if not timestamp:
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(TZ_VN).isoformat()
 
     overall_status = calculate_overall_status(http_res, dns_res, ssl_res)
     
@@ -163,7 +165,7 @@ def get_monitoring_logs(website_id: Optional[int] = None, limit: int = 50) -> Li
 
 def purge_old_logs(days_to_keep: int = 30) -> int:
     """Dọn dẹp các bản ghi log quá cũ theo chính sách Data Retention trong RULE_DESIGN_DB.md."""
-    cutoff_time = (datetime.now(timezone.utc) - timedelta(days=days_to_keep)).isoformat()
+    cutoff_time = (datetime.now(TZ_VN) - timedelta(days=days_to_keep)).isoformat()
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM monitoring_logs WHERE timestamp < ?;", (cutoff_time,))
@@ -183,7 +185,7 @@ def save_milestone_baseline(
     set_active: bool = True
 ) -> int:
     """Tạo mới một mốc chuẩn. Nếu set_active=True, tự động tắt cờ is_active của các mốc cũ."""
-    created_at = datetime.now(timezone.utc).isoformat()
+    created_at = datetime.now(TZ_VN).isoformat()
     conn = get_db_connection()
     cursor = conn.cursor()
     

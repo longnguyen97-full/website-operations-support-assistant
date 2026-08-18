@@ -151,7 +151,8 @@ def render_history_tab(selected_site):
     # 2. Biểu đồ xu hướng độ trễ
     st.markdown("#### ⏱️ Biểu đồ Độ trễ phản hồi (Latency Trend)")
     chart_df = df[["timestamp", "http_latency_ms", "dns_latency_ms"]].copy()
-    chart_df["timestamp"] = pd.to_datetime(chart_df["timestamp"])
+    # Chuyển đổi an toàn đa múi giờ (mixed timezones) về chuẩn UTC+7 (Asia/Ho_Chi_Minh)
+    chart_df["timestamp"] = pd.to_datetime(chart_df["timestamp"], utc=True).dt.tz_convert("Asia/Ho_Chi_Minh").dt.tz_localize(None)
     chart_df = chart_df.sort_values("timestamp")
     chart_df = chart_df.set_index("timestamp")
     chart_df.columns = ["HTTP Latency (ms)", "DNS Resolution Latency (ms)"]
@@ -163,8 +164,9 @@ def render_history_tab(selected_site):
         "timestamp", "overall_status", "http_status_code", 
         "http_latency_ms", "dns_resolved", "ssl_is_valid", "ssl_days_remaining"
     ]].copy()
+    display_df["timestamp"] = pd.to_datetime(display_df["timestamp"], utc=True).dt.tz_convert("Asia/Ho_Chi_Minh").dt.strftime("%Y-%m-%d %H:%M:%S")
     display_df.columns = [
-        "Thời điểm (UTC)", "Trạng thái", "Mã HTTP", 
+        "Thời điểm (UTC+7)", "Trạng thái", "Mã HTTP", 
         "Độ trễ HTTP (ms)", "DNS Resolved", "SSL Hợp lệ", "SSL Ngày còn lại"
     ]
     st.dataframe(display_df, use_container_width=True)
