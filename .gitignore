@@ -1,10 +1,72 @@
-# Python-generated files
+# ==========================================
+# 1. Environment & Secret Files (Bảo mật)
+# ==========================================
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# ==========================================
+# 2. Database & Data Storage (CSDL Cục bộ)
+# ==========================================
+*.db
+*.db-journal
+*.db-wal
+*.sqlite
+*.sqlite3
+data/*.db
+data/*.sqlite
+data/*.sqlite3
+
+# ==========================================
+# 3. Python Bytecode & Cache
+# ==========================================
 __pycache__/
-*.py[oc]
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ==========================================
+# 4. Virtual Environments
+# ==========================================
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# ==========================================
+# 5. Distribution & Packaging
+# ==========================================
 build/
 dist/
 wheels/
-*.egg-info
+*.egg-info/
+*.egg
+.installed.cfg
 
-# Virtual environments
-.venv
+# ==========================================
+# 6. Streamlit & Logs
+# ==========================================
+.streamlit/secrets.toml
+*.log
+logs/
+
+# ==========================================
+# 7. IDE & OS Generated Files
+# ==========================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
