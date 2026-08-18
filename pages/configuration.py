@@ -5,6 +5,9 @@ from datetime import datetime
 import config
 from database import (
     init_db,
+    get_all_websites,
+    add_or_update_website,
+    delete_website,
     get_system_settings,
     update_system_settings
 )
@@ -12,7 +15,13 @@ from notifications.email_service import (
     send_test_email,
     send_periodic_report_email
 )
-from scheduler import update_scheduler_interval
+from scheduler import (
+    get_scheduler_info,
+    update_scheduler_interval,
+    stop_background_scheduler,
+    run_monitors_now
+)
+from scheduler.monitor_scheduler import resume_background_scheduler
 
 # --- Cấu hình trang ---
 st.set_page_config(
@@ -26,7 +35,113 @@ def render_configuration_page():
     settings = get_system_settings()
 
     st.title("⚙️ Quản lý Cấu hình Hệ thống (System Configuration)")
-    st.markdown("Quản lý toàn bộ tham số cấu hình động vận hành hệ thống lưu trữ trực tiếp trong CSDL SQLite (`monitoring.db`).")
+    st.markdown("Toàn bộ cấu hình vận hành, mục tiêu giám sát, bộ lập lịch và thông báo được lưu trữ trực tiếp trong CSDL SQLite (`monitoring.db`).")
+
+    # ==========================================
+    # PHẦN 1: QUẢN LÝ TARGET WEBSITES
+    # ==========================================
+    st.markdown("## 🎯 1. Quản lý Mục tiêu Giám sát (Target Websites)")
+    
+    col_w1, col_w2 = st.columns([1, 2])
+    with col_w1:
+        st.markdown("#### ➕ Thêm / Cập nhật Website")
+        with st.form("add_website_form"):
+            w_name = st.text_input("Tên Website:", placeholder="Google")
+            w_url = st.text_input("URL đầy đủ:", placeholder="https://www.google.com")
+            w_domain = st.text_input("Domain:", placeholder="google.com")
+            w_exp_status = st.number_input("Mã HTTP kỳ vọng:", min_value=100, max_value=599, value=200)
+            
+            btn_add_site = st.form_submit_button("Lưu Website Vào CSDL", type="primary")
+            if btn_add_site:
+                if w_name and w_url and w_domain:
+                    add_or_update_website(w_name.strip(), w_url.strip(), w_domain.strip(), int(w_exp_status))
+                    st.success(f"✅ Đã lưu website '{w_name}' vào CSDL!")
+                    st.rerun()
+                else:
+                    st.error("Vui lòng điền đầy đủ Tên, URL và Domain.")
+
+    with col_w2:
+        st.markdown("#### 📋 Danh sách Website đang được giám sát")
+        current_websites = get_all_websites()
+        if current_websites:
+            w_df = pd.DataFrame(current_websites)[["id", "name", "url", "domain", "expected_status"]]
+            w_df.columns = ["ID", "Tên Website", "URL", "Domain", "HTTP Kỳ vọng"]
+            st.dataframe(w_df, use_container_width=True)
+
+            # Xóa website
+            with st.expander("🗑️ Xóa Website khỏi danh mục"):
+                del_site_id = st.selectbox(
+                    "Chọn website cần xóa:", 
+                    options=[w["id"] for w in current_websites],
+                    format_func=lambda x: next((f"ID #{w['id']} - {w['name']} ({w['domain']})" for w in current_websites if w["id"] == x), str(x))
+                )
+                if st.button("Xác nhận Xóa Website", type="secondary"):
+                    delete_website(del_site_id)
+                    st.success(f"Đã xóa website ID #{del_site_id} thành công!")
+                    st.rerun()
+        else:
+            st.info("Chưa có website nào trong CSDL.")
+
+    st.markdown("---")
+
+    # ==========================================
+    # PHẦN 2: ĐIỀU KHIỂN & CẤU HÌNH APSCHEDULER
+    # ==========================================
+    st.markdown("## ⏱️ 2. Bộ lập lịch Quét Tự động (APScheduler)")
+    sched_info = get_scheduler_info()
+    
+    c_s1, c_s2, c_s3 = st.columns(3)
+    c_s1.metric(
+        "Trạng thái Bộ lập lịch", 
+        "🟢 Đang Chạy Tự Động" if sched_info["is_running"] else "🔴 Đang Tạm Dừng"
+    )
+    c_s2.metric("Chu kỳ quét hiện tại", f"{sched_info['interval_seconds']} giây")
+    c_s3.metric("Tổng số lần quét nền", f"{sched_info['total_runs']} lần")
+
+    if sched_info.get("next_run_time"):
+        st.caption(f"🕒 **Lần quét tiếp theo (UTC+7):** `{sched_info['next_run_time']}`")
+    if sched_info.get("last_run_time"):
+        st.caption(f"✅ **Lần quét gần nhất:** `{str(sched_info['last_run_time']).replace('T', ' ')[:19]}`")
+
+    # Điều khiển Scheduler
+    col_ctl1, col_ctl2, col_ctl3 = st.columns([2, 1, 1])
+    with col_ctl1:
+        new_sched_interval = st.select_slider(
+            "Thay đổi chu kỳ quét định kỳ:",
+            options=[10, 30, 60, 120, 300, 600, 1800, 3600],
+            value=sched_info["interval_seconds"] if sched_info["interval_seconds"] in [10, 30, 60, 120, 300, 600, 1800, 3600] else 60,
+            format_func=lambda x: f"{x} giây" if x < 60 else f"{x//60} phút"
+        )
+        if new_sched_interval != sched_info["interval_seconds"]:
+            update_scheduler_interval(new_sched_interval)
+            st.toast(f"Đã đổi chu kỳ quét thành {new_sched_interval}s!", icon="⏱️")
+            st.rerun()
+
+    with col_ctl2:
+        st.write("&nbsp;")
+        if sched_info["is_running"]:
+            if st.button("⏸️ Tạm dừng Quét Nền", use_container_width=True):
+                stop_background_scheduler()
+                st.rerun()
+        else:
+            if st.button("▶️ Tiếp tục Quét Nền", use_container_width=True, type="primary"):
+                resume_background_scheduler()
+                st.rerun()
+
+    with col_ctl3:
+        st.write("&nbsp;")
+        if st.button("⚡ Quét Ngay Tất Cả", use_container_width=True):
+            with st.spinner("Đang chạy kiểm tra toàn bộ website..."):
+                run_monitors_now()
+                st.toast("Đã hoàn tất quét tất cả website!", icon="⚡")
+                st.rerun()
+
+    st.markdown("---")
+
+    # ==========================================
+    # PHẦN 3: CẤU HÌNH EMAIL, BÁO CÁO & THAM SỐ
+    # ==========================================
+    st.markdown("## 📧 3. Cấu hình Email, Báo cáo Định kỳ & Cảnh báo")
 
     with st.expander("ℹ️ Hướng dẫn lấy Mật khẩu ứng dụng (App Password) cho Gmail"):
         st.markdown("""
@@ -37,8 +152,8 @@ def render_configuration_page():
         """)
 
     with st.form("dynamic_system_config_form"):
-        # 1. Cấu hình Email & SMTP
-        st.markdown("### 1. 📧 Dịch vụ Email & Máy chủ SMTP")
+        # 1. Email & SMTP
+        st.markdown("#### A. Thông số Máy chủ SMTP")
         is_enabled = st.toggle(
             "🔔 Kích hoạt tính năng Dịch vụ Email (Gửi báo cáo & cảnh báo)", 
             value=bool(settings.get("is_enabled", 0))
@@ -68,9 +183,8 @@ def render_configuration_page():
             placeholder="devops@company.com, admin@company.com"
         )
 
-        # 2. Báo cáo Sức khỏe Định kỳ
-        st.markdown("---")
-        st.markdown("### 2. 📊 Báo cáo Sức khỏe Định kỳ Hàng ngày (Daily Health Digest)")
+        # 2. Báo cáo định kỳ
+        st.markdown("#### B. 📊 Báo cáo Sức khỏe Định kỳ Hàng ngày (Daily Health Digest)")
         c6, c7 = st.columns([2, 1])
         enable_daily_report = c6.checkbox(
             "✅ Tự động tổng hợp và gửi Báo cáo Sức khỏe hàng ngày qua Email", 
@@ -83,13 +197,12 @@ def render_configuration_page():
         )
         st.caption("ℹ️ Báo cáo sẽ thống kê chi tiết tỷ lệ Uptime %, độ trễ trung bình, hạn chứng chỉ SSL và các sự cố trong 24 giờ qua.")
 
-        # 3. Cảnh báo Sự cố tức thời
-        st.markdown("---")
-        st.markdown("### 3. 🚨 Quy tắc Cảnh báo Sự cố Tức thời (Incident Alerts)")
+        # 3. Cảnh báo Sự cố
+        st.markdown("#### C. 🚨 Quy tắc Cảnh báo Sự cố Tức thời (Incident Alerts)")
         c8, c9, c10 = st.columns(3)
-        notify_critical = c8.checkbox("🚨 Gửi khi có lỗi CRITICAL (Website Down, SSL Expired, DNS Failed)", value=bool(settings.get("notify_on_critical", 1)))
-        notify_warning = c9.checkbox("⚠️ Gửi khi có cảnh báo WARNING (SSL sắp hết hạn)", value=bool(settings.get("notify_on_warning", 1)))
-        notify_recovery = c10.checkbox("✅ Gửi khi dịch vụ PHỤC HỒI (Recovery)", value=bool(settings.get("notify_on_recovery", 1)))
+        notify_critical = c8.checkbox("🚨 Lỗi CRITICAL (Website Down, SSL Expired, DNS Failed)", value=bool(settings.get("notify_on_critical", 1)))
+        notify_warning = c9.checkbox("⚠️ Cảnh báo WARNING (SSL sắp hết hạn)", value=bool(settings.get("notify_on_warning", 1)))
+        notify_recovery = c10.checkbox("✅ Thông báo PHỤC HỒI (Recovery)", value=bool(settings.get("notify_on_recovery", 1)))
 
         cooldown = st.number_input(
             "Thời gian chờ giữa các lần gửi cảnh báo lặp lại (Cooldown phút):", 
@@ -97,11 +210,10 @@ def render_configuration_page():
             value=int(settings.get("cooldown_minutes", config.DEFAULT_COOLDOWN_MINUTES))
         )
 
-        # 4. Tham số Lập lịch & Lưu trữ
-        st.markdown("---")
-        st.markdown("### 4. ⏱️ Tham số Bộ lập lịch (Scheduler) & Vận hành")
+        # 4. Tham số Vận hành
+        st.markdown("#### D. ⏱️ Tham số Vận hành & Lưu trữ Dữ liệu")
         c11, c12, c13 = st.columns(3)
-        sched_interval = c11.number_input(
+        sched_interval_val = c11.number_input(
             "Chu kỳ quét định kỳ mặc định (giây):", 
             min_value=10, max_value=3600, 
             value=int(settings.get("scheduler_interval_seconds", config.DEFAULT_SCHEDULER_INTERVAL_SECONDS))
@@ -133,18 +245,17 @@ def render_configuration_page():
                 "cooldown_minutes": cooldown,
                 "enable_daily_report": enable_daily_report,
                 "daily_report_time": daily_report_time,
-                "scheduler_interval_seconds": sched_interval,
+                "scheduler_interval_seconds": sched_interval_val,
                 "data_retention_days": retention_days,
                 "ssl_warning_days": ssl_warn_days
             }
             update_system_settings(updated_data)
-            update_scheduler_interval(int(sched_interval))
+            update_scheduler_interval(int(sched_interval_val))
             st.success("✅ Đã cập nhật và lưu cấu hình động thành công vào Database!")
             st.toast("Đã lưu cấu hình thành công!", icon="💾")
 
-    # Thao tác gửi email & test
-    st.markdown("---")
-    st.markdown("### 5. 🚀 Thao tác Kiểm thử Nhanh")
+    # Thao tác gửi email kiểm thử
+    st.markdown("#### 🚀 Thao tác Kiểm thử Nhanh")
     col_act1, col_act2 = st.columns(2)
     if col_act1.button("📊 Gửi Báo Cáo Định Kỳ 24h Ngay Lập Tức", type="primary", use_container_width=True):
         current_cfg = get_system_settings()

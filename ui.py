@@ -11,119 +11,166 @@ from database.repository import (
 )
 
 def render_realtime_tab(selected_site, http_res, dns_res, ssl_res):
-    """Hiển thị kết quả kiểm tra thời gian thực và cho phép lưu Mốc chuẩn."""
+    """Hiển thị kết quả kiểm tra thời gian thực với layout hiện đại, gọn gàng và đầy đủ."""
+    from database.repository import calculate_overall_status
+    overall_status = calculate_overall_status(http_res, dns_res, ssl_res)
+
+    status_badge_map = {
+        "HEALTHY": ("🟢 HOẠT ĐỘNG TỐT (HEALTHY)", "#10b981"),
+        "WARNING": ("🟡 CẢNH BÁO (WARNING)", "#f59e0b"),
+        "CRITICAL": ("🔴 SỰ CỐ NGHIÊM TRỌNG (CRITICAL)", "#ef4444")
+    }
+    badge_label, badge_color = status_badge_map.get(overall_status, ("⚪ KHÔNG XÁC ĐỊNH", "#6b7280"))
+
+    # 1. Header Overview & KPI Bar
     st.subheader(f"📊 Kết quả kiểm tra: {selected_site['name']}")
+    st.markdown(f"**Trạng thái Tổng thể:** `{badge_label}` | **URL:** [{selected_site['url']}]({selected_site['url']}) | **Domain:** `{selected_site['domain']}`")
+
+    # 4 KPI Metrics Card
+    kpi1, kpi2, kpi3, kpi4 = st.columns(4)
+    http_code = http_res.get("status_code", "N/A")
+    http_cat = http_res.get("status_category", "")
+    kpi1.metric(
+        "🌐 HTTP Status", 
+        f"{http_code} {http_cat}".strip(), 
+        f"{http_res.get('response_time_ms', 0)} ms"
+    )
     
-    # 1. HTTP Section (RFC 9110)
-    st.markdown("### 🌐 HTTP Monitoring (RFC 9110)")
-    cols = st.columns(4)
-    status_label = f"{http_res.get('status_code')} ({http_res.get('status_category', 'N/A')})" if http_res.get('status_code') else "N/A"
-    cols[0].metric("Status", status_label)
-    cols[1].metric("Latency", f"{http_res.get('response_time_ms')} ms")
-    cols[2].metric("Method", http_res.get("method"))
-    cols[3].metric("Result", "Match Expected" if http_res.get("is_expected_status") else "Status Mismatch")
+    dns_ok = "Resolved" if dns_res.get("resolved") else "Failed"
+    kpi2.metric(
+        "🗂️ DNS Resolution", 
+        dns_ok, 
+        f"{dns_res.get('resolution_time_ms', 0)} ms"
+    )
     
-    if http_res.get("redirect_chain"):
-        st.info(f"🔄 **Redirect Chain:** " + " ➔ ".join([f"`{hop['url']} ({hop['status_code']})`" for hop in http_res["redirect_chain"]]))
+    ssl_days = ssl_res.get("days_remaining", 0)
+    ssl_status = "Hợp lệ" if ssl_res.get("is_valid") else "Không hợp lệ"
+    kpi3.metric(
+        "🔒 SSL Certificate", 
+        ssl_status, 
+        f"{ssl_days} ngày còn lại"
+    )
     
-    if http_res.get("headers"):
-        with st.expander("🔍 HTTP Headers (Caching & Server)"):
-            st.json(http_res["headers"])
-            
-    if http_res.get("error"):
-        st.error(f"❌ HTTP Error [{http_res.get('error_type')}]: {http_res.get('error')}")
+    match_label = "Khớp Baseline" if not dns_res.get("changes_detected") else "Phát hiện thay đổi"
+    kpi4.metric(
+        "🎯 Đối soát Baseline", 
+        match_label, 
+        "Trùng khớp" if http_res.get("is_expected_status") else "Sai mã HTTP"
+    )
 
     st.markdown("---")
 
-    # 2. DNS Section (RFC 1035)
-    st.markdown("### 🗂️ DNS Monitoring (RFC 1035)")
-    if dns_res.get("resolved"):
-        st.success(f"✅ DNS Resolution: Success ({dns_res.get('resolution_time_ms')} ms)")
+    # 2. Chi tiết 3 tín hiệu phân bổ 3 Cột chuyên biệt
+    col_http, col_dns, col_ssl = st.columns(3)
+
+    # Cột 1: HTTP Monitoring (RFC 9110)
+    with col_http:
+        st.markdown("#### 🌐 HTTP (RFC 9110)")
+        if http_res.get("is_success"):
+            st.success(f"Status Code: **{http_res.get('status_code')}** ({http_res.get('status_category')})")
+        else:
+            st.error(f"HTTP Error: **{http_res.get('status_code') or 'Failed'}**")
         
-        table_data = {
-            "Record Type": ["A (IPv4)", "AAAA (IPv6)", "CNAME", "MX", "TXT"],
-            "Values": [
-                ", ".join(dns_res.get("a", [])) or "None",
-                ", ".join(dns_res.get("aaaa", [])) or "None",
-                str(dns_res.get("cname")) or "None",
-                "; ".join(dns_res.get("mx", [])) or "None",
-                "; ".join(dns_res.get("txt", [])) or "None"
-            ],
-            "TTL (s)": [
-                str(dns_res.get("ttl", {}).get("a", "-")),
-                str(dns_res.get("ttl", {}).get("aaaa", "-")),
-                str(dns_res.get("ttl", {}).get("cname", "-")),
-                str(dns_res.get("ttl", {}).get("mx", "-")),
-                str(dns_res.get("ttl", {}).get("txt", "-"))
-            ]
-        }
-        st.table(table_data)
+        st.markdown(f"- **Method:** `{http_res.get('method')}`")
+        st.markdown(f"- **Thời gian phản hồi:** `{http_res.get('response_time_ms')} ms`")
+        st.markdown(f"- **Mã mong đợi:** `{http_res.get('is_expected_status')}` (`{selected_site.get('expected_status', 200)}`)")
         
+        if http_res.get("redirect_chain"):
+            st.info("🔄 **Redirect Chain:**\n" + "\n".join([f"- `{hop['url']}` ({hop['status_code']})" for hop in http_res["redirect_chain"]]))
+            
+        if http_res.get("error"):
+            st.warning(f"Chi tiết lỗi: `{http_res.get('error')}`")
+            
+        if http_res.get("headers"):
+            with st.expander("🔍 Xem HTTP Headers"):
+                st.json(http_res["headers"])
+
+    # Cột 2: DNS Monitoring (RFC 1035)
+    with col_dns:
+        st.markdown("#### 🗂️ DNS (RFC 1035)")
+        if dns_res.get("resolved"):
+            st.success(f"Resolution: **Thành công** ({dns_res.get('resolution_time_ms')} ms)")
+        else:
+            st.error(f"DNS Resolution: **Thất bại**")
+            
+        dns_summary_rows = []
+        if dns_res.get("a"):
+            dns_summary_rows.append({"Type": "A (IPv4)", "Value": ", ".join(dns_res["a"]), "TTL": str(dns_res.get("ttl", {}).get("a", "-"))})
+        if dns_res.get("aaaa"):
+            dns_summary_rows.append({"Type": "AAAA (IPv6)", "Value": ", ".join(dns_res["aaaa"]), "TTL": str(dns_res.get("ttl", {}).get("aaaa", "-"))})
+        if dns_res.get("cname"):
+            dns_summary_rows.append({"Type": "CNAME", "Value": str(dns_res["cname"]), "TTL": str(dns_res.get("ttl", {}).get("cname", "-"))})
+        if dns_res.get("mx"):
+            dns_summary_rows.append({"Type": "MX", "Value": "; ".join(dns_res["mx"][:2]), "TTL": str(dns_res.get("ttl", {}).get("mx", "-"))})
+        if dns_res.get("txt"):
+            dns_summary_rows.append({"Type": "TXT", "Value": f"{len(dns_res['txt'])} records", "TTL": str(dns_res.get("ttl", {}).get("txt", "-"))})
+
+        if dns_summary_rows:
+            st.dataframe(pd.DataFrame(dns_summary_rows), use_container_width=True, hide_index=True)
+            
         if dns_res.get("is_load_balancing_suspected"):
-            st.info("ℹ️ **Cơ chế Load Balancing / CDN:** Phát hiện nhiều địa chỉ IP hoặc phân phối vòng tròn (Round-Robin).")
+            st.info("ℹ️ **Cơ chế CDN / Load Balancing:** Phân phối nhiều IP.")
             
         if dns_res.get("changes_detected"):
-            with st.expander("⚠️ Chi tiết thay đổi so với DNS Baseline"):
+            with st.expander("⚠️ Chi tiết thay đổi DNS so với Baseline"):
                 st.json(dns_res["changes_detected"])
-    else:
-        st.error(f"❌ DNS Resolution: Failed - {dns_res.get('error')}")
 
-    st.markdown("---")
-
-    # 3. SSL/TLS Section (RFC 5280 & RFC 8446)
-    st.markdown("### 🔒 SSL/TLS Monitoring (RFC 5280 & RFC 8446)")
-    if ssl_res.get("is_valid"):
-        st.success("✅ Certificate Status: Valid & Trusted")
-    else:
-        st.error(f"❌ Certificate Status: Invalid / Issue Detected ({ssl_res.get('error_type') or 'Untrusted'})")
-
-    cols = st.columns(4)
-    cols[0].metric("Days Remaining", ssl_res.get("days_remaining"))
-    cols[1].metric("TLS Version", ssl_res.get("tls_version") or "N/A")
-    cols[2].metric("Hostname Match", "Matched" if ssl_res.get("hostname_matched") else "Mismatch")
-    cols[3].metric("Issuer", ssl_res.get("issuer") or "N/A")
-
-    if ssl_res.get("error"):
-        st.warning(f"⚠️ Chi tiết lỗi SSL: `{ssl_res.get('error')}`")
+    # Cột 3: SSL/TLS Monitoring (RFC 5280 & RFC 8446)
+    with col_ssl:
+        st.markdown("#### 🔒 SSL/TLS (RFC 5280 / 8446)")
+        if ssl_res.get("is_valid"):
+            st.success(f"Certificate: **Hợp lệ & Tin cậy**")
+        else:
+            st.error(f"Certificate: **{ssl_res.get('error_type') or 'Không hợp lệ'}**")
+            
+        st.markdown(f"- **Hạn còn lại:** **{ssl_res.get('days_remaining')} ngày**")
+        st.markdown(f"- **TLS Version:** `{ssl_res.get('tls_version') or 'N/A'}`")
+        st.markdown(f"- **Hostname Match:** `{'Khớp' if ssl_res.get('hostname_matched') else 'Sai lệch'}`")
+        st.markdown(f"- **Tổ chức cấp (Issuer):** `{ssl_res.get('issuer') or 'N/A'}`")
         
-    with st.expander("📜 Chi tiết Chứng chỉ X.509"):
-        st.json({
-            "Hostname": ssl_res.get("hostname"),
-            "Issuer": ssl_res.get("issuer"),
-            "Subject CN": ssl_res.get("subject_common_name"),
-            "SANs": ssl_res.get("subject_alternative_names"),
-            "Valid From": ssl_res.get("not_before"),
-            "Valid To": ssl_res.get("not_after"),
-            "Is Self Signed": ssl_res.get("is_self_signed"),
-            "Is Expired": ssl_res.get("is_expired"),
-            "Is Untrusted CA": ssl_res.get("is_untrusted_ca")
-        })
+        if ssl_res.get("error"):
+            st.warning(f"Lỗi SSL: `{ssl_res.get('error')}`")
+            
+        with st.expander("📜 Chi tiết Chứng chỉ X.509"):
+            st.json({
+                "Hostname": ssl_res.get("hostname"),
+                "Issuer": ssl_res.get("issuer"),
+                "Subject CN": ssl_res.get("subject_common_name"),
+                "SANs": ssl_res.get("subject_alternative_names"),
+                "Valid From": ssl_res.get("not_before"),
+                "Valid To": ssl_res.get("not_after"),
+                "Self-Signed": ssl_res.get("is_self_signed"),
+                "Expired": ssl_res.get("is_expired"),
+                "Untrusted CA": ssl_res.get("is_untrusted_ca")
+            })
 
-    # 4. Action: Lưu làm Mốc chuẩn (Milestone)
+    # 3. Action: Lưu làm Mốc chuẩn (Milestone)
     st.markdown("---")
-    st.markdown("### 📌 Thiết lập Mốc chuẩn (Milestone Baseline)")
-    with st.form("save_milestone_form"):
-        note = st.text_input("Ghi chú mốc chuẩn:", placeholder="Ví dụ: Cấu hình chuẩn trước đợt bảo trì hệ thống...")
-        set_active = st.checkbox("Kích hoạt mốc này làm Baseline mặc định (is_active)", value=True)
-        submitted = st.form_submit_button("💾 Lưu làm Mốc chuẩn mới")
-        if submitted:
-            current_dns_baseline = {
-                "a": dns_res.get("a", []),
-                "aaaa": dns_res.get("aaaa", []),
-                "cname": dns_res.get("cname"),
-                "mx": dns_res.get("mx", []),
-                "txt": dns_res.get("txt", [])
-            }
-            save_milestone_baseline(
-                website_id=selected_site["id"],
-                website_name=selected_site["name"],
-                baseline_dns=current_dns_baseline,
-                expected_http_status=http_res.get("status_code") or selected_site.get("expected_status", 200),
-                note=note or "Mốc chuẩn lưu từ kết quả kiểm tra thời gian thực",
-                set_active=set_active
-            )
-            st.success("✅ Đã lưu mốc chuẩn thành công vào CSDL!")
-            st.rerun()
+    with st.expander("📌 Lưu Kết Quả Này Làm Mốc Chuẩn (Milestone Baseline)"):
+        with st.form("save_milestone_form"):
+            col_m1, col_m2 = st.columns([3, 1])
+            note = col_m1.text_input("Ghi chú mốc chuẩn:", placeholder="Ví dụ: Mốc chuẩn cấu hình trước đợt bảo trì...")
+            set_active = col_m2.checkbox("Kích hoạt làm Baseline mặc định", value=True)
+            submitted = st.form_submit_button("💾 Lưu Mốc Chuẩn Vào CSDL", type="primary")
+            if submitted:
+                current_dns_baseline = {
+                    "a": dns_res.get("a", []),
+                    "aaaa": dns_res.get("aaaa", []),
+                    "cname": dns_res.get("cname"),
+                    "mx": dns_res.get("mx", []),
+                    "txt": dns_res.get("txt", [])
+                }
+                save_milestone_baseline(
+                    website_id=selected_site["id"],
+                    website_name=selected_site["name"],
+                    baseline_dns=current_dns_baseline,
+                    expected_http_status=http_res.get("status_code") or selected_site.get("expected_status", 200),
+                    note=note or "Mốc chuẩn lưu từ kết quả kiểm tra thời gian thực",
+                    set_active=set_active
+                )
+                st.success("✅ Đã lưu mốc chuẩn thành công vào CSDL!")
+                st.toast("Đã lưu mốc chuẩn mới!", icon="📌")
+                st.rerun()
 
 def render_history_tab(selected_site):
     """Hiển thị biểu đồ độ trễ và bảng lịch sử kiểm tra từ CSDL."""
