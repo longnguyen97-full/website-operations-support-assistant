@@ -12,10 +12,18 @@ from database.repository import (
     get_active_baseline,
     save_monitoring_log,
     calculate_overall_status,
-    purge_old_logs
+    purge_old_logs,
+    get_system_settings
 )
 from notifications.email_service import check_and_send_alert
-from config import TZ_VN, DEFAULT_SCHEDULER_INTERVAL_SECONDS, DATA_RETENTION_DAYS
+from config import (
+    TZ_VN,
+    DEFAULT_SCHEDULER_INTERVAL_SECONDS,
+    DATA_RETENTION_DAYS,
+    HTTP_TIMEOUT_SECONDS,
+    DNS_TIMEOUT_SECONDS,
+    SSL_TIMEOUT_SECONDS
+)
 
 JOB_ID = "website_periodic_monitoring_job"
 
@@ -28,8 +36,15 @@ _scheduler_state = {
     "total_runs": 0
 }
 
-def execute_single_website_check(site: dict) -> dict:
+def execute_single_website_check(site: dict, sys_settings: Optional[dict] = None) -> dict:
     """Thực hiện đầy đủ quy trình kiểm tra 3 probes cho 1 website và lưu vào CSDL."""
+    if sys_settings is None:
+        sys_settings = get_system_settings()
+
+    http_timeout = float(sys_settings.get("http_timeout_seconds") or HTTP_TIMEOUT_SECONDS)
+    dns_timeout = float(sys_settings.get("dns_timeout_seconds") or DNS_TIMEOUT_SECONDS)
+    ssl_timeout = float(sys_settings.get("ssl_timeout_seconds") or SSL_TIMEOUT_SECONDS)
+
     active_b = get_active_baseline(site["id"])
     baseline_dns = active_b.get("baseline_dns") if active_b else None
     expected_status = (
@@ -38,10 +53,10 @@ def execute_single_website_check(site: dict) -> dict:
         else site.get("expected_status", 200)
     )
 
-    # 1. Chạy 3 Tools
-    http_res = check_http(site["url"], expected_status=expected_status)
-    dns_res = check_dns(site["domain"], baseline=baseline_dns)
-    ssl_res = check_ssl(site["url"])
+    # 1. Chạy 3 Tools với timeout động
+    http_res = check_http(site["url"], expected_status=expected_status, timeout=http_timeout)
+    dns_res = check_dns(site["domain"], baseline=baseline_dns, timeout=dns_timeout)
+    ssl_res = check_ssl(site["url"], timeout=ssl_timeout)
 
     # 2. Ghi nhật ký vào CSDL
     log_id = save_monitoring_log(
@@ -80,10 +95,11 @@ def run_all_monitors_job():
         _scheduler_state["last_run_summary"] = "Không có website nào trong CSDL để quét."
         return
 
+    sys_settings = get_system_settings()
     results = []
     for site in websites:
         try:
-            res = execute_single_website_check(site)
+            res = execute_single_website_check(site, sys_settings=sys_settings)
             results.append(res)
         except Exception as e:
             results.append({

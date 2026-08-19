@@ -60,9 +60,19 @@ DEFAULT_DAILY_REPORT_TIME = os.getenv("DAILY_REPORT_TIME", "08:00")
 HTTP_TIMEOUT_SECONDS = float(os.getenv("HTTP_TIMEOUT_SECONDS", 10.0))
 DNS_TIMEOUT_SECONDS = float(os.getenv("DNS_TIMEOUT_SECONDS", 5.0))
 SSL_TIMEOUT_SECONDS = float(os.getenv("SSL_TIMEOUT_SECONDS", 10.0))
+PERFORMANCE_TIMEOUT_SECONDS = float(os.getenv("PERFORMANCE_TIMEOUT_SECONDS", 15.0))
+DOM_TIMEOUT_SECONDS = float(os.getenv("DOM_TIMEOUT_SECONDS", 15.0))
+VISUAL_TIMEOUT_SECONDS = float(os.getenv("VISUAL_TIMEOUT_SECONDS", 20.0))
 
 # Ngưỡng cảnh báo chứng chỉ SSL sắp hết hạn (ngày)
 SSL_EXPIRY_WARNING_DAYS = int(os.getenv("SSL_EXPIRY_WARNING_DAYS", 14))
 
-# User-Agent mặc định cho HTTP Probe
+# Ngưỡng cảnh báo hiệu năng SRE (ms)
+PERFORMANCE_WARNING_THRESHOLD_MS = float(os.getenv("PERFORMANCE_WARNING_THRESHOLD_MS", 2000.0))
+PERFORMANCE_CRITICAL_THRESHOLD_MS = float(os.getenv("PERFORMANCE_CRITICAL_THRESHOLD_MS", 5000.0))
+
+# Ngưỡng phát hiện biến dạng giao diện (%)
+VISUAL_DIFF_THRESHOLD_PERCENT = float(os.getenv("VISUAL_DIFF_THRESHOLD_PERCENT", 3.0))
+
+# User-Agent mặc định cho HTTP & Browser Probes
 DEFAULT_USER_AGENT = os.getenv("USER_AGENT", "WebsiteOperationsSupportAssistant/1.0")

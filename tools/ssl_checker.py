@@ -92,11 +92,34 @@ def check_ssl(url_or_host: str, timeout: float = SSL_TIMEOUT_SECONDS) -> dict:
         if subject_dict and issuer_dict and subject_dict == issuer_dict:
             result["is_self_signed"] = True
 
-    # 1. Thử xác thực chuẩn với Root CAs hệ thống
+    # 1. Bước 1: Thiết lập kết nối TCP Socket (Transport Layer L4)
+    try:
+        sock = socket.create_connection((hostname, port), timeout=timeout)
+    except Exception as e:
+        err_msg = str(e)
+        result["can_connect"] = False
+        result["is_valid"] = False
+        result["status"] = "UNREACHABLE"
+        result["error"] = err_msg
+        result["error_detail"] = err_msg
+        result["error_type"] = type(e).__name__
+
+        if "10061" in err_msg or "actively refused" in err_msg.lower() or "connection refused" in err_msg.lower():
+            result["error_title"] = "Connection Refused (TCP Layer)"
+        elif "11001" in err_msg or "getaddrinfo" in err_msg.lower() or "gaierror" in type(e).__name__.lower():
+            result["error_title"] = "Host Not Found (DNS Failure)"
+        elif "timeout" in err_msg.lower() or isinstance(e, TimeoutError):
+            result["error_title"] = f"SSL Connection Timeout (>{timeout}s)"
+        else:
+            result["error_title"] = f"TCP Connection Failed ({type(e).__name__})"
+        return result
+
+    # 2. Bước 2: Bắt tay mã hóa SSL/TLS (Presentation/Security Layer L6/L7)
     context = ssl.create_default_context()
+    result["can_connect"] = True
 
     try:
-        with socket.create_connection((hostname, port), timeout=timeout) as sock:
+        with sock:
             with context.wrap_socket(sock, server_hostname=hostname) as ssock:
                 cert = ssock.getpeercert()
                 populate_cert_info(cert, ssock.version())
@@ -104,29 +127,38 @@ def check_ssl(url_or_host: str, timeout: float = SSL_TIMEOUT_SECONDS) -> dict:
                 # Hợp lệ khi không hết hạn và hostname khớp
                 if not result["is_expired"] and result["hostname_matched"]:
                     result["is_valid"] = True
+                    result["status"] = "VALID"
                 else:
                     result["is_valid"] = False
+                    result["status"] = "INVALID"
 
     except ssl.SSLCertVerificationError as e:
         err_msg = str(e)
         result["error"] = err_msg
+        result["error_detail"] = err_msg
         result["is_valid"] = False
+        result["status"] = "INVALID"
         
         # Phân loại lỗi chứng chỉ theo RFC 5280
         if "self-signed" in err_msg.lower() or "self signed" in err_msg.lower():
             result["is_self_signed"] = True
             result["error_type"] = "SelfSignedCertificate"
+            result["error_title"] = "Self-Signed Certificate"
         elif "expired" in err_msg.lower() or "has expired" in err_msg.lower():
             result["is_expired"] = True
             result["error_type"] = "CertificateExpired"
+            result["error_title"] = "Certificate Expired"
         elif "hostname mismatch" in err_msg.lower() or "not valid for" in err_msg.lower():
             result["hostname_matched"] = False
             result["error_type"] = "HostnameMismatch"
+            result["error_title"] = "Hostname Mismatch"
         elif "unable to get local issuer certificate" in err_msg.lower() or "authority invalid" in err_msg.lower():
             result["is_untrusted_ca"] = True
             result["error_type"] = "UntrustedCAOrBrokenChain"
+            result["error_title"] = "Untrusted CA / Incomplete Certificate Chain"
         else:
             result["error_type"] = "SSLCertVerificationError"
+            result["error_title"] = "Certificate Verification Failed"
 
         # Fallback lấy metadata chứng chỉ ở chế độ unverified để phục vụ phân tích
         try:
@@ -139,13 +171,25 @@ def check_ssl(url_or_host: str, timeout: float = SSL_TIMEOUT_SECONDS) -> dict:
             pass
 
     except ssl.SSLError as e:
-        result["error"] = str(e)
+        err_msg = str(e)
+        result["error"] = err_msg
+        result["error_detail"] = err_msg
         result["error_type"] = "SSLError"
         result["is_valid"] = False
+        result["status"] = "HANDSHAKE_ERROR"
+        if "WRONG_VERSION_NUMBER" in err_msg:
+            result["error_title"] = "SSL Protocol / Port Mismatch (Non-HTTPS port)"
+            result["error_detail"] = f"Server does not support SSL/TLS on this port (likely HTTP): {err_msg}"
+        else:
+            result["error_title"] = "SSL/TLS Protocol Error"
 
     except Exception as e:
-        result["error"] = str(e)
+        err_msg = str(e)
+        result["error"] = err_msg
+        result["error_detail"] = err_msg
         result["error_type"] = type(e).__name__
         result["is_valid"] = False
+        result["status"] = "ERROR"
+        result["error_title"] = type(e).__name__
 
     return result

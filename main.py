@@ -9,7 +9,8 @@ from database import (
     get_active_baseline,
     save_monitoring_log,
     calculate_overall_status,
-    add_or_update_website
+    add_or_update_website,
+    get_system_settings
 )
 from notifications import check_and_send_alert
 from scheduler import (
@@ -21,7 +22,7 @@ from scheduler import (
 )
 from scheduler.monitor_scheduler import resume_background_scheduler
 
-from config import DEFAULT_SCHEDULER_INTERVAL_SECONDS
+from config import DEFAULT_SCHEDULER_INTERVAL_SECONDS, HTTP_TIMEOUT_SECONDS, DNS_TIMEOUT_SECONDS, SSL_TIMEOUT_SECONDS
 
 # --- Cấu hình trang ---
 st.set_page_config(layout="wide", page_title="Agentic AI Monitoring Dashboard", page_icon="🛡️")
@@ -90,11 +91,17 @@ def main():
             else selected_site.get("expected_status", 200)
         )
 
+        # Lấy cấu hình timeout động từ hệ thống
+        sys_settings = get_system_settings()
+        http_timeout = float(sys_settings.get("http_timeout_seconds") or HTTP_TIMEOUT_SECONDS)
+        dns_timeout = float(sys_settings.get("dns_timeout_seconds") or DNS_TIMEOUT_SECONDS)
+        ssl_timeout = float(sys_settings.get("ssl_timeout_seconds") or SSL_TIMEOUT_SECONDS)
+
         with st.spinner(f"Đang chạy các công cụ giám sát cho '{selected_site['name']}'..."):
-            # 1. Gọi các Tools
-            http_res = check_http(selected_site["url"], expected_status=expected_status)
-            dns_res = check_dns(selected_site["domain"], baseline=baseline_dns)
-            ssl_res = check_ssl(selected_site["url"])
+            # 1. Gọi các Tools với timeout động
+            http_res = check_http(selected_site["url"], expected_status=expected_status, timeout=http_timeout)
+            dns_res = check_dns(selected_site["domain"], baseline=baseline_dns, timeout=dns_timeout)
+            ssl_res = check_ssl(selected_site["url"], timeout=ssl_timeout)
             
             # 2. Lưu kết quả vào CSDL SQLite (monitoring_logs)
             save_monitoring_log(

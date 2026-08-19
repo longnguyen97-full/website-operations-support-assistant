@@ -95,6 +95,28 @@ def check_dns(domain: str, baseline: Optional[dict] = None, timeout: float = DNS
     else:
         result["records_status"]["txt"] = txt_err
 
+    # Fallback cho localhost / tên miền nội bộ qua OS Resolver (file hosts / loopback)
+    # dnspython mặc định query ra ngoài công cộng sẽ bị NXDOMAIN với localhost
+    if not result["resolved"] or clean_domain.lower() in ["localhost", "127.0.0.1", "::1"] or clean_domain.lower().endswith(".local") or clean_domain.lower().endswith(".localhost"):
+        try:
+            import socket
+            addr_info = socket.getaddrinfo(clean_domain, None)
+            ipv4_list = sorted(list(set([item[4][0] for item in addr_info if item[0] == socket.AF_INET])))
+            ipv6_list = sorted(list(set([item[4][0] for item in addr_info if item[0] == socket.AF_INET6])))
+            
+            if ipv4_list:
+                result["a"] = ipv4_list
+                result["ttl"]["a"] = "OS Hosts/Cache"
+                result["records_status"]["a"] = "OK (OS Resolver)"
+                result["resolved"] = True
+            if ipv6_list:
+                result["aaaa"] = ipv6_list
+                result["ttl"]["aaaa"] = "OS Hosts/Cache"
+                result["records_status"]["aaaa"] = "OK (OS Resolver)"
+                result["resolved"] = True
+        except Exception:
+            pass
+
     # Tính tổng thời gian phân giải
     end_time = time.time()
     result["resolution_time_ms"] = round((end_time - start_time) * 1000, 2)
@@ -103,11 +125,19 @@ def check_dns(domain: str, baseline: Optional[dict] = None, timeout: float = DNS
     if not result["resolved"]:
         all_errs = list(result["records_status"].values())
         if "NXDOMAIN" in all_errs:
-            result["error"] = f"Domain '{clean_domain}' does not exist (NXDOMAIN)."
+            result["error_title"] = "Domain Not Found (NXDOMAIN)"
+            result["error_detail"] = f"Domain '{clean_domain}' does not exist in DNS (NXDOMAIN / [Errno 11001] getaddrinfo failed)."
         elif "TIMEOUT" in all_errs:
-            result["error"] = f"DNS query timed out for domain '{clean_domain}'."
+            result["error_title"] = "DNS Query Timeout"
+            result["error_detail"] = f"DNS query timed out after {timeout}s for domain '{clean_domain}'."
         else:
-            result["error"] = f"Failed to resolve DNS records for '{clean_domain}'."
+            result["error_title"] = "DNS Resolution Failed"
+            result["error_detail"] = f"Failed to resolve DNS records for domain '{clean_domain}'."
+        result["error"] = result["error_detail"]
+    else:
+        result["error"] = None
+        result["error_title"] = None
+        result["error_detail"] = None
 
     # 6. So sánh với baseline & Phân biệt Load Balancing vs Thay đổi ngoài dự kiến
     if baseline:

@@ -76,16 +76,39 @@ def check_http(url: str, method: str = "GET", expected_status: int = 200, timeou
             result["headers"] = {k: response.headers.get(k) for k in relevant_headers if k in response.headers}
 
     except httpx.TimeoutException as e:
-        result["error"] = f"Request timed out after {timeout}s: {str(e)}"
+        err_detail = str(e) or f"Request timed out after waiting {timeout} seconds."
+        result["error_title"] = "Connection Timeout"
+        result["error_detail"] = f"[Timeout] Request timed out after {timeout}s: {err_detail}"
+        result["error"] = result["error_detail"]
         result["error_type"] = "Timeout"
     except httpx.ConnectError as e:
-        result["error"] = f"Connection failed (DNS or Network): {str(e)}"
+        err_detail = str(e)
+        if "10061" in err_detail or "actively refused" in err_detail.lower() or "connection refused" in err_detail.lower() or "econnrefused" in err_detail.lower():
+            result["error_title"] = "Connection Refused"
+        elif "11001" in err_detail or "getaddrinfo failed" in err_detail.lower() or "nameresolutionerror" in err_detail.lower():
+            result["error_title"] = "Host Not Found (DNS Failure)"
+        else:
+            result["error_title"] = "Connection Failed"
+        result["error_detail"] = err_detail
+        result["error"] = err_detail
         result["error_type"] = "ConnectionError"
+    except httpx.TooManyRedirects as e:
+        err_detail = str(e) or "Too many redirects encountered."
+        result["error_title"] = "Redirect Loop (Too Many Redirects)"
+        result["error_detail"] = f"[TooManyRedirects] {err_detail}"
+        result["error"] = result["error_detail"]
+        result["error_type"] = "TooManyRedirects"
     except httpx.RequestError as e:
-        result["error"] = str(e)
+        err_detail = str(e)
+        result["error_title"] = type(e).__name__
+        result["error_detail"] = err_detail
+        result["error"] = err_detail
         result["error_type"] = type(e).__name__
     except Exception as e:
-        result["error"] = str(e)
+        err_detail = str(e)
+        result["error_title"] = "Unknown Error"
+        result["error_detail"] = err_detail
+        result["error"] = err_detail
         result["error_type"] = "UnknownError"
         
     return result

@@ -171,10 +171,13 @@ def build_incident_alert_html(
     elif dns_res.get("changes_detected") and not dns_res.get("is_load_balancing_suspected"):
         issues.append("<b>DNS Drift:</b> Phát hiện thay đổi bản ghi IP ngoài dự kiến so với Baseline.")
 
-    if not ssl_res.get("is_valid"):
-        issues.append(f"<b>SSL/TLS Invalid:</b> {ssl_res.get('error') or 'Chứng chỉ không hợp lệ / Hết hạn'}")
+    if ssl_res.get("can_connect") is False:
+        # Khi kết nối TCP bị lỗi/ngắt, không gán nhầm là lỗi chứng chỉ SSL
+        pass
+    elif not ssl_res.get("is_valid"):
+        issues.append(f"<b>SSL/TLS Invalid:</b> {ssl_res.get('error_title') or ssl_res.get('error') or 'Chứng chỉ không hợp lệ / Hết hạn'}")
     elif ssl_res.get("days_remaining", 0) <= SSL_EXPIRY_WARNING_DAYS:
-        issues.append(f"<b>SSL Expiring Soon:</b> Chứng chỉ số chỉ còn lại <b>{ssl_res.get('days_remaining')} ngày</b> hiệu lực (ngưỡng cảnh báo: $\\le$ {SSL_EXPIRY_WARNING_DAYS} ngày).")
+        issues.append(f"<b>SSL Expiring Soon:</b> Chứng chỉ số chỉ còn lại <b>{ssl_res.get('days_remaining')} ngày</b> hiệu lực (ngưỡng cảnh báo: &le; {SSL_EXPIRY_WARNING_DAYS} ngày).")
 
     issues_html = "".join([f"<li style='margin-bottom: 6px;'>{issue}</li>" for issue in issues]) if issues else "<li>Không ghi nhận bất thường.</li>"
 

@@ -28,11 +28,16 @@ def render_realtime_tab(selected_site, http_res, dns_res, ssl_res):
 
     # 4 KPI Metrics Card
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
-    http_code = http_res.get("status_code", "N/A")
+    http_code = http_res.get("status_code")
     http_cat = http_res.get("status_category", "")
+    if http_code is not None:
+        http_display = f"{http_code} {http_cat}".strip()
+    else:
+        http_display = http_res.get("error_title") or "Connection Failed"
+
     kpi1.metric(
         "🌐 HTTP Status", 
-        f"{http_code} {http_cat}".strip(), 
+        http_display, 
         f"{http_res.get('response_time_ms', 0)} ms"
     )
     
@@ -43,20 +48,100 @@ def render_realtime_tab(selected_site, http_res, dns_res, ssl_res):
         f"{dns_res.get('resolution_time_ms', 0)} ms"
     )
     
+    # KPI 3: SSL Certificate
     ssl_days = ssl_res.get("days_remaining", 0)
-    ssl_status = "Hợp lệ" if ssl_res.get("is_valid") else "Không hợp lệ"
+    if ssl_res.get("can_connect") is False:
+        ssl_status = "Không thể kiểm tra"
+        ssl_delta = ssl_res.get("error_title") or "Lỗi kết nối TCP"
+    elif ssl_res.get("is_valid"):
+        ssl_status = "Hợp lệ"
+        ssl_delta = f"{ssl_days} ngày còn lại"
+    else:
+        ssl_status = "Không hợp lệ"
+        ssl_delta = ssl_res.get("error_title") or "Chứng chỉ không hợp lệ"
+
     kpi3.metric(
         "🔒 SSL Certificate", 
         ssl_status, 
-        f"{ssl_days} ngày còn lại"
+        ssl_delta
     )
     
-    match_label = "Khớp Baseline" if not dns_res.get("changes_detected") else "Phát hiện thay đổi"
+    # KPI 4: Đối soát Baseline (Tổng hợp cả HTTP Status và DNS Records)
+    dns_match = not bool(dns_res.get("changes_detected"))
+    http_match = bool(http_res.get("is_expected_status"))
+    
+    if dns_match and http_match:
+        match_label = "Khớp Baseline"
+        match_delta = "Trùng khớp hoàn toàn"
+    elif not http_match and not dns_match:
+        match_label = "Lệch Baseline"
+        match_delta = "Sai mã HTTP & Lệch DNS"
+    elif not http_match:
+        match_label = "Lệch Baseline"
+        match_delta = f"Sai mã HTTP ({http_res.get('status_code') or http_res.get('error_title', 'Lỗi')})"
+    else:
+        match_label = "Lệch Baseline"
+        match_delta = "Phát hiện thay đổi DNS"
+
     kpi4.metric(
         "🎯 Đối soát Baseline", 
         match_label, 
-        "Trùng khớp" if http_res.get("is_expected_status") else "Sai mã HTTP"
+        match_delta
     )
+
+    st.markdown("---")
+
+    # 1.5. Khối Phân tích Bất thường & Tương quan Sự cố (Anomaly Detection & Root Cause Analysis)
+    from database.repository import get_system_settings, get_website_latency_history
+    from analytics.anomaly_detector import AnomalyDetectionOrchestrator
+
+    sys_settings = get_system_settings()
+    current_mode = sys_settings.get("monitoring_mode", "MULTI_SIGNAL_RULE_STATISTICAL")
+    latency_thresh = float(sys_settings.get("latency_threshold_ms", 2000.0))
+    lat_history = get_website_latency_history(selected_site["id"], limit=50)
+
+    orchestrator = AnomalyDetectionOrchestrator()
+    if current_mode == "THRESHOLD_BASED":
+        analysis = orchestrator.run_threshold_based_monitoring(
+            http_res=http_res,
+            latency_threshold_ms=latency_thresh,
+            expected_status=selected_site.get("expected_status", 200)
+        )
+        mode_tag = "⚠️ CHẾ ĐỘ: CẢNH BÁO DỰA TRÊN NGƯỠNG TRUYỀN THỐNG (THRESHOLD-BASED)"
+        mode_box_color = "#fef3c7"
+    else:
+        analysis = orchestrator.run_multi_signal_rule_statistical(
+            http_res=http_res,
+            dns_res=dns_res,
+            ssl_res=ssl_res,
+            history_latencies=lat_history
+        )
+        mode_tag = "🛡️ CHẾ ĐỘ: GIÁM SÁT ĐA TÍN HIỆU + LUẬT + THỐNG KÊ (MULTI-SIGNAL RULE & STATISTICAL - KHÔNG AI)"
+        mode_box_color = "#eff6ff"
+
+    with st.container():
+        st.markdown(f"""
+        <div style="background: {mode_box_color}; padding: 12px 16px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 15px;">
+            <div style="font-size: 13px; font-weight: bold; color: #1e293b; text-transform: uppercase;">
+                {mode_tag}
+            </div>
+            <div style="font-size: 14px; margin-top: 4px; color: #334155;">
+                <b>Đánh giá:</b> {analysis.get('root_cause_summary') or analysis.get('summary', 'Hệ thống bình thường.')}
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        if current_mode == "MULTI_SIGNAL_RULE_STATISTICAL":
+            c_an1, c_an2, c_an3 = st.columns(3)
+            c_an1.metric("Điểm Bất Thường (0-100)", f"{analysis.get('anomaly_score', 0)} / 100")
+            c_an2.metric("Sự cố Nhận diện", analysis.get("incident_type", "NONE"))
+            c_an3.metric("Cảnh báo Trùng Triệt tiêu", f"{analysis.get('suppressed_alerts_count', 0)} cảnh báo")
+
+            z_info = analysis.get("z_score_analysis", {})
+            if z_info.get("is_anomaly"):
+                st.warning(f"📈 **Phát hiện Đột biến Độ trễ Z-Score (+{z_info.get('z_score')}):** {z_info.get('reason')}")
+            elif z_info.get("sample_count", 0) >= z_info.get("min_samples_required", 5):
+                st.caption(f"📊 **Thống kê Z-Score:** Z = `{z_info.get('z_score')}` (Mean: `{z_info.get('mean_ms')}ms`, Std: `{z_info.get('std_ms')}ms` qua {z_info.get('sample_count')} lần quét)")
 
     st.markdown("---")
 
@@ -78,8 +163,10 @@ def render_realtime_tab(selected_site, http_res, dns_res, ssl_res):
         if http_res.get("redirect_chain"):
             st.info("🔄 **Redirect Chain:**\n" + "\n".join([f"- `{hop['url']}` ({hop['status_code']})" for hop in http_res["redirect_chain"]]))
             
-        if http_res.get("error"):
-            st.warning(f"Chi tiết lỗi: `{http_res.get('error')}`")
+        if http_res.get("error") or http_res.get("error_title"):
+            err_title = http_res.get("error_title") or "Lỗi kết nối HTTP"
+            err_detail = http_res.get("error_detail") or http_res.get("error")
+            st.warning(f"**Tiêu đề lỗi:** `{err_title}`\n\n**Chi tiết (Tooltip/Log):** `{err_detail}`")
             
         if http_res.get("headers"):
             with st.expander("🔍 Xem HTTP Headers"):
@@ -115,34 +202,46 @@ def render_realtime_tab(selected_site, http_res, dns_res, ssl_res):
             with st.expander("⚠️ Chi tiết thay đổi DNS so với Baseline"):
                 st.json(dns_res["changes_detected"])
 
+        if dns_res.get("error") or dns_res.get("error_title"):
+            err_title = dns_res.get("error_title") or "Lỗi phân giải DNS"
+            err_detail = dns_res.get("error_detail") or dns_res.get("error")
+            st.warning(f"**Tiêu đề lỗi:** `{err_title}`\n\n**Chi tiết (Tooltip/Log):** `{err_detail}`")
+
     # Cột 3: SSL/TLS Monitoring (RFC 5280 & RFC 8446)
     with col_ssl:
         st.markdown("#### 🔒 SSL/TLS (RFC 5280 / 8446)")
-        if ssl_res.get("is_valid"):
-            st.success(f"Certificate: **Hợp lệ & Tin cậy**")
+        if ssl_res.get("can_connect") is False:
+            st.warning("SSL Status: **Không thể kiểm tra SSL** (Chưa thiết lập được phiên TCP)")
+            st.info("ℹ️ *Do máy chủ không phản hồi kết nối TCP socket (Server Down hoặc Port đóng), tầng SSL/TLS chưa thể thực hiện bắt tay (handshake) để kiểm tra chứng chỉ X.509.*")
+        elif ssl_res.get("is_valid"):
+            st.success("Certificate: **Hợp lệ & Tin cậy**")
         else:
-            st.error(f"Certificate: **{ssl_res.get('error_type') or 'Không hợp lệ'}**")
+            st.error(f"Certificate: **{ssl_res.get('error_title') or ssl_res.get('error_type') or 'Không hợp lệ'}**")
             
-        st.markdown(f"- **Hạn còn lại:** **{ssl_res.get('days_remaining')} ngày**")
-        st.markdown(f"- **TLS Version:** `{ssl_res.get('tls_version') or 'N/A'}`")
-        st.markdown(f"- **Hostname Match:** `{'Khớp' if ssl_res.get('hostname_matched') else 'Sai lệch'}`")
-        st.markdown(f"- **Tổ chức cấp (Issuer):** `{ssl_res.get('issuer') or 'N/A'}`")
+        if ssl_res.get("can_connect") is not False:
+            st.markdown(f"- **Hạn còn lại:** **{ssl_res.get('days_remaining')} ngày**")
+            st.markdown(f"- **TLS Version:** `{ssl_res.get('tls_version') or 'N/A'}`")
+            st.markdown(f"- **Hostname Match:** `{'Khớp' if ssl_res.get('hostname_matched') else 'Sai lệch'}`")
+            st.markdown(f"- **Tổ chức cấp (Issuer):** `{ssl_res.get('issuer') or 'N/A'}`")
         
-        if ssl_res.get("error"):
-            st.warning(f"Lỗi SSL: `{ssl_res.get('error')}`")
+        if ssl_res.get("error") or ssl_res.get("error_title"):
+            err_title = ssl_res.get("error_title") or ssl_res.get("error_type") or "Lỗi SSL"
+            err_detail = ssl_res.get("error_detail") or ssl_res.get("error")
+            st.warning(f"**Tiêu đề lỗi:** `{err_title}`\n\n**Chi tiết (Tooltip/Log):** `{err_detail}`")
             
-        with st.expander("📜 Chi tiết Chứng chỉ X.509"):
-            st.json({
-                "Hostname": ssl_res.get("hostname"),
-                "Issuer": ssl_res.get("issuer"),
-                "Subject CN": ssl_res.get("subject_common_name"),
-                "SANs": ssl_res.get("subject_alternative_names"),
-                "Valid From": ssl_res.get("not_before"),
-                "Valid To": ssl_res.get("not_after"),
-                "Self-Signed": ssl_res.get("is_self_signed"),
-                "Expired": ssl_res.get("is_expired"),
-                "Untrusted CA": ssl_res.get("is_untrusted_ca")
-            })
+        if ssl_res.get("can_connect") is not False:
+            with st.expander("📜 Chi tiết Chứng chỉ X.509"):
+                st.json({
+                    "Hostname": ssl_res.get("hostname"),
+                    "Issuer": ssl_res.get("issuer"),
+                    "Subject CN": ssl_res.get("subject_common_name"),
+                    "SANs": ssl_res.get("subject_alternative_names"),
+                    "Valid From": ssl_res.get("not_before"),
+                    "Valid To": ssl_res.get("not_after"),
+                    "Self-Signed": ssl_res.get("is_self_signed"),
+                    "Expired": ssl_res.get("is_expired"),
+                    "Untrusted CA": ssl_res.get("is_untrusted_ca")
+                })
 
     # 3. Action: Lưu làm Mốc chuẩn (Milestone)
     st.markdown("---")
@@ -360,10 +459,110 @@ def render_email_settings_tab():
             else:
                 st.error("❌ " + msg)
 
+def render_benchmark_tab(selected_site, http_res=None, dns_res=None, ssl_res=None):
+    """Giao diện Đánh giá Đối chứng Song song 2 Cấu hình Giám sát (Evaluation Benchmark)."""
+    st.subheader(f"⚖️ Đánh giá Đối chứng Song song 2 Cấu hình: {selected_site['name']}")
+    st.markdown("""
+    Trang này cho phép **đối chứng trực tiếp** hiệu quả phát hiện sự cố, chất lượng cảnh báo và mức độ khử nhiễu giữa:
+    - **Cấu hình 1 (Truyền thống)**: Cảnh báo đơn tín hiệu dựa trên ngưỡng cứng (Threshold-Based).
+    - **Cấu hình 2 (Nghiên cứu)**: Giám sát đa tín hiệu kết hợp Bộ luật & Thống kê Z-Score (Không sử dụng AI).
+    """)
+
+    if not (http_res and dns_res and ssl_res):
+        st.info("👉 Hãy thực hiện kiểm tra website ở thanh bên trái để xem kết quả đối chứng 2 cấu hình.")
+        return
+
+    from database.repository import get_system_settings, get_website_latency_history
+    from analytics.anomaly_detector import AnomalyDetectionOrchestrator
+
+    sys_settings = get_system_settings()
+    latency_thresh = float(sys_settings.get("latency_threshold_ms", 2000.0))
+    lat_history = get_website_latency_history(selected_site["id"], limit=50)
+
+    orchestrator = AnomalyDetectionOrchestrator()
+    comparison = orchestrator.compare_both_configurations(
+        http_res=http_res,
+        dns_res=dns_res,
+        ssl_res=ssl_res,
+        history_latencies=lat_history,
+        latency_threshold_ms=latency_thresh,
+        expected_status=selected_site.get("expected_status", 200)
+    )
+
+    cfg1 = comparison["config_1_threshold_based"]
+    cfg2 = comparison["config_2_multi_signal"]
+    metrics = comparison["evaluation_metrics"]
+
+    # 1. Thẻ KPI Đánh giá Hiệu năng Khử Nhiễu (Evaluation Metrics)
+    st.markdown("### 📊 1. Chỉ số Đánh giá Hiệu quả Đối chứng")
+    c_m1, c_m2, c_m3, c_m4 = st.columns(4)
+    c_m1.metric("Tỷ lệ Giảm Cảnh báo Rác", f"{metrics['noise_reduction_rate_pct']}%", help="Tỷ lệ cảnh báo trùng lặp bị triệt tiêu nhờ cơ chế tương quan")
+    c_m2.metric("Cảnh báo Trùng Đã Triệt tiêu", f"{metrics['suppressed_alerts_count']} cảnh báo")
+    c_m3.metric("Điểm Z-Score Độ trễ", f"Z = {metrics['z_score_value']}")
+    c_m4.metric("Sự cố Gốc Nhận diện", metrics['cfg2_incident_type'] or "HEALTHY")
+
+    st.markdown("---")
+
+    # 2. So sánh Trực quan Song song 2 Cột (Side-by-Side Comparison)
+    st.markdown("### 🔬 2. Bảng So sánh Trực quan Kết quả Phân tích")
+    col_cfg1, col_cfg2 = st.columns(2)
+
+    with col_cfg1:
+        st.markdown("""
+        <div style="background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px solid #fde68a; min-height: 380px;">
+            <h4 style="margin-top:0; color: #b45309;">⚠️ CẤU HÌNH 1: Ngưỡng Truyền thống</h4>
+            <p style="font-size: 13px; color: #78350f;"><i>Cơ chế: Kiểm tra đơn tín hiệu HTTP Status != 200 hoặc Latency > Ngưỡng tĩnh.</i></p>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"- **Trạng thái:** `{cfg1['overall_status']}`")
+        st.markdown(f"- **Số lượng Cảnh báo Phát sinh:** **`{cfg1['violations_count']}`** cảnh báo rời rạc")
+        st.markdown(f"- **Tính tương quan sự cố:** ❌ **Không có** (Không liên kết được DNS, SSL, Server)")
+        st.markdown(f"- **Phát hiện đột biến thống kê:** ❌ **Không có** (Chỉ so sánh ngưỡng tĩnh {latency_thresh}ms)")
+        
+        if cfg1["violations"]:
+            st.markdown("##### 🚨 Danh sách Cảnh báo Rời rạc:")
+            for v in cfg1["violations"]:
+                st.markdown(f"- `[{v['type']}]` {v['message']}")
+        else:
+            st.success("Không vi phạm ngưỡng tĩnh nào.")
+            
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with col_cfg2:
+        st.markdown("""
+        <div style="background: #eff6ff; padding: 15px; border-radius: 8px; border: 1px solid #bfdbfe; min-height: 380px;">
+            <h4 style="margin-top:0; color: #1d4ed8;">🛡️ CẤU HÌNH 2: Đa tín hiệu + Luật + Z-Score</h4>
+            <p style="font-size: 13px; color: #1e40af;"><i>Cơ chế: Tương quan đồng thời 6 tín hiệu + Kiểm định Z-Score chuỗi thời gian (Không AI).</i></p>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"- **Trạng thái:** `{cfg2['overall_status']}` (Điểm Anomaly: **`{cfg2['anomaly_score']}/100`**)")
+        st.markdown(f"- **Sự cố Gom nhóm (Root Cause):** **`{cfg2['incident_type']}`**")
+        st.markdown(f"- **Tín hiệu tương quan:** `{', '.join(cfg2.get('correlated_signals', [])) or 'N/A'}`")
+        st.markdown(f"- **Cảnh báo trùng lặp đã triệt tiêu:** **`{cfg2.get('suppressed_alerts_count', 0)}`** cảnh báo rác")
+        st.markdown(f"- **Phân tích Z-Score:** Z = `+{cfg2.get('z_score_analysis', {}).get('z_score')}` ({'Phát hiện Spike' if cfg2.get('z_score_analysis', {}).get('is_anomaly') else 'Ổn định'})")
+
+        st.info(f"💡 **Tóm tắt Nguyên nhân Gốc:**\n\n{cfg2.get('root_cause_summary')}")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+
+    # 3. Bảng Tổng kết Tiêu chí Đồ án
+    st.markdown("### 📋 3. Bảng Tổng kết Đánh giá Đối chứng Theo Tiêu chí Đồ án")
+    benchmark_table = [
+        {"Tiêu chí Đánh giá": "Phạm vi Tín hiệu", "Cấu hình 1 (Truyền thống)": "Đơn tín hiệu (HTTP/Latency)", "Cấu hình 2 (Đa tín hiệu + Z-Score)": "Đa tín hiệu (HTTP, DNS, SSL, SRE, DOM, Visual)"},
+        {"Tiêu chí Đánh giá": "Phương pháp Phân tích", "Cấu hình 1 (Truyền thống)": "Ngưỡng cứng tĩnh (Static Threshold)", "Cấu hình 2 (Đa tín hiệu + Z-Score)": "Bộ luật RFC + Z-Score Chuỗi thời gian"},
+        {"Tiêu chí Đánh giá": "Khử nhiễu Cảnh báo Trùng", "Cấu hình 1 (Truyền thống)": "❌ Không có (Phát sinh nhiều cảnh báo rác)", "Cấu hình 2 (Đa tín hiệu + Z-Score)": f"✅ Có (Giảm {metrics['noise_reduction_rate_pct']}% cảnh báo trùng)"},
+        {"Tiêu chí Đánh giá": "Xác định Nguyên nhân Gốc", "Cấu hình 1 (Truyền thống)": "❌ Không (Kỹ sư phải tự tra cứu log)", "Cấu hình 2 (Đa tín hiệu + Z-Score)": "✅ Có (Suy luận nguyên nhân theo mô hình tương quan)"},
+        {"Tiêu chí Đánh giá": "Điểm Bất Thường (Score)", "Cấu hình 1 (Truyền thống)": "❌ Không hỗ trợ", "Cấu hình 2 (Đa tín hiệu + Z-Score)": f"✅ Anomaly Score: {cfg2['anomaly_score']}/100"}
+    ]
+    st.dataframe(pd.DataFrame(benchmark_table), use_container_width=True, hide_index=True)
+
+
 def render_dashboard(selected_site, http_res=None, dns_res=None, ssl_res=None):
-    """Giao diện Dashboard Giám sát phân chia theo 3 Tabs chuyên biệt."""
-    tab1, tab2, tab3 = st.tabs([
+    """Giao diện Dashboard Giám sát phân chia theo 4 Tabs chuyên biệt."""
+    tab1, tab2, tab3, tab4 = st.tabs([
         "📊 Giám sát Thời gian thực", 
+        "⚖️ So sánh Đối chứng 2 Cấu hình",
         "📈 Lịch sử & Xu hướng", 
         "🏷️ Quản lý Mốc chuẩn"
     ])
@@ -379,9 +578,13 @@ def render_dashboard(selected_site, http_res=None, dns_res=None, ssl_res=None):
                 st.markdown(f"**Mốc chuẩn đang áp dụng:** `{active_b.get('note')}` (Lưu lúc: {active_b.get('created_at')})")
                 with st.expander("Xem DNS Baseline hiện tại"):
                     st.json(active_b.get("baseline_dns", {}))
-                    
+
     with tab2:
+        render_benchmark_tab(selected_site, http_res, dns_res, ssl_res)
+                    
+    with tab3:
         render_history_tab(selected_site)
         
-    with tab3:
-        render_milestones_tab(selected_site)
+    with tab4:
+        render_milestones_tab(selected_site)
+

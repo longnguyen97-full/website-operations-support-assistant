@@ -237,6 +237,55 @@ def render_configuration_page():
             value=int(settings.get("ssl_warning_days", config.SSL_EXPIRY_WARNING_DAYS))
         )
 
+        # 5. Cấu hình Timeout Mạng (Network Probe Timeouts)
+        st.markdown("#### E. 🌐 Cấu hình Thời gian Chờ Mạng (Network Timeout Probes)")
+        st.caption("Cấu hình giới hạn thời gian (giây) tối đa mà hệ thống chờ đợi phản hồi từ mục tiêu trước khi đánh dấu là Timeout.")
+        c14, c15, c16 = st.columns(3)
+        http_timeout_val = c14.number_input(
+            "HTTP Request Timeout (giây):",
+            min_value=1.0, max_value=120.0, step=0.5,
+            value=float(settings.get("http_timeout_seconds", config.HTTP_TIMEOUT_SECONDS)),
+            help="Thời gian tối đa chờ phản hồi HTTP Request trước khi ném ngoại lệ Timeout."
+        )
+        dns_timeout_val = c15.number_input(
+            "DNS Resolver Timeout (giây):",
+            min_value=1.0, max_value=60.0, step=0.5,
+            value=float(settings.get("dns_timeout_seconds", config.DNS_TIMEOUT_SECONDS)),
+            help="Thời gian tối đa chờ phân giải tên miền DNS trước khi đánh dấu thất bại."
+        )
+        ssl_timeout_val = c16.number_input(
+            "SSL/TLS Handshake Timeout (giây):",
+            min_value=1.0, max_value=60.0, step=0.5,
+            value=float(settings.get("ssl_timeout_seconds", config.SSL_TIMEOUT_SECONDS)),
+            help="Thời gian tối đa chờ thiết lập bắt tay mã hóa SSL/TLS socket."
+        )
+
+        # 6. Cấu hình Chế độ Giám sát & Phát hiện Bất thường (Evaluation Modes)
+        st.markdown("#### F. 🔬 Chế độ Giám sát & Phát hiện Bất thường (Evaluation & Benchmark Modes)")
+        current_mode = settings.get("monitoring_mode", "MULTI_SIGNAL_RULE_STATISTICAL")
+        mode_options = [
+            "MULTI_SIGNAL_RULE_STATISTICAL",
+            "THRESHOLD_BASED"
+        ]
+        mode_labels = {
+            "MULTI_SIGNAL_RULE_STATISTICAL": "🛡️ Giám sát Đa tín hiệu + Luật + Thống kê Z-Score/IQR (Không AI - Khuyến nghị)",
+            "THRESHOLD_BASED": "⚠️ Cảnh báo Ngưỡng truyền thống (Single-threshold / Baseline đối chứng)"
+        }
+        selected_mode = st.radio(
+            "Chọn chế độ vận hành và phát hiện sự cố:",
+            options=mode_options,
+            index=0 if current_mode == "MULTI_SIGNAL_RULE_STATISTICAL" else 1,
+            format_func=lambda x: mode_labels.get(x, x),
+            help="Chuyển đổi giữa chế độ cảnh báo ngưỡng truyền thống và chế độ giám sát đa tín hiệu kết hợp luật & thống kê."
+        )
+
+        latency_thresh_val = st.number_input(
+            "Ngưỡng thời gian phản hồi cảnh báo (ms) cho chế độ truyền thống:",
+            min_value=100.0, max_value=30000.0, step=100.0,
+            value=float(settings.get("latency_threshold_ms", 2000.0)),
+            help="Ngưỡng latency cứng dùng trong chế độ Threshold-based."
+        )
+
         btn_save = st.form_submit_button("💾 Lưu Toàn Bộ Cấu Hình Động Vào CSDL", type="primary")
         if btn_save:
             updated_data = {
@@ -255,7 +304,12 @@ def render_configuration_page():
                 "daily_report_time": daily_report_time,
                 "scheduler_interval_seconds": sched_interval_val,
                 "data_retention_days": retention_days,
-                "ssl_warning_days": ssl_warn_days
+                "ssl_warning_days": ssl_warn_days,
+                "http_timeout_seconds": http_timeout_val,
+                "dns_timeout_seconds": dns_timeout_val,
+                "ssl_timeout_seconds": ssl_timeout_val,
+                "monitoring_mode": selected_mode,
+                "latency_threshold_ms": latency_thresh_val
             }
             update_system_settings(updated_data)
             update_scheduler_interval(int(sched_interval_val))

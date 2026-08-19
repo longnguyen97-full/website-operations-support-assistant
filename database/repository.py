@@ -180,6 +180,23 @@ def get_monitoring_logs(website_id: Optional[int] = None, limit: int = 50) -> Li
         result.append(item)
     return result
 
+def get_website_latency_history(website_id: int, limit: int = 50) -> List[float]:
+    """Lấy chuỗi độ trễ thời gian (HTTP latency ms) gần nhất của website phục vụ phân tích thống kê."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT http_latency_ms FROM monitoring_logs
+        WHERE website_id = ? AND http_latency_ms IS NOT NULL AND http_latency_ms > 0
+        ORDER BY id DESC
+        LIMIT ?;
+    """, (website_id, limit))
+    rows = cursor.fetchall()
+    conn.close()
+    # Trả về theo thứ tự thời gian tăng dần (cũ -> mới)
+    latencies = [float(r["http_latency_ms"]) for r in rows if r["http_latency_ms"] is not None]
+    latencies.reverse()
+    return latencies
+
 def purge_old_logs(days_to_keep: int = 30) -> int:
     """Dọn dẹp các bản ghi log quá cũ theo chính sách Data Retention trong RULE_DESIGN_DB.md."""
     cutoff_time = (datetime.now(TZ_VN) - timedelta(days=days_to_keep)).isoformat()
@@ -327,6 +344,11 @@ def get_system_settings() -> Dict[str, Any]:
         "scheduler_interval_seconds": settings.get("scheduler_interval_seconds") or DEFAULT_SCHEDULER_INTERVAL_SECONDS,
         "data_retention_days": settings.get("data_retention_days") or DATA_RETENTION_DAYS,
         "ssl_warning_days": settings.get("ssl_warning_days") or SSL_EXPIRY_WARNING_DAYS,
+        "http_timeout_seconds": settings.get("http_timeout_seconds") or config.HTTP_TIMEOUT_SECONDS,
+        "dns_timeout_seconds": settings.get("dns_timeout_seconds") or config.DNS_TIMEOUT_SECONDS,
+        "ssl_timeout_seconds": settings.get("ssl_timeout_seconds") or config.SSL_TIMEOUT_SECONDS,
+        "monitoring_mode": settings.get("monitoring_mode") or "MULTI_SIGNAL_RULE_STATISTICAL",
+        "latency_threshold_ms": float(settings.get("latency_threshold_ms") or 2000.0),
         "last_report_sent_at": settings.get("last_report_sent_at")
     }
 
@@ -357,7 +379,12 @@ def sync_settings_from_env() -> Dict[str, Any]:
         "daily_report_time": config.DEFAULT_DAILY_REPORT_TIME,
         "scheduler_interval_seconds": config.DEFAULT_SCHEDULER_INTERVAL_SECONDS,
         "data_retention_days": config.DATA_RETENTION_DAYS,
-        "ssl_warning_days": config.SSL_EXPIRY_WARNING_DAYS
+        "ssl_warning_days": config.SSL_EXPIRY_WARNING_DAYS,
+        "http_timeout_seconds": config.HTTP_TIMEOUT_SECONDS,
+        "dns_timeout_seconds": config.DNS_TIMEOUT_SECONDS,
+        "ssl_timeout_seconds": config.SSL_TIMEOUT_SECONDS,
+        "monitoring_mode": "MULTI_SIGNAL_RULE_STATISTICAL",
+        "latency_threshold_ms": 2000.0
     }
     update_system_settings(env_settings)
     return env_settings
@@ -374,8 +401,10 @@ def update_system_settings(settings: Dict[str, Any]) -> bool:
             notify_on_warning, notify_on_recovery, cooldown_minutes,
             enable_daily_report, daily_report_time,
             scheduler_interval_seconds, data_retention_days, ssl_warning_days,
+            http_timeout_seconds, dns_timeout_seconds, ssl_timeout_seconds,
+            monitoring_mode, latency_threshold_ms,
             updated_at
-        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             smtp_server = excluded.smtp_server,
             smtp_port = excluded.smtp_port,
@@ -393,6 +422,11 @@ def update_system_settings(settings: Dict[str, Any]) -> bool:
             scheduler_interval_seconds = excluded.scheduler_interval_seconds,
             data_retention_days = excluded.data_retention_days,
             ssl_warning_days = excluded.ssl_warning_days,
+            http_timeout_seconds = excluded.http_timeout_seconds,
+            dns_timeout_seconds = excluded.dns_timeout_seconds,
+            ssl_timeout_seconds = excluded.ssl_timeout_seconds,
+            monitoring_mode = excluded.monitoring_mode,
+            latency_threshold_ms = excluded.latency_threshold_ms,
             updated_at = excluded.updated_at;
     """, (
         settings.get("smtp_server", DEFAULT_SMTP_SERVER),
@@ -411,6 +445,11 @@ def update_system_settings(settings: Dict[str, Any]) -> bool:
         int(settings.get("scheduler_interval_seconds", DEFAULT_SCHEDULER_INTERVAL_SECONDS)),
         int(settings.get("data_retention_days", DATA_RETENTION_DAYS)),
         int(settings.get("ssl_warning_days", SSL_EXPIRY_WARNING_DAYS)),
+        float(settings.get("http_timeout_seconds", 10.0)),
+        float(settings.get("dns_timeout_seconds", 5.0)),
+        float(settings.get("ssl_timeout_seconds", 10.0)),
+        str(settings.get("monitoring_mode", "MULTI_SIGNAL_RULE_STATISTICAL")),
+        float(settings.get("latency_threshold_ms", 2000.0)),
         updated_at
     ))
     conn.commit()

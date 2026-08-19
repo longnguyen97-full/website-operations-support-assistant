@@ -93,7 +93,7 @@ def init_db() -> None:
     );
     """)
 
-    # 4. Bảng system_settings (Cấu hình động: Email, Scheduler, Báo cáo & Lưu trữ)
+    # 4. Bảng system_settings (Cấu hình động: Email, Scheduler, Báo cáo, Lưu trữ & Timeout Probes)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS system_settings (
         id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -117,6 +117,13 @@ def init_db() -> None:
         scheduler_interval_seconds INTEGER DEFAULT 60,
         data_retention_days INTEGER DEFAULT 30,
         ssl_warning_days INTEGER DEFAULT 14,
+        -- Cấu hình Timeout Mạng / Probes (Dynamic)
+        http_timeout_seconds REAL DEFAULT 10.0,
+        dns_timeout_seconds REAL DEFAULT 5.0,
+        ssl_timeout_seconds REAL DEFAULT 10.0,
+        -- Cấu hình Chế độ Giám sát Đối chứng (Evaluation Mode)
+        monitoring_mode TEXT DEFAULT 'MULTI_SIGNAL_RULE_STATISTICAL',
+        latency_threshold_ms REAL DEFAULT 2000.0,
         updated_at TEXT
     );
     """)
@@ -129,7 +136,12 @@ def init_db() -> None:
         ("last_report_sent_at", "TEXT"),
         ("scheduler_interval_seconds", "INTEGER DEFAULT 60"),
         ("data_retention_days", "INTEGER DEFAULT 30"),
-        ("ssl_warning_days", "INTEGER DEFAULT 14")
+        ("ssl_warning_days", "INTEGER DEFAULT 14"),
+        ("http_timeout_seconds", "REAL DEFAULT 10.0"),
+        ("dns_timeout_seconds", "REAL DEFAULT 5.0"),
+        ("ssl_timeout_seconds", "REAL DEFAULT 10.0"),
+        ("monitoring_mode", "TEXT DEFAULT 'MULTI_SIGNAL_RULE_STATISTICAL'"),
+        ("latency_threshold_ms", "REAL DEFAULT 2000.0")
     ]:
         try:
             cursor.execute(f"ALTER TABLE system_settings ADD COLUMN {col} {col_type};")
@@ -145,8 +157,9 @@ def init_db() -> None:
                 recipient_emails, use_tls, is_enabled, 
                 notify_on_critical, notify_on_warning, notify_on_recovery, 
                 cooldown_minutes, enable_daily_report, daily_report_time,
-                scheduler_interval_seconds, data_retention_days, ssl_warning_days
-            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                scheduler_interval_seconds, data_retention_days, ssl_warning_days,
+                http_timeout_seconds, dns_timeout_seconds, ssl_timeout_seconds
+            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """, (
             DEFAULT_SMTP_SERVER,
             DEFAULT_SMTP_PORT,
@@ -163,7 +176,10 @@ def init_db() -> None:
             DEFAULT_DAILY_REPORT_TIME,
             DEFAULT_SCHEDULER_INTERVAL_SECONDS,
             DATA_RETENTION_DAYS,
-            14
+            SSL_EXPIRY_WARNING_DAYS,
+            10.0,
+            5.0,
+            10.0
         ))
 
     # Tạo indexes để tăng tốc truy vấn lịch sử theo website và thời gian
