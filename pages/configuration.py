@@ -10,7 +10,14 @@ from database import (
     delete_website,
     get_system_settings,
     update_system_settings,
-    sync_settings_from_env
+    sync_settings_from_env,
+    create_db_backup,
+    get_all_db_backups,
+    get_current_db_bytes,
+    inspect_sqlite_bytes,
+    restore_db_from_bytes,
+    restore_db_from_file,
+    delete_db_backup
 )
 from notifications.email_service import (
     send_test_email,
@@ -337,5 +344,119 @@ def render_configuration_page():
             else:
                 st.error("❌ " + msg)
 
+    st.markdown("---")
+
+    # ==========================================
+    # PHẦN 4: SAO LƯU & KHÔI PHỤC CƠ SỞ DỮ LIỆU
+    # ==========================================
+    st.markdown("## 💾 4. Sao lưu & Khôi phục Cơ sở Dữ liệu (Database Backup & Restore)")
+    st.markdown("Toàn bộ cấu hình hệ thống, danh mục website, các mốc baseline chuẩn và lịch sử logs giám sát được lưu trữ an toàn trong SQLite (`data/monitoring.db`). Bạn có thể tải về bản sao lưu dự phòng hoặc khôi phục dữ liệu bất cứ lúc nào.")
+
+    col_bk1, col_bk2 = st.columns(2)
+
+    with col_bk1:
+        st.markdown("### 📥 Sao lưu Cơ sở Dữ liệu (Backup)")
+        st.caption("Tải file `.db` về máy hoặc tạo bản snapshot an toàn vào thư mục `data/backups/`.")
+
+        # 1. Nút tải trực tiếp CSDL hiện tại
+        db_raw_bytes = get_current_db_bytes()
+        now_ts = datetime.now(config.TZ_VN).strftime("%Y%m%d_%H%M%S")
+        if db_raw_bytes:
+            st.download_button(
+                label="⬇️ Tải xuống file CSDL hiện tại (monitoring.db)",
+                data=db_raw_bytes,
+                file_name=f"monitoring_backup_{now_ts}.db",
+                mime="application/x-sqlite3",
+                use_container_width=True,
+                type="primary"
+            )
+        else:
+            st.warning("⚠️ Không thể đọc file cơ sở dữ liệu hiện tại.")
+
+        # 2. Tạo bản snapshot cục bộ
+        with st.form("create_snapshot_form"):
+            st.markdown("##### 📌 Tạo Snapshot Cục bộ (Local Snapshot)")
+            snap_note = st.text_input(
+                "Ghi chú bản sao lưu (tùy chọn):",
+                placeholder="VD: truoc_khi_nang_cap_he_thong",
+                help="Ghi chú sẽ được gắn vào tên file sao lưu để tiện nhận diện."
+            )
+            btn_create_snap = st.form_submit_button("Tạo Bản Snapshot Cục bộ", use_container_width=True)
+            if btn_create_snap:
+                success, snap_msg, path = create_db_backup(custom_name=snap_note)
+                if success:
+                    st.success(f"✅ {snap_msg}")
+                    st.rerun()
+                else:
+                    st.error(f"❌ {snap_msg}")
+
+        # 3. Danh sách các bản snapshot cục bộ
+        all_backups = get_all_db_backups()
+        with st.expander(f"📁 Quản lý các bản sao lưu cục bộ ({len(all_backups)} bản lưu)", expanded=False):
+            if all_backups:
+                for idx, bk in enumerate(all_backups):
+                    tag = "🛡️ [Safety Auto-Backup]" if bk["is_safety"] else "📦 [Manual Snapshot]"
+                    st.markdown(f"**{idx + 1}. {tag} `{bk['filename']}`**")
+                    st.caption(f"📅 Thời gian: {bk['created_time']} | 💾 Dung lượng: {bk['size_kb']} KB")
+                    
+                    c_btn1, c_btn2 = st.columns([1, 1])
+                    with c_btn1:
+                        if st.button(f"♻️ Khôi phục bản này", key=f"restore_local_{bk['filename']}", use_container_width=True):
+                            ok, r_msg = restore_db_from_file(bk["path"])
+                            if ok:
+                                st.success(r_msg)
+                                st.rerun()
+                            else:
+                                st.error(r_msg)
+                    with c_btn2:
+                        if st.button(f"🗑️ Xóa", key=f"del_bk_{bk['filename']}", type="secondary", use_container_width=True):
+                            ok, d_msg = delete_db_backup(bk["path"])
+                            if ok:
+                                st.success(d_msg)
+                                st.rerun()
+                            else:
+                                st.error(d_msg)
+                    st.markdown("---")
+            else:
+                st.info("Chưa có bản sao lưu cục bộ nào trong thư mục `data/backups/`.")
+
+    with col_bk2:
+        st.markdown("### 📤 Khôi phục Cơ sở Dữ liệu (Restore)")
+        st.caption("Tải lên file `.db` hoặc `.sqlite` để nạp lại dữ liệu vào hệ thống.")
+
+        uploaded_db = st.file_uploader(
+            "Chọn file CSDL SQLite cần khôi phục:",
+            type=["db", "sqlite"],
+            help="Chỉ chấp nhận file định dạng SQLite có chứa schema hợp lệ của hệ thống."
+        )
+
+        if uploaded_db is not None:
+            db_bytes = uploaded_db.getvalue()
+            is_valid, inspect_msg, stats = inspect_sqlite_bytes(db_bytes)
+
+            if is_valid:
+                st.success("✅ File CSDL hợp lệ và tương thích hoàn toàn!")
+                st.markdown(f"""
+                - **📊 Số Website mục tiêu:** `{stats.get('website_count', 0)}`
+                - **📝 Số bản ghi lịch sử Logs:** `{stats.get('log_count', 0)}`
+                - **🎯 Số mốc chuẩn Baseline:** `{stats.get('baseline_count', 0)}`
+                - **💾 Dung lượng file:** `{stats.get('size_kb', 0)} KB`
+                """)
+
+                st.info("ℹ️ **Cơ chế an toàn:** Hệ thống sẽ **tự động sao lưu một bản dự phòng (Safety Auto-Backup)** của CSDL hiện tại trước khi thực hiện ghi đè, đảm bảo tuyệt đối không mất mát dữ liệu.")
+
+                if st.button("⚠️ Xác nhận Khôi phục Cơ sở Dữ liệu Ngay", type="primary", use_container_width=True):
+                    with st.spinner("Đang tiến hành sao lưu an toàn và ghi đè CSDL..."):
+                        restore_ok, restore_msg = restore_db_from_bytes(db_bytes)
+                        if restore_ok:
+                            st.success(f"🎉 {restore_msg}")
+                            st.toast("Khôi phục CSDL thành công!", icon="✅")
+                            st.rerun()
+                        else:
+                            st.error(f"❌ {restore_msg}")
+            else:
+                st.error(f"❌ {inspect_msg}")
+
 if __name__ == "__main__":
     render_configuration_page()
+
