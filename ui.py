@@ -10,7 +10,7 @@ from database.repository import (
     get_active_baseline
 )
 
-def render_realtime_tab(selected_site, http_res, dns_res, ssl_res):
+def render_realtime_tab(selected_site, http_res, dns_res, ssl_res, visual_res=None):
     """Hiển thị kết quả kiểm tra thời gian thực với layout hiện đại, gọn gàng và đầy đủ."""
     from database.repository import calculate_overall_status
     overall_status = calculate_overall_status(http_res, dns_res, ssl_res)
@@ -242,6 +242,89 @@ def render_realtime_tab(selected_site, http_res, dns_res, ssl_res):
                     "Expired": ssl_res.get("is_expired"),
                     "Untrusted CA": ssl_res.get("is_untrusted_ca")
                 })
+
+    # 2.5. Khối Ảnh chụp màn hình giao diện (Playwright Screenshot & Visual Regression)
+    st.markdown("---")
+    st.markdown("### 📸 Ảnh chụp màn hình giao diện (Playwright Screenshot)")
+    
+    import re
+    import os
+    import shutil
+    from pathlib import Path
+    from config import DATA_DIR
+    from tools.visual_checker import check_visual_regression, capture_screenshot
+
+    safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', selected_site['name'].strip().lower())
+    screenshots_dir = DATA_DIR / "screenshots"
+    baselines_dir = DATA_DIR / "visual_baselines"
+    latest_img_path = screenshots_dir / f"{safe_name}_latest.png"
+    baseline_img_path = baselines_dir / f"{safe_name}_baseline.png"
+
+    col_shot_act1, col_shot_act2, col_shot_act3 = st.columns([2, 1, 1])
+    with col_shot_act1:
+        full_page_toggle = st.checkbox("Chụp toàn bộ trang cuộn (Full Page Screenshot)", value=False, key=f"fp_toggle_{selected_site['id']}")
+    with col_shot_act2:
+        if st.button("📸 Chụp ảnh màn hình mới", key=f"btn_shot_action_{selected_site['id']}", use_container_width=True, type="secondary"):
+            with st.spinner(f"Đang sử dụng Playwright Chromium chụp ảnh {selected_site['url']}..."):
+                new_v_res = check_visual_regression(
+                    url=selected_site["url"],
+                    website_identifier=selected_site["name"],
+                    full_page=full_page_toggle,
+                    timeout=20.0
+                )
+                if "last_scan" in st.session_state and selected_site["id"] in st.session_state["last_scan"]:
+                    st.session_state["last_scan"][selected_site["id"]]["visual"] = new_v_res
+                visual_res = new_v_res
+                st.toast("Đã chụp ảnh màn hình thành công!", icon="📸")
+                st.rerun()
+    with col_shot_act3:
+        if latest_img_path.exists():
+            if st.button("🎯 Cập nhật làm Baseline", key=f"btn_set_base_action_{selected_site['id']}", use_container_width=True):
+                baselines_dir.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(str(latest_img_path), str(baseline_img_path))
+                st.success("Đã cập nhật ảnh baseline chuẩn mới!")
+                st.toast("Đã cập nhật baseline!", icon="🎯")
+                st.rerun()
+
+    # Hiển thị ảnh chụp & trạng thái Visual Regression
+    if visual_res and visual_res.get("current_image_path") and os.path.exists(visual_res["current_image_path"]):
+        curr_path = visual_res["current_image_path"]
+        v_status = visual_res.get("status", "HEALTHY")
+        is_regr = visual_res.get("is_regression_detected", False)
+        diff_pct = visual_res.get("diff_percentage", 0.0)
+        capture_ms = visual_res.get("capture_time_ms", 0.0)
+        vp = visual_res.get("viewport", {"width": 1280, "height": 800})
+
+        c_v1, c_v2, c_v3 = st.columns(3)
+        c_v1.metric("⏱️ Thời gian chụp ảnh", f"{capture_ms} ms")
+        c_v2.metric("📐 Viewport giả lập", f"{vp.get('width', 1280)}x{vp.get('height', 800)}")
+        if is_regr:
+            c_v3.metric("🔴 Lệch Baseline (Visual Diff)", f"{diff_pct}% (Biến dạng)", delta_color="inverse")
+            st.error(f"🚨 **Phát hiện biến dạng giao diện (Visual Regression):** Khác biệt {diff_pct}% diện tích pixel so với ảnh baseline chuẩn!")
+        elif visual_res.get("is_baseline_created"):
+            c_v3.metric("🎯 Baseline", "Khởi tạo mới")
+            st.info("📌 Ảnh chụp đầu tiên đã được tự động lưu làm ảnh chuẩn (Baseline) cho website này.")
+        else:
+            c_v3.metric("🟢 Độ khớp Baseline", f"100% (Lệch {diff_pct}%)")
+
+        if is_regr and visual_res.get("diff_image_path") and os.path.exists(visual_res["diff_image_path"]):
+            col_v_base, col_v_curr, col_v_diff = st.columns(3)
+            with col_v_base:
+                st.markdown("**📌 1. Ảnh Baseline Chuẩn**")
+                if visual_res.get("baseline_image_path") and os.path.exists(visual_res["baseline_image_path"]):
+                    st.image(visual_res["baseline_image_path"], use_container_width=True)
+            with col_v_curr:
+                st.markdown("**📸 2. Ảnh Chụp Hiện Tại**")
+                st.image(curr_path, use_container_width=True)
+            with col_v_diff:
+                st.markdown("**🔴 3. Vùng Sai Khác (Diff Heatmap)**")
+                st.image(visual_res["diff_image_path"], use_container_width=True)
+        else:
+            st.image(curr_path, caption=f"📸 Ảnh chụp màn hình Playwright: {selected_site['name']} ({selected_site['url']})", use_container_width=True)
+    elif latest_img_path.exists():
+        st.image(str(latest_img_path), caption=f"📸 Ảnh chụp màn hình gần nhất: {selected_site['name']} ({selected_site['url']})", use_container_width=True)
+    else:
+        st.info("ℹ️ Chưa có ảnh chụp màn hình nào cho website này. Hãy bấm **'📸 Chụp ảnh màn hình mới'** để chụp bằng Playwright.")
 
     # 3. Action: Lưu làm Mốc chuẩn (Milestone)
     st.markdown("---")
@@ -558,7 +641,7 @@ def render_benchmark_tab(selected_site, http_res=None, dns_res=None, ssl_res=Non
     st.dataframe(pd.DataFrame(benchmark_table), use_container_width=True, hide_index=True)
 
 
-def render_dashboard(selected_site, http_res=None, dns_res=None, ssl_res=None):
+def render_dashboard(selected_site, http_res=None, dns_res=None, ssl_res=None, visual_res=None):
     """Giao diện Dashboard Giám sát phân chia theo 4 Tabs chuyên biệt."""
     tab1, tab2, tab3, tab4 = st.tabs([
         "📊 Giám sát Thời gian thực", 
@@ -569,7 +652,7 @@ def render_dashboard(selected_site, http_res=None, dns_res=None, ssl_res=None):
     
     with tab1:
         if http_res and dns_res and ssl_res:
-            render_realtime_tab(selected_site, http_res, dns_res, ssl_res)
+            render_realtime_tab(selected_site, http_res, dns_res, ssl_res, visual_res=visual_res)
         else:
             st.info("👉 Hãy bấm nút **'Kiểm tra ngay'** ở thanh điều khiển bên trái để bắt đầu phiên quét mới.")
             # Hiển thị thông tin baseline đang active

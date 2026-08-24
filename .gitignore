@@ -18,6 +18,9 @@
 data/*.db
 data/*.sqlite
 data/*.sqlite3
+data/visual_baselines
+data/visual_diffs
+data/screenshots
 
 # ==========================================
 # 3. Python Bytecode & Cache

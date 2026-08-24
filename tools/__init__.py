@@ -14,7 +14,7 @@ from tools.dns_checker import check_dns
 from tools.ssl_checker import check_ssl
 from tools.performance_checker import check_performance
 from tools.dom_validator import validate_dom
-from tools.visual_checker import check_visual_regression
+from tools.visual_checker import check_visual_regression, capture_screenshot
 
 __all__ = [
     "check_http",
@@ -23,5 +23,7 @@ __all__ = [
     "check_ssl",
     "check_performance",
     "validate_dom",
-    "check_visual_regression"
+    "check_visual_regression",
+    "capture_screenshot"
 ]
+

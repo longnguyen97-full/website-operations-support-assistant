@@ -2,6 +2,7 @@ import streamlit as st
 from tools.http_checker import check_http
 from tools.dns_checker import check_dns
 from tools.ssl_checker import check_ssl
+from tools.visual_checker import check_visual_regression, capture_screenshot
 from ui import render_dashboard
 from database import (
     init_db,
@@ -62,6 +63,17 @@ def main():
             type="primary"
         )
 
+        enable_screenshot = st.sidebar.checkbox(
+            "📸 Kèm chụp ảnh Playwright khi quét", 
+            value=True,
+            help="Tự động sử dụng Playwright mở trình duyệt headless và chụp ảnh giao diện để so sánh Visual Regression"
+        )
+
+        quick_shot_clicked = st.sidebar.button(
+            "📸 Chỉ chụp ảnh màn hình (Screenshot)",
+            use_container_width=True
+        )
+
         # Thông tin tóm tắt nhanh website
         st.sidebar.markdown("---")
         st.sidebar.markdown(f"**🌐 URL:** `{selected_site['url']}`")
@@ -76,11 +88,27 @@ def main():
         st.sidebar.info("👉 Vui lòng cấu hình thêm website tại trang `/configuration`.")
         selected_site = None
         run_check_clicked = False
+        enable_screenshot = False
+        quick_shot_clicked = False
 
     # 4. Trạng thái session state cho kết quả quét
     if "last_scan" not in st.session_state:
         st.session_state["last_scan"] = {}
 
+    # Xử lý nút Chỉ chụp ảnh màn hình
+    if selected_site and quick_shot_clicked:
+        with st.spinner(f"Đang sử dụng Playwright chụp ảnh màn hình '{selected_site['name']}'..."):
+            visual_res = check_visual_regression(
+                url=selected_site["url"],
+                website_identifier=selected_site["name"],
+                timeout=20.0
+            )
+            if selected_site["id"] not in st.session_state["last_scan"]:
+                st.session_state["last_scan"][selected_site["id"]] = {}
+            st.session_state["last_scan"][selected_site["id"]]["visual"] = visual_res
+            st.toast("Đã chụp ảnh màn hình với Playwright thành công!", icon="📸")
+
+    # Xử lý nút Kiểm tra thủ công đầy đủ
     if selected_site and run_check_clicked:
         # Lấy active baseline từ DB nếu có
         active_baseline_record = get_active_baseline(selected_site["id"])
@@ -103,6 +131,17 @@ def main():
             dns_res = check_dns(selected_site["domain"], baseline=baseline_dns, timeout=dns_timeout)
             ssl_res = check_ssl(selected_site["url"], timeout=ssl_timeout)
             
+            visual_res = None
+            if enable_screenshot:
+                try:
+                    visual_res = check_visual_regression(
+                        url=selected_site["url"],
+                        website_identifier=selected_site["name"],
+                        timeout=20.0
+                    )
+                except Exception as ex:
+                    visual_res = {"error": str(ex), "status": "ERROR"}
+
             # 2. Lưu kết quả vào CSDL SQLite (monitoring_logs)
             save_monitoring_log(
                 website_id=selected_site["id"],
@@ -123,22 +162,27 @@ def main():
             st.session_state["last_scan"][selected_site["id"]] = {
                 "http": http_res,
                 "dns": dns_res,
-                "ssl": ssl_res
+                "ssl": ssl_res,
+                "visual": visual_res
             }
-            st.toast(f"Đã hoàn thành kiểm tra và lưu lịch sử vào CSDL!", icon="✅")
+            st.toast(f"Đã hoàn thành kiểm tra và chụp ảnh Playwright!", icon="✅")
 
     # 5. Hiển thị Dashboard
     if selected_site:
         current_site_scan = st.session_state["last_scan"].get(selected_site["id"])
-        if current_site_scan:
+        if current_site_scan and current_site_scan.get("http"):
             render_dashboard(
                 selected_site=selected_site,
-                http_res=current_site_scan["http"],
-                dns_res=current_site_scan["dns"],
-                ssl_res=current_site_scan["ssl"]
+                http_res=current_site_scan.get("http"),
+                dns_res=current_site_scan.get("dns"),
+                ssl_res=current_site_scan.get("ssl"),
+                visual_res=current_site_scan.get("visual")
             )
         else:
-            render_dashboard(selected_site=selected_site)
+            render_dashboard(
+                selected_site=selected_site,
+                visual_res=current_site_scan.get("visual") if current_site_scan else None
+            )
 
 if __name__ == "__main__":
     main()

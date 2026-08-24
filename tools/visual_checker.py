@@ -2,6 +2,7 @@ import os
 import time
 import math
 import re
+import shutil
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
 from datetime import datetime
@@ -48,6 +49,101 @@ def _mask_dynamic_elements(page, mask_selectors: List[str]):
         page.evaluate(js_code)
     except Exception:
         pass
+
+def capture_screenshot(
+    url: str,
+    website_identifier: str = "website",
+    output_path: Optional[str] = None,
+    full_page: bool = False,
+    viewport: Optional[Dict[str, int]] = None,
+    mask_selectors: Optional[List[str]] = None,
+    timeout: float = 20.0,
+    wait_until: str = "load"
+) -> Dict[str, Any]:
+    """
+    Sử dụng Playwright tự động hóa trình duyệt chụp ảnh màn hình (screenshot) website.
+    
+    Tham số:
+    - url: Địa chỉ URL của website cần chụp ảnh.
+    - website_identifier: Tên định danh website để đặt tên file an toàn.
+    - output_path: Đường dẫn file ảnh đầu ra tùy chỉnh (nếu None sẽ tự động lưu vào data/screenshots).
+    - full_page: Chụp toàn bộ chiều dài trang cuộn (True) hoặc chỉ viewport hiển thị (False).
+    - viewport: Độ phân giải màn hình giả lập (mặc định: 1280x800).
+    - mask_selectors: Danh sách CSS selectors cần che trước khi chụp ảnh.
+    - timeout: Thời gian timeout tối đa tính bằng giây.
+    - wait_until: Sự kiện chờ tải trang ('load', 'domcontentloaded', 'networkidle').
+    
+    Trả về Dict:
+    - success (bool), screenshot_path (str), latest_path (str), capture_time_ms (float), error (str|None).
+    """
+    _ensure_dirs()
+    safe_name = _sanitize_name(website_identifier)
+    timestamp_str = datetime.now(TZ_VN).strftime("%Y%m%d_%H%M%S")
+
+    vp = viewport or DEFAULT_VIEWPORT
+    
+    if output_path:
+        target_path = Path(output_path)
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        current_img_name = f"{safe_name}_{timestamp_str}.png"
+        target_path = SCREENSHOTS_DIR / current_img_name
+
+    latest_path = SCREENSHOTS_DIR / f"{safe_name}_latest.png"
+
+    result = {
+        "url": url,
+        "website_identifier": website_identifier,
+        "success": False,
+        "screenshot_path": str(target_path),
+        "latest_path": str(latest_path),
+        "capture_time_ms": 0.0,
+        "viewport": vp,
+        "full_page": full_page,
+        "timestamp": datetime.now(TZ_VN).strftime("%Y-%m-%d %H:%M:%S"),
+        "error": None
+    }
+
+    try:
+        from playwright.sync_api import sync_playwright
+
+        start_t = time.time()
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            context = browser.new_context(
+                viewport=vp,
+                user_agent=DEFAULT_USER_AGENT,
+                device_scale_factor=1
+            )
+            page = context.new_page()
+
+            try:
+                page.goto(url, timeout=int(timeout * 1000), wait_until=wait_until)
+            except Exception:
+                # Fallback nếu mạng chậm hoặc sự kiện load bị trễ
+                page.goto(url, timeout=int(timeout * 1000), wait_until="domcontentloaded")
+            
+            page.wait_for_timeout(400)  # Chờ layout và web fonts ổn định
+
+            # Che (Mask) các thành phần nội dung động
+            if mask_selectors:
+                _mask_dynamic_elements(page, mask_selectors)
+
+            # Chụp ảnh màn hình
+            page.screenshot(path=str(target_path), full_page=full_page)
+            # Lưu bản sao latest
+            page.screenshot(path=str(latest_path), full_page=full_page)
+
+            browser.close()
+
+        result["capture_time_ms"] = round((time.time() - start_t) * 1000, 2)
+        result["success"] = True
+
+    except Exception as e:
+        result["error"] = str(e)
+        result["success"] = False
+
+    return result
 
 def _compare_images(
     baseline_path: Path,
@@ -131,7 +227,7 @@ def check_visual_regression(
     Quy trình:
     1. Sử dụng Playwright mở website với Viewport cố định (1280x800).
     2. Che phủ (Mask) các vùng nội dung động (quảng cáo, đồng hồ, banner xoay vòng) để chống false positive.
-    3. Chụp ảnh màn hình hiện tại (screenshot).
+    3. Chụp ảnh màn hình hiện tại (screenshot) qua hàm capture_screenshot.
     4. So sánh với ảnh baseline chuẩn:
        - Nếu chưa có baseline: Tự động khởi tạo baseline mới từ ảnh chụp đầu tiên.
        - Nếu đã có baseline: So sánh chi tiết từng pixel, đo tỷ lệ chênh lệch (%) và tạo ảnh Diff trực quan.
@@ -142,7 +238,6 @@ def check_visual_regression(
 
     current_img_name = f"{safe_name}_{timestamp_str}.png"
     current_img_path = SCREENSHOTS_DIR / current_img_name
-    latest_curr_symlink = SCREENSHOTS_DIR / f"{safe_name}_latest.png"
 
     default_baseline_path = VISUAL_BASELINES_DIR / f"{safe_name}_baseline.png"
     target_baseline_path = Path(baseline_image_path) if baseline_image_path else default_baseline_path
@@ -168,56 +263,40 @@ def check_visual_regression(
         "error": None
     }
 
+    # 1. Chụp ảnh màn hình bằng capture_screenshot
+    shot_res = capture_screenshot(
+        url=url,
+        website_identifier=website_identifier,
+        output_path=str(current_img_path),
+        full_page=full_page,
+        viewport=DEFAULT_VIEWPORT,
+        mask_selectors=mask_selectors,
+        timeout=timeout
+    )
+
+    if not shot_res["success"]:
+        result["error"] = shot_res["error"]
+        result["status"] = "ERROR"
+        return result
+
+    result["capture_time_ms"] = shot_res["capture_time_ms"]
+
+    # 2. Kiểm tra Baseline
+    if not target_baseline_path.exists():
+        if update_baseline_if_missing:
+            # Khởi tạo ảnh baseline đầu tiên
+            shutil.copyfile(str(current_img_path), str(target_baseline_path))
+            result["is_baseline_created"] = True
+            result["baseline_image_path"] = str(target_baseline_path)
+            result["status"] = "BASELINE_INITIALIZED"
+            return result
+        else:
+            result["status"] = "NO_BASELINE"
+            result["error"] = f"Chưa có ảnh baseline chuẩn tại '{target_baseline_path}'."
+            return result
+
+    # 3. Thực hiện so sánh Pixel với Baseline
     try:
-        from playwright.sync_api import sync_playwright
-
-        start_t = time.time()
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            context = browser.new_context(
-                viewport=DEFAULT_VIEWPORT,
-                user_agent=DEFAULT_USER_AGENT,
-                device_scale_factor=1
-            )
-            page = context.new_page()
-
-            try:
-                page.goto(url, timeout=int(timeout * 1000), wait_until="load")
-            except Exception:
-                # Fallback nếu mạng chậm hoặc sự kiện load bị trễ
-                page.goto(url, timeout=int(timeout * 1000), wait_until="domcontentloaded")
-            
-            page.wait_for_timeout(400)  # Chờ layout và web fonts ổn định
-
-            # Che (Mask) các thành phần nội dung động
-            if mask_selectors:
-                _mask_dynamic_elements(page, mask_selectors)
-
-            # Chụp ảnh màn hình
-            page.screenshot(path=str(current_img_path), full_page=full_page)
-            # Lưu bản sao latest
-            page.screenshot(path=str(latest_curr_symlink), full_page=full_page)
-
-            browser.close()
-
-        result["capture_time_ms"] = round((time.time() - start_t) * 1000, 2)
-
-        # Kiểm tra Baseline
-        if not target_baseline_path.exists():
-            if update_baseline_if_missing:
-                # Khởi tạo ảnh baseline đầu tiên
-                import shutil
-                shutil.copyfile(str(current_img_path), str(target_baseline_path))
-                result["is_baseline_created"] = True
-                result["baseline_image_path"] = str(target_baseline_path)
-                result["status"] = "BASELINE_INITIALIZED"
-                return result
-            else:
-                result["status"] = "NO_BASELINE"
-                result["error"] = f"Chưa có ảnh baseline chuẩn tại '{target_baseline_path}'."
-                return result
-
-        # Thực hiện so sánh Pixel với Baseline
         diff_pct, diff_pix, total_pix, is_regr = _compare_images(
             baseline_path=target_baseline_path,
             current_path=current_img_path,
@@ -236,9 +315,8 @@ def check_visual_regression(
             result["status"] = "VISUAL_REGRESSION_DETECTED"
         else:
             result["status"] = "HEALTHY"
-
     except Exception as e:
-        result["error"] = str(e)
+        result["error"] = f"Lỗi so sánh ảnh: {e}"
         result["status"] = "ERROR"
 
     return result
