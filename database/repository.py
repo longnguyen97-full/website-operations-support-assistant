@@ -1,3 +1,4 @@
+import os
 import json
 import sqlite3
 from datetime import datetime, timedelta
@@ -93,6 +94,84 @@ def delete_website(website_id: int) -> bool:
     deleted = cursor.rowcount > 0
     conn.close()
     return deleted
+
+def sync_websites_from_json_file(file_path: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Đồng bộ và nạp toàn bộ danh sách website từ tệp JSON cấu hình (mặc định target_websites.json) vào CSDL SQLite.
+    Tự động cập nhật hoặc thêm mới và khởi tạo mốc chuẩn baseline tương ứng.
+    """
+    from config import TARGET_WEBSITES_FILE
+    target_path = file_path or str(TARGET_WEBSITES_FILE)
+    
+    if not os.path.exists(target_path):
+        return {"success": False, "count": 0, "message": f"Không tìm thấy file cấu hình: {target_path}"}
+        
+    try:
+        with open(target_path, "r", encoding="utf-8") as f:
+            config_data = json.load(f)
+            
+        websites_list = config_data.get("websites", [])
+        if not websites_list:
+            return {"success": False, "count": 0, "message": "File JSON không chứa danh sách 'websites'."}
+            
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        now_iso = datetime.now(TZ_VN).isoformat()
+        synced_count = 0
+        
+        for site in websites_list:
+            name = site.get("name")
+            url = site.get("url")
+            domain = site.get("domain")
+            expected_status = site.get("expected_status", 200)
+            
+            if not (name and url and domain):
+                continue
+                
+            cursor.execute("""
+                INSERT INTO websites (name, url, domain, expected_status)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(name) DO UPDATE SET
+                    url = excluded.url,
+                    domain = excluded.domain,
+                    expected_status = excluded.expected_status;
+            """, (name, url, domain, expected_status))
+            
+            # Lấy website_id vừa insert/update
+            cursor.execute("SELECT id FROM websites WHERE name = ?;", (name,))
+            row = cursor.fetchone()
+            if row:
+                site_id = row[0]
+                baseline_dns = site.get("baseline_dns", {})
+                
+                # Kiểm tra xem đã có baseline chưa, nếu chưa có thì tạo
+                cursor.execute("SELECT COUNT(*) FROM milestone_baselines WHERE website_id = ?;", (site_id,))
+                if cursor.fetchone()[0] == 0:
+                    cursor.execute("""
+                        INSERT INTO milestone_baselines (
+                            website_id, website_name, created_at, baseline_dns_json, 
+                            expected_http_status, note, is_active
+                        ) VALUES (?, ?, ?, ?, ?, ?, 1)
+                    """, (
+                        site_id,
+                        name,
+                        now_iso,
+                        json.dumps(baseline_dns, ensure_ascii=False),
+                        expected_status,
+                        "Mốc chuẩn khởi tạo tự động từ target_websites.json"
+                    ))
+            synced_count += 1
+            
+        conn.commit()
+        conn.close()
+        return {
+            "success": True, 
+            "count": synced_count, 
+            "message": f"Đã đồng bộ thành công {synced_count} website từ file cấu hình vào CSDL SQLite!"
+        }
+    except Exception as e:
+        return {"success": False, "count": 0, "message": f"Lỗi trong quá trình đồng bộ website: {e}"}
+
 
 # ==================== 2. QUẢN LÝ LỊCH SỬ GIÁM SÁT (MONITORING LOGS) ====================
 

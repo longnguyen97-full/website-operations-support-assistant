@@ -19,7 +19,8 @@ from database.repository import (
     calculate_overall_status,
     generate_periodic_report_data,
     record_report_sent_time,
-    purge_old_logs
+    purge_old_logs,
+    sync_websites_from_json_file
 )
 from database.backup import (
     create_db_backup,
@@ -54,6 +55,7 @@ __all__ = [
     "generate_periodic_report_data",
     "record_report_sent_time",
     "purge_old_logs",
+    "sync_websites_from_json_file",
     "create_db_backup",
     "get_all_db_backups",
     "get_current_db_bytes",

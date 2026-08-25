@@ -8,6 +8,7 @@ from database import (
     get_all_websites,
     add_or_update_website,
     delete_website,
+    sync_websites_from_json_file,
     get_system_settings,
     update_system_settings,
     sync_settings_from_env,
@@ -67,6 +68,17 @@ def render_configuration_page():
                     st.rerun()
                 else:
                     st.error("Vui lòng điền đầy đủ Tên, URL và Domain.")
+
+        st.markdown("---")
+        st.markdown("#### 🔄 Nạp Dữ liệu từ File Cấu hình")
+        if st.button("📥 Đồng bộ toàn bộ Target Websites từ target_websites.json", use_container_width=True, type="secondary"):
+            with st.spinner("Đang nạp và đồng bộ danh sách website vào CSDL SQLite..."):
+                sync_res = sync_websites_from_json_file()
+                if sync_res["success"]:
+                    st.success(f"🎉 {sync_res['message']}")
+                    st.rerun()
+                else:
+                    st.error(f"❌ {sync_res['message']}")
 
     with col_w2:
         st.markdown("#### 📋 Danh sách Website đang được giám sát")

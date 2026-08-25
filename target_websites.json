@@ -1,24 +1,5404 @@
 {
   "websites": [
     {
-      "name": "Example Domain",
-      "url": "https://example.com",
-      "domain": "example.com",
+      "name": "Aura Luxe Fashion",
+      "url": "http://localhost:8000/sites/site-001",
+      "domain": "auraluxe-shop.vn",
       "expected_status": 200,
       "baseline_dns": {
-        "a": ["93.184.216.34"],
+        "a": [
+          "192.168.100.10"
+        ],
         "aaaa": [],
         "cname": null,
-        "mx": [],
-        "txt": []
+        "mx": [
+          "mail.auraluxe-shop.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.auraluxe-shop.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-001",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
       }
     },
     {
-      "name": "Python Website",
-      "url": "https://www.python.org",
-      "domain": "python.org",
+      "name": "MegaMart Direct",
+      "url": "http://localhost:8000/sites/site-002",
+      "domain": "megamart-online.com",
       "expected_status": 200,
-      "baseline_dns": {}
+      "baseline_dns": {
+        "a": [
+          "192.168.100.11"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.megamart-online.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.megamart-online.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-002",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Critical Script Missing (JS 404 Error)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "SneakerZone Global",
+      "url": "http://localhost:8000/sites/site-003",
+      "domain": "sneakerzone-street.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.12"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.sneakerzone-street.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.sneakerzone-street.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-003",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 401 Unauthorized",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "FreshGrocer Express",
+      "url": "http://localhost:8000/sites/site-004",
+      "domain": "freshgrocer-hub.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.13"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.freshgrocer-hub.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.freshgrocer-hub.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-004",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Page Footer (<footer> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "GadgetGalaxy Tech",
+      "url": "http://localhost:8000/sites/site-005",
+      "domain": "gadgetgalaxy-store.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.14"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.gadgetgalaxy-store.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.gadgetgalaxy-store.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-005",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "BookWorm Haven",
+      "url": "http://localhost:8000/sites/site-006",
+      "domain": "bookwormhaven.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.15"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.bookwormhaven.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.bookwormhaven.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-006",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Hero Banner / Brand Logo (Image 404)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "HomeDeco Living",
+      "url": "http://localhost:8000/sites/site-007",
+      "domain": "homedeco-lifestyle.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.16"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.homedeco-lifestyle.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.homedeco-lifestyle.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-007",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Stylesheet (CSS 404 Error)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "PetParadise Care",
+      "url": "http://localhost:8000/sites/site-008",
+      "domain": "petparadise-store.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.17"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.petparadise-store.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.petparadise-store.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-008",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High TTFB Server Bottleneck (8.5s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CosmoBeauty Labs",
+      "url": "http://localhost:8000/sites/site-009",
+      "domain": "cosmobeauty-cosmetics.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.18"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cosmobeauty-cosmetics.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cosmobeauty-cosmetics.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-009",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Header & Content Element Overlapping",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "AudioPhile ProSound",
+      "url": "http://localhost:8000/sites/site-010",
+      "domain": "audiophile-pro.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.19"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.audiophile-pro.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.audiophile-pro.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-010",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Stylesheet (CSS 404 Error)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "ApexPay Wallet",
+      "url": "http://localhost:8000/sites/site-011",
+      "domain": "apexpay-gateway.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.20"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.apexpay-gateway.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.apexpay-gateway.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-011",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 302 Cyclical Redirect Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "NovaBank Digital",
+      "url": "http://localhost:8000/sites/site-012",
+      "domain": "novabank-corp.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.21"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.novabank-corp.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.novabank-corp.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-012",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Header & Content Element Overlapping",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CryptoVault Exchange",
+      "url": "http://localhost:8000/sites/site-013",
+      "domain": "cryptovault-trade.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.22"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cryptovault-trade.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cryptovault-trade.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-013",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 500 Internal Server Error",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "Zenith Wealth Management",
+      "url": "http://localhost:8000/sites/site-014",
+      "domain": "zenith-wealth.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.23"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.zenith-wealth.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.zenith-wealth.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-014",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "Untrusted Self-Signed Certificate (ERR_CERT_AUTHORITY_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "QuickLoan MicroFinance",
+      "url": "http://localhost:8000/sites/site-015",
+      "domain": "quickloan-credit.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.24"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.quickloan-credit.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.quickloan-credit.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-015",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Header & Content Element Overlapping",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "InsurTech Shield",
+      "url": "http://localhost:8000/sites/site-016",
+      "domain": "insurtech-shield.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.25"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.insurtech-shield.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.insurtech-shield.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-016",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Page Footer (<footer> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "TradePulse Analytics",
+      "url": "http://localhost:8000/sites/site-017",
+      "domain": "tradepulse-terminal.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.26"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.tradepulse-terminal.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.tradepulse-terminal.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-017",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Resolution Failure (NXDOMAIN / Non-Existent Host)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "PayBridge Remittance",
+      "url": "http://localhost:8000/sites/site-018",
+      "domain": "paybridge-global.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.27"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.paybridge-global.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.paybridge-global.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-018",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 502 Bad Gateway",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "MedixCare Hospital Portal",
+      "url": "http://localhost:8000/sites/site-019",
+      "domain": "medixcare-hospital.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.28"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.medixcare-hospital.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.medixcare-hospital.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-019",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 401 Unauthorized",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "TeleDoc Online Clinic",
+      "url": "http://localhost:8000/sites/site-020",
+      "domain": "teledoc-consult.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.29"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.teledoc-consult.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.teledoc-consult.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-020",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 504 Gateway Timeout",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "PharmaDirect Rx",
+      "url": "http://localhost:8000/sites/site-021",
+      "domain": "pharmadirect-pharmacy.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.30"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.pharmadirect-pharmacy.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.pharmadirect-pharmacy.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-021",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 404 Not Found",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "BioLab Diagnostics",
+      "url": "http://localhost:8000/sites/site-022",
+      "domain": "biolab-testing.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.31"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.biolab-testing.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.biolab-testing.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-022",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 403 Forbidden",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CardioHeart Institute",
+      "url": "http://localhost:8000/sites/site-023",
+      "domain": "cardioheart-portal.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.32"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cardioheart-portal.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cardioheart-portal.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-023",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Severe Contrast & Color Distortion",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "DentalSmile Clinic",
+      "url": "http://localhost:8000/sites/site-024",
+      "domain": "dentalsmile-center.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.33"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.dentalsmile-center.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.dentalsmile-center.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-024",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Page Footer (<footer> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "TaskFlow Workspace",
+      "url": "http://localhost:8000/sites/site-025",
+      "domain": "taskflow-app.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.34"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.taskflow-app.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.taskflow-app.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-025",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Layout Regression / Container Overflow",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CloudScale DevOps Hub",
+      "url": "http://localhost:8000/sites/site-026",
+      "domain": "cloudscale-infra.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.35"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cloudscale-infra.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cloudscale-infra.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-026",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High TTFB Server Bottleneck (8.5s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CRMPlus Enterprise",
+      "url": "http://localhost:8000/sites/site-027",
+      "domain": "crmplus-suite.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.36"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.crmplus-suite.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.crmplus-suite.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-027",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Header & Content Element Overlapping",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "HRMatrix Human Resources",
+      "url": "http://localhost:8000/sites/site-028",
+      "domain": "hrmatrix-portal.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.37"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.hrmatrix-portal.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.hrmatrix-portal.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-028",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 429 Too Many Requests",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "DocuSignet Contracts",
+      "url": "http://localhost:8000/sites/site-029",
+      "domain": "docusignet-legal.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.38"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.docusignet-legal.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.docusignet-legal.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-029",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 500 Internal Server Error",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "DataMesh BI Dashboard",
+      "url": "http://localhost:8000/sites/site-030",
+      "domain": "datamesh-analytics.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.39"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.datamesh-analytics.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.datamesh-analytics.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-030",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "SupportHero Helpdesk",
+      "url": "http://localhost:8000/sites/site-031",
+      "domain": "supporthero-desk.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.40"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.supporthero-desk.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.supporthero-desk.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-031",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Layout Regression / Container Overflow",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "SurveyPulse Feedback",
+      "url": "http://localhost:8000/sites/site-032",
+      "domain": "surveypulse-research.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.41"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.surveypulse-research.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.surveypulse-research.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-032",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Critical Script Missing (JS 404 Error)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "UniLearn LMS Portal",
+      "url": "http://localhost:8000/sites/site-033",
+      "domain": "unilearn-elearning.edu.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.42"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.unilearn-elearning.edu.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.unilearn-elearning.edu.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-033",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 302 Cyclical Redirect Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "CodeAcademy Vietnam",
+      "url": "http://localhost:8000/sites/site-034",
+      "domain": "codeacademy-dev.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.43"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.codeacademy-dev.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.codeacademy-dev.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-034",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Layout Regression / Container Overflow",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "LangMaster English Hub",
+      "url": "http://localhost:8000/sites/site-035",
+      "domain": "langmaster-edu.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.44"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.langmaster-edu.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.langmaster-edu.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-035",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Resolution Failure (NXDOMAIN / Non-Existent Host)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "KidsMath Interactive",
+      "url": "http://localhost:8000/sites/site-036",
+      "domain": "kidsmath-stem.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.45"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.kidsmath-stem.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.kidsmath-stem.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-036",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "SkillCraft Masterclass",
+      "url": "http://localhost:8000/sites/site-037",
+      "domain": "skillcraft-courses.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.46"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.skillcraft-courses.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.skillcraft-courses.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-037",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "SSL Certificate Expired (ERR_CERT_DATE_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "TechChronicle Daily News",
+      "url": "http://localhost:8000/sites/site-038",
+      "domain": "techchronicle-news.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.47"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.techchronicle-news.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.techchronicle-news.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-038",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High TTFB Server Bottleneck (8.5s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "StreamVibe Video Portal",
+      "url": "http://localhost:8000/sites/site-039",
+      "domain": "streamvibe-ott.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.48"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.streamvibe-ott.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.streamvibe-ott.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-039",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Navigation Menu (<nav> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "GameSphere Community",
+      "url": "http://localhost:8000/sites/site-040",
+      "domain": "gamesphere-esports.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.49"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.gamesphere-esports.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.gamesphere-esports.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-040",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 504 Gateway Timeout",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "MusicStream Live FM",
+      "url": "http://localhost:8000/sites/site-041",
+      "domain": "musicstream-audio.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.50"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.musicstream-audio.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.musicstream-audio.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-041",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "Untrusted Self-Signed Certificate (ERR_CERT_AUTHORITY_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "CinemaTickets Booking",
+      "url": "http://localhost:8000/sites/site-042",
+      "domain": "cinematickets-box.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.51"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cinematickets-box.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cinematickets-box.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-042",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 502 Bad Gateway",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "WanderLust Flight Booking",
+      "url": "http://localhost:8000/sites/site-043",
+      "domain": "wanderlust-flights.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.52"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.wanderlust-flights.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.wanderlust-flights.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-043",
+        "industry": "Travel & Hospitality",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Navigation Menu (<nav> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "StayComfort Hotel Resort",
+      "url": "http://localhost:8000/sites/site-044",
+      "domain": "staycomfort-hotels.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.53"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.staycomfort-hotels.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.staycomfort-hotels.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-044",
+        "industry": "Travel & Hospitality",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "Untrusted Self-Signed Certificate (ERR_CERT_AUTHORITY_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "TourVista Discovery",
+      "url": "http://localhost:8000/sites/site-045",
+      "domain": "tourvista-expeditions.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.54"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.tourvista-expeditions.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.tourvista-expeditions.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-045",
+        "industry": "Travel & Hospitality",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Hero Banner / Brand Logo (Image 404)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "RentRide Car Rental",
+      "url": "http://localhost:8000/sites/site-046",
+      "domain": "rentride-mobility.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.55"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.rentride-mobility.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.rentride-mobility.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-046",
+        "industry": "Travel & Hospitality",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Record Hijack / IP Drift Mismatch",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "SpeedyShip Express",
+      "url": "http://localhost:8000/sites/site-047",
+      "domain": "speedyship-logistics.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.56"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.speedyship-logistics.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.speedyship-logistics.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-047",
+        "industry": "Logistics & Transport",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High Latency / Slow Response (10s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "FreightForward Global",
+      "url": "http://localhost:8000/sites/site-048",
+      "domain": "freightforward-cargo.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.57"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.freightforward-cargo.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.freightforward-cargo.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-048",
+        "industry": "Logistics & Transport",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "SSL Hostname Mismatch (ERR_CERT_COMMON_NAME_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "UrbanRide Taxi Dispatch",
+      "url": "http://localhost:8000/sites/site-049",
+      "domain": "urbanride-mobility.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.58"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.urbanride-mobility.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.urbanride-mobility.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-049",
+        "industry": "Logistics & Transport",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Core Heading (h1 Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "WarehousePro Fulfillment",
+      "url": "http://localhost:8000/sites/site-050",
+      "domain": "warehousepro-hub.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.59"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.warehousepro-hub.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.warehousepro-hub.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-050",
+        "industry": "Logistics & Transport",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Action Buttons (CTA Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CyberArmor SOC Portal",
+      "url": "http://localhost:8000/sites/site-051",
+      "domain": "cyberarmor-security.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.60"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cyberarmor-security.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cyberarmor-security.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-051",
+        "industry": "CyberSecurity & Infrastructure",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Resolution Failure (NXDOMAIN / Non-Existent Host)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "CloudHost VPS Infrastructure",
+      "url": "http://localhost:8000/sites/site-052",
+      "domain": "cloudhost-servers.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.61"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cloudhost-servers.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cloudhost-servers.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-052",
+        "industry": "CyberSecurity & Infrastructure",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 301 Permanent Infinite Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "CertAuthority SSL Center",
+      "url": "http://localhost:8000/sites/site-053",
+      "domain": "certauthority-pki.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.62"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.certauthority-pki.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.certauthority-pki.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-053",
+        "industry": "CyberSecurity & Infrastructure",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 500 Internal Server Error",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "DNSGlobal Anycast Network",
+      "url": "http://localhost:8000/sites/site-054",
+      "domain": "dnsglobal-routing.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.63"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.dnsglobal-routing.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.dnsglobal-routing.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-054",
+        "industry": "CyberSecurity & Infrastructure",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Hero Banner / Brand Logo (Image 404)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "FoodieBite Delivery",
+      "url": "http://localhost:8000/sites/site-055",
+      "domain": "foodiebite-eats.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.64"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.foodiebite-eats.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.foodiebite-eats.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-055",
+        "industry": "Food, Dining & Lifestyle",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Stylesheet (CSS 404 Error)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "GourmetBistro Restaurant",
+      "url": "http://localhost:8000/sites/site-056",
+      "domain": "gourmetbistro-dining.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.65"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.gourmetbistro-dining.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.gourmetbistro-dining.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-056",
+        "industry": "Food, Dining & Lifestyle",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Page Footer (<footer> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CoffeeRoasters Craft Café",
+      "url": "http://localhost:8000/sites/site-057",
+      "domain": "coffeeroasters-specialty.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.66"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.coffeeroasters-specialty.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.coffeeroasters-specialty.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-057",
+        "industry": "Food, Dining & Lifestyle",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Resolution Failure (NXDOMAIN / Non-Existent Host)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "FitLife Gym & Wellness",
+      "url": "http://localhost:8000/sites/site-058",
+      "domain": "fitlife-fitness.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.67"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.fitlife-fitness.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.fitlife-fitness.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-058",
+        "industry": "Food, Dining & Lifestyle",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Stylesheet (CSS 404 Error)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "Aura Luxe Fashion (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-059",
+      "domain": "auraluxe-shop-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.68"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.auraluxe-shop-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.auraluxe-shop-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-059",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "MegaMart Direct (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-060",
+      "domain": "megamart-online-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.69"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.megamart-online-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.megamart-online-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-060",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Header & Content Element Overlapping",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "SneakerZone Global (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-061",
+      "domain": "sneakerzone-street-2.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.70"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.sneakerzone-street-2.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.sneakerzone-street-2.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-061",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High Latency / Slow Response (10s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "FreshGrocer Express (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-062",
+      "domain": "freshgrocer-hub-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.71"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.freshgrocer-hub-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.freshgrocer-hub-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-062",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 403 Forbidden",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "GadgetGalaxy Tech (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-063",
+      "domain": "gadgetgalaxy-store-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.72"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.gadgetgalaxy-store-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.gadgetgalaxy-store-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-063",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Resolution Failure (NXDOMAIN / Non-Existent Host)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "BookWorm Haven (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-064",
+      "domain": "bookwormhaven-2.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.73"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.bookwormhaven-2.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.bookwormhaven-2.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-064",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Layout Regression / Container Overflow",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "HomeDeco Living (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-065",
+      "domain": "homedeco-lifestyle-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.74"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.homedeco-lifestyle-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.homedeco-lifestyle-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-065",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 302 Cyclical Redirect Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "PetParadise Care (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-066",
+      "domain": "petparadise-store-2.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.75"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.petparadise-store-2.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.petparadise-store-2.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-066",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Action Buttons (CTA Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CosmoBeauty Labs (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-067",
+      "domain": "cosmobeauty-cosmetics-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.76"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cosmobeauty-cosmetics-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cosmobeauty-cosmetics-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-067",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "AudioPhile ProSound (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-068",
+      "domain": "audiophile-pro-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.77"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.audiophile-pro-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.audiophile-pro-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-068",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "Untrusted Self-Signed Certificate (ERR_CERT_AUTHORITY_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "ApexPay Wallet (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-069",
+      "domain": "apexpay-gateway-2.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.78"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.apexpay-gateway-2.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.apexpay-gateway-2.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-069",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High Latency / Slow Response (10s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "NovaBank Digital (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-070",
+      "domain": "novabank-corp-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.79"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.novabank-corp-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.novabank-corp-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-070",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "CryptoVault Exchange (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-071",
+      "domain": "cryptovault-trade-2.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.80"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cryptovault-trade-2.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cryptovault-trade-2.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-071",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Resolution Failure (NXDOMAIN / Non-Existent Host)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "Zenith Wealth Management (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-072",
+      "domain": "zenith-wealth-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.81"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.zenith-wealth-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.zenith-wealth-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-072",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 429 Too Many Requests",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "QuickLoan MicroFinance (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-073",
+      "domain": "quickloan-credit-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.82"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.quickloan-credit-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.quickloan-credit-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-073",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Stylesheet (CSS 404 Error)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "InsurTech Shield (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-074",
+      "domain": "insurtech-shield-2.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.83"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.insurtech-shield-2.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.insurtech-shield-2.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-074",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Record Hijack / IP Drift Mismatch",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "TradePulse Analytics (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-075",
+      "domain": "tradepulse-terminal-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.84"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.tradepulse-terminal-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.tradepulse-terminal-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-075",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Hero Banner / Brand Logo (Image 404)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "PayBridge Remittance (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-076",
+      "domain": "paybridge-global-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.85"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.paybridge-global-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.paybridge-global-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-076",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Page Footer (<footer> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "MedixCare Hospital Portal (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-077",
+      "domain": "medixcare-hospital-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.86"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.medixcare-hospital-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.medixcare-hospital-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-077",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "TeleDoc Online Clinic (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-078",
+      "domain": "teledoc-consult-2.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.87"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.teledoc-consult-2.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.teledoc-consult-2.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-078",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 403 Forbidden",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "PharmaDirect Rx (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-079",
+      "domain": "pharmadirect-pharmacy-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.88"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.pharmadirect-pharmacy-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.pharmadirect-pharmacy-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-079",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "SSL Certificate Expired (ERR_CERT_DATE_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "BioLab Diagnostics (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-080",
+      "domain": "biolab-testing-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.89"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.biolab-testing-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.biolab-testing-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-080",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Record Hijack / IP Drift Mismatch",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "CardioHeart Institute (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-081",
+      "domain": "cardioheart-portal-2.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.90"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cardioheart-portal-2.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cardioheart-portal-2.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-081",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High Latency / Slow Response (10s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "DentalSmile Clinic (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-082",
+      "domain": "dentalsmile-center-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.91"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.dentalsmile-center-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.dentalsmile-center-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-082",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "SSL Certificate Expired (ERR_CERT_DATE_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "TaskFlow Workspace (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-083",
+      "domain": "taskflow-app-2.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.92"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.taskflow-app-2.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.taskflow-app-2.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-083",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 503 Service Unavailable",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "CloudScale DevOps Hub (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-084",
+      "domain": "cloudscale-infra-2.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.93"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cloudscale-infra-2.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cloudscale-infra-2.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-084",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "SSL Hostname Mismatch (ERR_CERT_COMMON_NAME_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "CRMPlus Enterprise (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-085",
+      "domain": "crmplus-suite-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.94"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.crmplus-suite-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.crmplus-suite-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-085",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "HRMatrix Human Resources (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-086",
+      "domain": "hrmatrix-portal-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.95"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.hrmatrix-portal-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.hrmatrix-portal-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-086",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Critical Script Missing (JS 404 Error)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "DocuSignet Contracts (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-087",
+      "domain": "docusignet-legal-2.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.96"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.docusignet-legal-2.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.docusignet-legal-2.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-087",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "DataMesh BI Dashboard (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-088",
+      "domain": "datamesh-analytics-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.97"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.datamesh-analytics-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.datamesh-analytics-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-088",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Page Footer (<footer> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "SupportHero Helpdesk (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-089",
+      "domain": "supporthero-desk-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.98"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.supporthero-desk-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.supporthero-desk-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-089",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 500 Internal Server Error",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "SurveyPulse Feedback (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-090",
+      "domain": "surveypulse-research-2.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.99"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.surveypulse-research-2.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.surveypulse-research-2.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-090",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Hero Banner / Brand Logo (Image 404)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "UniLearn LMS Portal (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-091",
+      "domain": "unilearn-elearning-2.edu.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.100"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.unilearn-elearning-2.edu.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.unilearn-elearning-2.edu.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-091",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 302 Cyclical Redirect Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "CodeAcademy Vietnam (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-092",
+      "domain": "codeacademy-dev-2.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.101"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.codeacademy-dev-2.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.codeacademy-dev-2.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-092",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 429 Too Many Requests",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "LangMaster English Hub (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-093",
+      "domain": "langmaster-edu-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.102"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.langmaster-edu-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.langmaster-edu-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-093",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Resolution Failure (NXDOMAIN / Non-Existent Host)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "KidsMath Interactive (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-094",
+      "domain": "kidsmath-stem-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.103"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.kidsmath-stem-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.kidsmath-stem-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-094",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High TTFB Server Bottleneck (8.5s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "SkillCraft Masterclass (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-095",
+      "domain": "skillcraft-courses-2.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.104"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.skillcraft-courses-2.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.skillcraft-courses-2.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-095",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 302 Cyclical Redirect Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "TechChronicle Daily News (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-096",
+      "domain": "techchronicle-news-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.105"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.techchronicle-news-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.techchronicle-news-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-096",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High TTFB Server Bottleneck (8.5s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "StreamVibe Video Portal (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-097",
+      "domain": "streamvibe-ott-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.106"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.streamvibe-ott-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.streamvibe-ott-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-097",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 302 Cyclical Redirect Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "GameSphere Community (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-098",
+      "domain": "gamesphere-esports-2.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.107"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.gamesphere-esports-2.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.gamesphere-esports-2.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-098",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High TTFB Server Bottleneck (8.5s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "MusicStream Live FM (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-099",
+      "domain": "musicstream-audio-2.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.108"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.musicstream-audio-2.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.musicstream-audio-2.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-099",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 302 Cyclical Redirect Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "CinemaTickets Booking (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-100",
+      "domain": "cinematickets-box-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.109"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cinematickets-box-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cinematickets-box-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-100",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 504 Gateway Timeout",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "WanderLust Flight Booking (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-101",
+      "domain": "wanderlust-flights-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.110"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.wanderlust-flights-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.wanderlust-flights-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-101",
+        "industry": "Travel & Hospitality",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High Latency / Slow Response (10s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "StayComfort Hotel Resort (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-102",
+      "domain": "staycomfort-hotels-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.111"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.staycomfort-hotels-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.staycomfort-hotels-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-102",
+        "industry": "Travel & Hospitality",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 301 Permanent Infinite Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "TourVista Discovery (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-103",
+      "domain": "tourvista-expeditions-2.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.112"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.tourvista-expeditions-2.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.tourvista-expeditions-2.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-103",
+        "industry": "Travel & Hospitality",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "RentRide Car Rental (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-104",
+      "domain": "rentride-mobility-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.113"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.rentride-mobility-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.rentride-mobility-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-104",
+        "industry": "Travel & Hospitality",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 301 Permanent Infinite Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "SpeedyShip Express (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-105",
+      "domain": "speedyship-logistics-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.114"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.speedyship-logistics-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.speedyship-logistics-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-105",
+        "industry": "Logistics & Transport",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "FreightForward Global (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-106",
+      "domain": "freightforward-cargo-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.115"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.freightforward-cargo-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.freightforward-cargo-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-106",
+        "industry": "Logistics & Transport",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High TTFB Server Bottleneck (8.5s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "UrbanRide Taxi Dispatch (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-107",
+      "domain": "urbanride-mobility-2.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.116"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.urbanride-mobility-2.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.urbanride-mobility-2.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-107",
+        "industry": "Logistics & Transport",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High Latency / Slow Response (10s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "WarehousePro Fulfillment (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-108",
+      "domain": "warehousepro-hub-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.117"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.warehousepro-hub-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.warehousepro-hub-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-108",
+        "industry": "Logistics & Transport",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Header & Content Element Overlapping",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CyberArmor SOC Portal (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-109",
+      "domain": "cyberarmor-security-2.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.118"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cyberarmor-security-2.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cyberarmor-security-2.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-109",
+        "industry": "CyberSecurity & Infrastructure",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Layout Regression / Container Overflow",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CloudHost VPS Infrastructure (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-110",
+      "domain": "cloudhost-servers-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.119"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cloudhost-servers-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cloudhost-servers-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-110",
+        "industry": "CyberSecurity & Infrastructure",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "Untrusted Self-Signed Certificate (ERR_CERT_AUTHORITY_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "CertAuthority SSL Center (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-111",
+      "domain": "certauthority-pki-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.120"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.certauthority-pki-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.certauthority-pki-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-111",
+        "industry": "CyberSecurity & Infrastructure",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Hero Banner / Brand Logo (Image 404)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "DNSGlobal Anycast Network (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-112",
+      "domain": "dnsglobal-routing-2.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.121"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.dnsglobal-routing-2.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.dnsglobal-routing-2.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-112",
+        "industry": "CyberSecurity & Infrastructure",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Page Footer (<footer> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "FoodieBite Delivery (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-113",
+      "domain": "foodiebite-eats-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.122"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.foodiebite-eats-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.foodiebite-eats-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-113",
+        "industry": "Food, Dining & Lifestyle",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Resolution Failure (NXDOMAIN / Non-Existent Host)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "GourmetBistro Restaurant (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-114",
+      "domain": "gourmetbistro-dining-2.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.123"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.gourmetbistro-dining-2.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.gourmetbistro-dining-2.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-114",
+        "industry": "Food, Dining & Lifestyle",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 301 Permanent Infinite Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "CoffeeRoasters Craft Café (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-115",
+      "domain": "coffeeroasters-specialty-2.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.124"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.coffeeroasters-specialty-2.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.coffeeroasters-specialty-2.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-115",
+        "industry": "Food, Dining & Lifestyle",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Resolution Failure (NXDOMAIN / Non-Existent Host)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "FitLife Gym & Wellness (Chi nhánh 2)",
+      "url": "http://localhost:8000/sites/site-116",
+      "domain": "fitlife-fitness-2.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.125"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.fitlife-fitness-2.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.fitlife-fitness-2.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-116",
+        "industry": "Food, Dining & Lifestyle",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Page Footer (<footer> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "Aura Luxe Fashion (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-117",
+      "domain": "auraluxe-shop-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.126"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.auraluxe-shop-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.auraluxe-shop-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-117",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "SSL Hostname Mismatch (ERR_CERT_COMMON_NAME_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "MegaMart Direct (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-118",
+      "domain": "megamart-online-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.127"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.megamart-online-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.megamart-online-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-118",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "SSL Certificate Expired (ERR_CERT_DATE_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "SneakerZone Global (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-119",
+      "domain": "sneakerzone-street-3.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.128"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.sneakerzone-street-3.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.sneakerzone-street-3.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-119",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Navigation Menu (<nav> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "FreshGrocer Express (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-120",
+      "domain": "freshgrocer-hub-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.129"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.freshgrocer-hub-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.freshgrocer-hub-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-120",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 504 Gateway Timeout",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "GadgetGalaxy Tech (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-121",
+      "domain": "gadgetgalaxy-store-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.130"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.gadgetgalaxy-store-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.gadgetgalaxy-store-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-121",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Resolution Failure (NXDOMAIN / Non-Existent Host)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "BookWorm Haven (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-122",
+      "domain": "bookwormhaven-3.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.131"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.bookwormhaven-3.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.bookwormhaven-3.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-122",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 502 Bad Gateway",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "HomeDeco Living (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-123",
+      "domain": "homedeco-lifestyle-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.132"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.homedeco-lifestyle-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.homedeco-lifestyle-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-123",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Navigation Menu (<nav> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "PetParadise Care (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-124",
+      "domain": "petparadise-store-3.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.133"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.petparadise-store-3.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.petparadise-store-3.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-124",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 301 Permanent Infinite Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "CosmoBeauty Labs (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-125",
+      "domain": "cosmobeauty-cosmetics-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.134"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cosmobeauty-cosmetics-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cosmobeauty-cosmetics-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-125",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 500 Internal Server Error",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "AudioPhile ProSound (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-126",
+      "domain": "audiophile-pro-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.135"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.audiophile-pro-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.audiophile-pro-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-126",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High TTFB Server Bottleneck (8.5s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "ApexPay Wallet (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-127",
+      "domain": "apexpay-gateway-3.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.136"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.apexpay-gateway-3.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.apexpay-gateway-3.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-127",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 302 Cyclical Redirect Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "NovaBank Digital (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-128",
+      "domain": "novabank-corp-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.137"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.novabank-corp-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.novabank-corp-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-128",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Severe Contrast & Color Distortion",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CryptoVault Exchange (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-129",
+      "domain": "cryptovault-trade-3.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.138"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cryptovault-trade-3.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cryptovault-trade-3.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-129",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 404 Not Found",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "Zenith Wealth Management (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-130",
+      "domain": "zenith-wealth-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.139"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.zenith-wealth-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.zenith-wealth-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-130",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 502 Bad Gateway",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "QuickLoan MicroFinance (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-131",
+      "domain": "quickloan-credit-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.140"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.quickloan-credit-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.quickloan-credit-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-131",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High Latency / Slow Response (10s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "InsurTech Shield (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-132",
+      "domain": "insurtech-shield-3.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.141"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.insurtech-shield-3.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.insurtech-shield-3.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-132",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High TTFB Server Bottleneck (8.5s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "TradePulse Analytics (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-133",
+      "domain": "tradepulse-terminal-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.142"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.tradepulse-terminal-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.tradepulse-terminal-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-133",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 302 Cyclical Redirect Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "PayBridge Remittance (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-134",
+      "domain": "paybridge-global-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.143"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.paybridge-global-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.paybridge-global-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-134",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 403 Forbidden",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "MedixCare Hospital Portal (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-135",
+      "domain": "medixcare-hospital-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.144"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.medixcare-hospital-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.medixcare-hospital-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-135",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Navigation Menu (<nav> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "TeleDoc Online Clinic (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-136",
+      "domain": "teledoc-consult-3.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.145"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.teledoc-consult-3.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.teledoc-consult-3.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-136",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High TTFB Server Bottleneck (8.5s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "PharmaDirect Rx (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-137",
+      "domain": "pharmadirect-pharmacy-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.146"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.pharmadirect-pharmacy-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.pharmadirect-pharmacy-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-137",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "BioLab Diagnostics (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-138",
+      "domain": "biolab-testing-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.147"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.biolab-testing-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.biolab-testing-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-138",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Action Buttons (CTA Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CardioHeart Institute (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-139",
+      "domain": "cardioheart-portal-3.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.148"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cardioheart-portal-3.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cardioheart-portal-3.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-139",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Stylesheet (CSS 404 Error)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "DentalSmile Clinic (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-140",
+      "domain": "dentalsmile-center-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.149"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.dentalsmile-center-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.dentalsmile-center-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-140",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 429 Too Many Requests",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "TaskFlow Workspace (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-141",
+      "domain": "taskflow-app-3.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.150"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.taskflow-app-3.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.taskflow-app-3.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-141",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 404 Not Found",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CloudScale DevOps Hub (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-142",
+      "domain": "cloudscale-infra-3.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.151"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cloudscale-infra-3.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cloudscale-infra-3.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-142",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "SSL Certificate Expired (ERR_CERT_DATE_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "CRMPlus Enterprise (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-143",
+      "domain": "crmplus-suite-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.152"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.crmplus-suite-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.crmplus-suite-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-143",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "Untrusted Self-Signed Certificate (ERR_CERT_AUTHORITY_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "HRMatrix Human Resources (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-144",
+      "domain": "hrmatrix-portal-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.153"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.hrmatrix-portal-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.hrmatrix-portal-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-144",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "SSL Hostname Mismatch (ERR_CERT_COMMON_NAME_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "DocuSignet Contracts (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-145",
+      "domain": "docusignet-legal-3.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.154"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.docusignet-legal-3.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.docusignet-legal-3.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-145",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 500 Internal Server Error",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "DataMesh BI Dashboard (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-146",
+      "domain": "datamesh-analytics-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.155"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.datamesh-analytics-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.datamesh-analytics-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-146",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Record Hijack / IP Drift Mismatch",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "SupportHero Helpdesk (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-147",
+      "domain": "supporthero-desk-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.156"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.supporthero-desk-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.supporthero-desk-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-147",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Resolution Failure (NXDOMAIN / Non-Existent Host)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "SurveyPulse Feedback (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-148",
+      "domain": "surveypulse-research-3.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.157"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.surveypulse-research-3.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.surveypulse-research-3.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-148",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High TTFB Server Bottleneck (8.5s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "UniLearn LMS Portal (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-149",
+      "domain": "unilearn-elearning-3.edu.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.158"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.unilearn-elearning-3.edu.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.unilearn-elearning-3.edu.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-149",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Resolution Failure (NXDOMAIN / Non-Existent Host)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "CodeAcademy Vietnam (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-150",
+      "domain": "codeacademy-dev-3.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.159"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.codeacademy-dev-3.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.codeacademy-dev-3.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-150",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Record Hijack / IP Drift Mismatch",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "LangMaster English Hub (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-151",
+      "domain": "langmaster-edu-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.160"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.langmaster-edu-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.langmaster-edu-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-151",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Stylesheet (CSS 404 Error)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "KidsMath Interactive (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-152",
+      "domain": "kidsmath-stem-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.161"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.kidsmath-stem-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.kidsmath-stem-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-152",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Severe Contrast & Color Distortion",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "SkillCraft Masterclass (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-153",
+      "domain": "skillcraft-courses-3.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.162"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.skillcraft-courses-3.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.skillcraft-courses-3.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-153",
+        "industry": "EdTech & Education",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Core Heading (h1 Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "TechChronicle Daily News (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-154",
+      "domain": "techchronicle-news-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.163"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.techchronicle-news-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.techchronicle-news-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-154",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Layout Regression / Container Overflow",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "StreamVibe Video Portal (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-155",
+      "domain": "streamvibe-ott-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.164"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.streamvibe-ott-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.streamvibe-ott-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-155",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Critical Script Missing (JS 404 Error)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "GameSphere Community (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-156",
+      "domain": "gamesphere-esports-3.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.165"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.gamesphere-esports-3.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.gamesphere-esports-3.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-156",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High TTFB Server Bottleneck (8.5s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "MusicStream Live FM (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-157",
+      "domain": "musicstream-audio-3.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.166"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.musicstream-audio-3.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.musicstream-audio-3.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-157",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 404 Not Found",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CinemaTickets Booking (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-158",
+      "domain": "cinematickets-box-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.167"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cinematickets-box-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cinematickets-box-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-158",
+        "industry": "Media & Entertainment",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "Untrusted Self-Signed Certificate (ERR_CERT_AUTHORITY_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "WanderLust Flight Booking (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-159",
+      "domain": "wanderlust-flights-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.168"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.wanderlust-flights-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.wanderlust-flights-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-159",
+        "industry": "Travel & Hospitality",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Navigation Menu (<nav> Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "StayComfort Hotel Resort (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-160",
+      "domain": "staycomfort-hotels-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.169"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.staycomfort-hotels-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.staycomfort-hotels-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-160",
+        "industry": "Travel & Hospitality",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Record Hijack / IP Drift Mismatch",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "TourVista Discovery (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-161",
+      "domain": "tourvista-expeditions-3.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.170"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.tourvista-expeditions-3.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.tourvista-expeditions-3.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-161",
+        "industry": "Travel & Hospitality",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 500 Internal Server Error",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "RentRide Car Rental (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-162",
+      "domain": "rentride-mobility-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.171"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.rentride-mobility-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.rentride-mobility-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-162",
+        "industry": "Travel & Hospitality",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 502 Bad Gateway",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "SpeedyShip Express (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-163",
+      "domain": "speedyship-logistics-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.172"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.speedyship-logistics-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.speedyship-logistics-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-163",
+        "industry": "Logistics & Transport",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "SSL Certificate Expired (ERR_CERT_DATE_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "FreightForward Global (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-164",
+      "domain": "freightforward-cargo-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.173"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.freightforward-cargo-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.freightforward-cargo-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-164",
+        "industry": "Logistics & Transport",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Critical Script Missing (JS 404 Error)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "UrbanRide Taxi Dispatch (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-165",
+      "domain": "urbanride-mobility-3.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.174"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.urbanride-mobility-3.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.urbanride-mobility-3.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-165",
+        "industry": "Logistics & Transport",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 404 Not Found",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "WarehousePro Fulfillment (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-166",
+      "domain": "warehousepro-hub-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.175"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.warehousepro-hub-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.warehousepro-hub-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-166",
+        "industry": "Logistics & Transport",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 502 Bad Gateway",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "CyberArmor SOC Portal (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-167",
+      "domain": "cyberarmor-security-3.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.176"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cyberarmor-security-3.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cyberarmor-security-3.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-167",
+        "industry": "CyberSecurity & Infrastructure",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 401 Unauthorized",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CloudHost VPS Infrastructure (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-168",
+      "domain": "cloudhost-servers-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.177"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cloudhost-servers-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cloudhost-servers-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-168",
+        "industry": "CyberSecurity & Infrastructure",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "CertAuthority SSL Center (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-169",
+      "domain": "certauthority-pki-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.178"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.certauthority-pki-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.certauthority-pki-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-169",
+        "industry": "CyberSecurity & Infrastructure",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "SSL Certificate Expired (ERR_CERT_DATE_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "DNSGlobal Anycast Network (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-170",
+      "domain": "dnsglobal-routing-3.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.179"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.dnsglobal-routing-3.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.dnsglobal-routing-3.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-170",
+        "industry": "CyberSecurity & Infrastructure",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 403 Forbidden",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "FoodieBite Delivery (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-171",
+      "domain": "foodiebite-eats-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.180"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.foodiebite-eats-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.foodiebite-eats-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-171",
+        "industry": "Food, Dining & Lifestyle",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "GourmetBistro Restaurant (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-172",
+      "domain": "gourmetbistro-dining-3.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.181"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.gourmetbistro-dining-3.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.gourmetbistro-dining-3.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-172",
+        "industry": "Food, Dining & Lifestyle",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Layout Regression / Container Overflow",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "CoffeeRoasters Craft Café (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-173",
+      "domain": "coffeeroasters-specialty-3.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.182"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.coffeeroasters-specialty-3.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.coffeeroasters-specialty-3.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-173",
+        "industry": "Food, Dining & Lifestyle",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 404 Not Found",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "FitLife Gym & Wellness (Chi nhánh 3)",
+      "url": "http://localhost:8000/sites/site-174",
+      "domain": "fitlife-fitness-3.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.183"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.fitlife-fitness-3.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.fitlife-fitness-3.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-174",
+        "industry": "Food, Dining & Lifestyle",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Hero Banner / Brand Logo (Image 404)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "Aura Luxe Fashion (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-175",
+      "domain": "auraluxe-shop-4.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.184"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.auraluxe-shop-4.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.auraluxe-shop-4.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-175",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Layout Regression / Container Overflow",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "MegaMart Direct (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-176",
+      "domain": "megamart-online-4.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.185"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.megamart-online-4.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.megamart-online-4.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-176",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "SneakerZone Global (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-177",
+      "domain": "sneakerzone-street-4.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.186"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.sneakerzone-street-4.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.sneakerzone-street-4.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-177",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "SSL Hostname Mismatch (ERR_CERT_COMMON_NAME_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "FreshGrocer Express (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-178",
+      "domain": "freshgrocer-hub-4.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.187"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.freshgrocer-hub-4.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.freshgrocer-hub-4.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-178",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 301 Permanent Infinite Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "GadgetGalaxy Tech (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-179",
+      "domain": "gadgetgalaxy-store-4.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.188"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.gadgetgalaxy-store-4.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.gadgetgalaxy-store-4.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-179",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "BookWorm Haven (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-180",
+      "domain": "bookwormhaven-4.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.189"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.bookwormhaven-4.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.bookwormhaven-4.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-180",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 429 Too Many Requests",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "HomeDeco Living (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-181",
+      "domain": "homedeco-lifestyle-4.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.190"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.homedeco-lifestyle-4.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.homedeco-lifestyle-4.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-181",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Layout Regression / Container Overflow",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "PetParadise Care (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-182",
+      "domain": "petparadise-store-4.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.191"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.petparadise-store-4.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.petparadise-store-4.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-182",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Record Hijack / IP Drift Mismatch",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "CosmoBeauty Labs (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-183",
+      "domain": "cosmobeauty-cosmetics-4.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.192"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cosmobeauty-cosmetics-4.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cosmobeauty-cosmetics-4.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-183",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-PERF-01",
+        "fault_type": "HIGH_LATENCY",
+        "fault_name": "High Latency / Slow Response (10s Delay)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "AudioPhile ProSound (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-184",
+      "domain": "audiophile-pro-4.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.193"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.audiophile-pro-4.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.audiophile-pro-4.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-184",
+        "industry": "E-Commerce & Retail",
+        "scenario_code": "TC-DOM-02",
+        "fault_type": "MISSING_ASSETS",
+        "fault_name": "Missing Stylesheet (CSS 404 Error)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "ApexPay Wallet (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-185",
+      "domain": "apexpay-gateway-4.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.194"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.apexpay-gateway-4.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.apexpay-gateway-4.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-185",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-DOM-01",
+        "fault_type": "BROKEN_DOM",
+        "fault_name": "Missing Core Heading (h1 Missing)",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "NovaBank Digital (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-186",
+      "domain": "novabank-corp-4.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.195"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.novabank-corp-4.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.novabank-corp-4.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-186",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-SSL-01",
+        "fault_type": "SSL_ERROR",
+        "fault_name": "SSL Hostname Mismatch (ERR_CERT_COMMON_NAME_INVALID)",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "CryptoVault Exchange (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-187",
+      "domain": "cryptovault-trade-4.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.196"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cryptovault-trade-4.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cryptovault-trade-4.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-187",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "Zenith Wealth Management (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-188",
+      "domain": "zenith-wealth-4.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.197"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.zenith-wealth-4.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.zenith-wealth-4.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-188",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-04",
+        "fault_type": "HTTP_4XX",
+        "fault_name": "HTTP 429 Too Many Requests",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "QuickLoan MicroFinance (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-189",
+      "domain": "quickloan-credit-4.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.198"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.quickloan-credit-4.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.quickloan-credit-4.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-189",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 302 Cyclical Redirect Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "InsurTech Shield (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-190",
+      "domain": "insurtech-shield-4.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.199"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.insurtech-shield-4.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.insurtech-shield-4.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-190",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 301 Permanent Infinite Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "TradePulse Analytics (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-191",
+      "domain": "tradepulse-terminal-4.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.200"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.tradepulse-terminal-4.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.tradepulse-terminal-4.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-191",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 302 Cyclical Redirect Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "PayBridge Remittance (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-192",
+      "domain": "paybridge-global-4.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.201"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.paybridge-global-4.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.paybridge-global-4.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-192",
+        "industry": "Fintech & Banking",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 301 Permanent Infinite Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "MedixCare Hospital Portal (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-193",
+      "domain": "medixcare-hospital-4.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.202"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.medixcare-hospital-4.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.medixcare-hospital-4.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-193",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "TeleDoc Online Clinic (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-194",
+      "domain": "teledoc-consult-4.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.203"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.teledoc-consult-4.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.teledoc-consult-4.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-194",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-PERF-02",
+        "fault_type": "REQUEST_TIMEOUT",
+        "fault_name": "Extreme Response Latency (>15s Timeout)",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "PharmaDirect Rx (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-195",
+      "domain": "pharmadirect-pharmacy-4.com",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.204"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.pharmadirect-pharmacy-4.com"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.pharmadirect-pharmacy-4.com ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-195",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Header & Content Element Overlapping",
+        "severity": "Medium"
+      }
+    },
+    {
+      "name": "BioLab Diagnostics (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-196",
+      "domain": "biolab-testing-4.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.205"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.biolab-testing-4.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.biolab-testing-4.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-196",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-DNS-01",
+        "fault_type": "DNS_FAILURE",
+        "fault_name": "DNS Record Hijack / IP Drift Mismatch",
+        "severity": "Critical"
+      }
+    },
+    {
+      "name": "CardioHeart Institute (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-197",
+      "domain": "cardioheart-portal-4.org",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.206"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cardioheart-portal-4.org"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cardioheart-portal-4.org ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-197",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 500 Internal Server Error",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "DentalSmile Clinic (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-198",
+      "domain": "dentalsmile-center-4.vn",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.207"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.dentalsmile-center-4.vn"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.dentalsmile-center-4.vn ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-198",
+        "industry": "Healthcare & Medical",
+        "scenario_code": "TC-HTTP-02",
+        "fault_type": "HTTP_5XX",
+        "fault_name": "HTTP 502 Bad Gateway",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "TaskFlow Workspace (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-199",
+      "domain": "taskflow-app-4.io",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.208"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.taskflow-app-4.io"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.taskflow-app-4.io ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-199",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-HTTP-03",
+        "fault_type": "REDIRECT_LOOP",
+        "fault_name": "HTTP 302 Cyclical Redirect Loop",
+        "severity": "High"
+      }
+    },
+    {
+      "name": "CloudScale DevOps Hub (Chi nhánh 4)",
+      "url": "http://localhost:8000/sites/site-200",
+      "domain": "cloudscale-infra-4.net",
+      "expected_status": 200,
+      "baseline_dns": {
+        "a": [
+          "192.168.100.209"
+        ],
+        "aaaa": [],
+        "cname": null,
+        "mx": [
+          "mail.cloudscale-infra-4.net"
+        ],
+        "txt": [
+          "v=spf1 include:_spf.cloudscale-infra-4.net ~all"
+        ]
+      },
+      "metadata": {
+        "site_id": "site-200",
+        "industry": "SaaS & Cloud Platforms",
+        "scenario_code": "TC-UI-01",
+        "fault_type": "VISUAL_REGRESSION",
+        "fault_name": "Severe Contrast & Color Distortion",
+        "severity": "Medium"
+      }
     }
   ]
 }
