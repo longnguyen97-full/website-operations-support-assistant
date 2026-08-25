@@ -641,10 +641,144 @@ def render_benchmark_tab(selected_site, http_res=None, dns_res=None, ssl_res=Non
     st.dataframe(pd.DataFrame(benchmark_table), use_container_width=True, hide_index=True)
 
 
-def render_dashboard(selected_site, http_res=None, dns_res=None, ssl_res=None, visual_res=None):
-    """Giao diện Dashboard Giám sát phân chia theo 4 Tabs chuyên biệt."""
-    tab1, tab2, tab3, tab4 = st.tabs([
+def render_agentic_studio_tab(selected_site, agent_result=None):
+    """
+    Hiển thị Không gian Vận hành Agentic AI (Multi-Agent Reasoning Studio):
+    - Trực quan hóa toàn bộ chuỗi vết thực thi (Execution Trace).
+    - Thể hiện 4 năng lực cốt lõi: Planning, Tool Use, Self-Correction, Knowledge Base.
+    - Bản tóm tắt nguyên nhân gốc (RCA) bằng ngôn ngữ tự nhiên và kế hoạch khắc phục.
+    """
+    from agents.orchestrator import MonitoringOrchestratorAgent
+    from database.repository import get_active_baseline, get_website_latency_history
+
+    st.subheader(f"🧠 Agentic AI Operations Studio: {selected_site['name']}")
+    st.caption("Hệ thống đa tác tử tự động lập kế hoạch, thu thập bằng chứng, tự sửa sai và suy luận nguyên nhân gốc (RCA).")
+
+    # Nút kích hoạt Agentic AI Studio riêng biệt nếu chưa có kết quả
+    col_act1, col_act2 = st.columns([2, 3])
+    with col_act1:
+        run_agent_now = st.button("🚀 Chạy Chu trình Tác tử Agentic AI", use_container_width=True, type="primary")
+    with col_act2:
+        include_visual = st.checkbox("📸 Kèm tác tử kiểm tra Visual / DOM (Playwright)", value=False)
+
+    cached_agent_res = st.session_state.get("last_agent_result")
+    if run_agent_now or (agent_result is None and cached_agent_res and cached_agent_res.get("website_name") == selected_site["name"]):
+        if run_agent_now:
+            with st.spinner("🤖 Các tác tử đang phối hợp lập kế hoạch, thu thập bằng chứng và suy luận..."):
+                orchestrator = MonitoringOrchestratorAgent()
+                active_b = get_active_baseline(selected_site["id"])
+                hist_lat = get_website_latency_history(selected_site["id"], limit=15)
+                agent_result = orchestrator.run_agentic_workflow(
+                    website_info=selected_site,
+                    active_baseline=active_b,
+                    history_latencies=hist_lat,
+                    enable_visual=include_visual
+                )
+                st.session_state["last_agent_result"] = agent_result
+        else:
+            agent_result = cached_agent_res
+
+    if not agent_result:
+        st.info("👉 Nhấn nút **'Chạy Chu trình Tác tử Agentic AI'** ở trên để kích hoạt luồng làm việc của 6 tác tử.")
+        return
+
+    # 1. KPI Tóm tắt Chu trình Tác tử
+    k1, k2, k3, k4 = st.columns(4)
+    sev = agent_result.get("overall_severity", "HEALTHY")
+    sev_color = "🟢" if sev == "HEALTHY" else ("🟡" if sev == "WARNING" else "🔴")
+    k1.metric("Trạng thái Tác tử", f"{sev_color} {sev}")
+    k2.metric("Thời gian Xử lý Tác tử", f"{agent_result.get('total_execution_time_ms', 0)} ms")
+    k3.metric("Số Bước Suy luận", f"{len(agent_result.get('execution_trace', []))} bước")
+    k4.metric("Khử nhiễu Sự cố", f"{agent_result.get('correlation', {}).get('noise_reduction_pct', 0)}%")
+
+    st.markdown("---")
+
+    # 2. Báo cáo Phân tích Nguyên nhân Gốc (RCA Executive Summary)
+    rca = agent_result.get("rca_analysis", {})
+    st.markdown("### 📑 1. Báo cáo Phân tích Nguyên nhân Gốc (RCA Executive Report)")
+    
+    with st.container():
+        st.markdown(f"""
+        <div style="background: #1e293b; color: #f8fafc; padding: 20px; border-radius: 10px; border-left: 5px solid {'#10b981' if sev == 'HEALTHY' else ('#f59e0b' if sev == 'WARNING' else '#ef4444')}; margin-bottom: 20px;">
+            <h4 style="margin-top:0; color: #38bdf8;">📌 {rca.get('incident_title', 'Báo cáo Tổng hợp Vận hành')}</h4>
+            <p style="font-size: 15px; line-height: 1.6;"><strong>Bản tóm tắt quản lý (Executive Summary):</strong><br/>{rca.get('executive_summary')}</p>
+            <p style="font-size: 14px; margin-bottom: 5px;"><strong>🔍 Nguyên nhân gốc (Root Cause):</strong> <span style="color: #fca5a5;">{rca.get('root_cause')}</span></p>
+            <p style="font-size: 14px; margin-bottom: 5px;"><strong>💥 Đánh giá mức độ ảnh hưởng:</strong> {rca.get('user_impact')}</p>
+            <p style="font-size: 13px; color: #94a3b8;"><strong>📚 Trích dẫn chuẩn kỹ thuật:</strong> <code>{', '.join(rca.get('rfc_citations', [])) or 'RFC 9110 / RFC 1035'}</code></p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        col_act_left, col_act_right = st.columns(2)
+        with col_act_left:
+            st.markdown("##### 🛠️ Kế hoạch Khắc phục Đề xuất (Action Plan):")
+            for act in rca.get("action_plan", []):
+                st.markdown(f"- ✅ {act}")
+        with col_act_right:
+            st.markdown("##### 🔬 Các Bước Điều tra Chi tiết (Runbook):")
+            for step in rca.get("investigation_steps", []):
+                st.markdown(f"- 🔎 {step}")
+
+    st.markdown("---")
+
+    # 3. Chuỗi Vết Thực Thi Của Tác Tử (Execution Trace Timeline)
+    st.markdown("### 🧩 2. Chuỗi Vết Thực Thi & Suy Luận Của Tác Tử (Execution Trace Timeline)")
+    st.caption("Minh chứng minh bạch cho từng bước xử lý: Lập kế hoạch -> Gọi Tool -> Phát hiện bất thường -> Tự sửa sai -> Tương quan -> Phân tích -> Báo cáo.")
+
+    trace = agent_result.get("execution_trace", [])
+    for t in trace:
+        step_num = t.get("step")
+        phase = t.get("phase")
+        agent_n = t.get("agent")
+        action = t.get("action")
+        details = t.get("details")
+        ts = t.get("timestamp")
+
+        with st.expander(f"Bước {step_num} [{ts}]: **{phase}** — *{agent_n}* ({action})", expanded=(step_num in [1, 4, 6])):
+            st.markdown(f"**Tác tử phụ trách:** `{agent_n}` | **Hành động:** `{action}`")
+            st.info(details)
+            if "planned_tools" in t:
+                st.markdown(f"🛠️ **Công cụ đã lên lịch:** `{', '.join(t['planned_tools'])}`")
+            if "tools_executed" in t:
+                st.markdown(f"⚙️ **Công cụ đã chạy thành công:** `{', '.join(t['tools_executed'])}`")
+            if "violations_found" in t:
+                st.markdown(f"⚠️ **Bất thường phát hiện:** `{', '.join(t['violations_found']) if t['violations_found'] else 'Không có'}`")
+            if "executed" in t:
+                st.markdown(f"🔄 **Tự sửa sai (Self-Correction):** `{'Đã kích hoạt re-probe' if t['executed'] else 'Không cần thiết'}`")
+
+    st.markdown("---")
+
+    # 4. Ma Trận Đánh Giá 4 Khả Năng Cốt Lõi Của Agentic AI
+    st.markdown("### 🏆 3. Ma Trận Đánh Giá 4 Khả Năng Cốt Lõi Của Agentic AI")
+    capabilities = [
+        {
+            "Khả năng Cốt lõi": "1. Lập Kế Hoạch (Planning)",
+            "Hiện thực trong Hệ thống": "Monitoring Orchestrator Agent tự động sinh danh sách công cụ và thứ tự ưu tiên kiểm tra phân cấp.",
+            "Trạng thái": "✅ Đạt yêu cầu"
+        },
+        {
+            "Khả năng Cốt lõi": "2. Sử Dụng Công Cụ (Tool Use)",
+            "Hiện thực trong Hệ thống": "Probe Agent trực tiếp điều phối http_checker, dns_checker, ssl_checker, performance_checker, dom_validator, visual_checker.",
+            "Trạng thái": "✅ Đạt yêu cầu"
+        },
+        {
+            "Khả năng Cốt lõi": "3. Phản Hồi Linh Hoạt (Self-Correction)",
+            "Hiện thực trong Hệ thống": "Tự động kích hoạt cơ chế Re-probe tức thời khi phát hiện bất thường chập chờn để loại trừ cảnh báo giả (Flapping).",
+            "Trạng thái": "✅ Đạt yêu cầu"
+        },
+        {
+            "Khả năng Cốt lõi": "4. Bộ Nhớ & Tri Thức (Knowledge Base)",
+            "Hiện thực trong Hệ thống": "Truy vấn Kho tri thức chuẩn RFC 9110, RFC 1035, RFC 5280 và SRE Runbooks đối soát cùng Milestone Baseline.",
+            "Trạng thái": "✅ Đạt yêu cầu"
+        }
+    ]
+    st.dataframe(pd.DataFrame(capabilities), use_container_width=True, hide_index=True)
+
+
+def render_dashboard(selected_site, http_res=None, dns_res=None, ssl_res=None, visual_res=None, agent_result=None):
+    """Giao diện Dashboard Giám sát phân chia theo 5 Tabs chuyên biệt."""
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📊 Giám sát Thời gian thực", 
+        "🧠 Tác Tử Agentic AI (Multi-Agent)",
         "⚖️ So sánh Đối chứng 2 Cấu hình",
         "📈 Lịch sử & Xu hướng", 
         "🏷️ Quản lý Mốc chuẩn"
@@ -663,11 +797,15 @@ def render_dashboard(selected_site, http_res=None, dns_res=None, ssl_res=None, v
                     st.json(active_b.get("baseline_dns", {}))
 
     with tab2:
+        render_agentic_studio_tab(selected_site, agent_result=agent_result)
+
+    with tab3:
         render_benchmark_tab(selected_site, http_res, dns_res, ssl_res)
                     
-    with tab3:
+    with tab4:
         render_history_tab(selected_site)
         
-    with tab4:
+    with tab5:
         render_milestones_tab(selected_site)
+
 

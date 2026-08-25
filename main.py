@@ -63,6 +63,11 @@ def main():
             type="primary"
         )
 
+        run_agent_clicked = st.sidebar.button(
+            "🤖 Chạy Tác tử Agentic AI Điều tra",
+            use_container_width=True
+        )
+
         enable_screenshot = st.sidebar.checkbox(
             "📸 Kèm chụp ảnh Playwright khi quét", 
             value=True,
@@ -88,12 +93,50 @@ def main():
         st.sidebar.info("👉 Vui lòng cấu hình thêm website tại trang `/configuration`.")
         selected_site = None
         run_check_clicked = False
+        run_agent_clicked = False
         enable_screenshot = False
         quick_shot_clicked = False
 
     # 4. Trạng thái session state cho kết quả quét
     if "last_scan" not in st.session_state:
         st.session_state["last_scan"] = {}
+    if "last_agent_result" not in st.session_state:
+        st.session_state["last_agent_result"] = None
+
+    # Xử lý nút Chạy Tác tử Agentic AI từ Sidebar
+    if selected_site and run_agent_clicked:
+        from agents.orchestrator import MonitoringOrchestratorAgent
+        from database.repository import get_website_latency_history
+        with st.spinner(f"🤖 Đang điều động chu trình Agentic AI điều tra '{selected_site['name']}'..."):
+            orchestrator = MonitoringOrchestratorAgent()
+            active_baseline_record = get_active_baseline(selected_site["id"])
+            hist_lat = get_website_latency_history(selected_site["id"], limit=15)
+            agent_res = orchestrator.run_agentic_workflow(
+                website_info=selected_site,
+                active_baseline=active_baseline_record,
+                history_latencies=hist_lat,
+                enable_visual=enable_screenshot
+            )
+            st.session_state["last_agent_result"] = agent_res
+
+            # Đồng bộ kết quả probes vào last_scan
+            ev = agent_res.get("evidence", {})
+            st.session_state["last_scan"][selected_site["id"]] = {
+                "http": ev.get("http"),
+                "dns": ev.get("dns"),
+                "ssl": ev.get("ssl"),
+                "visual": ev.get("visual")
+            }
+            # Lưu monitoring log
+            if ev.get("http") and ev.get("dns") and ev.get("ssl"):
+                save_monitoring_log(
+                    website_id=selected_site["id"],
+                    website_name=selected_site["name"],
+                    http_res=ev.get("http"),
+                    dns_res=ev.get("dns"),
+                    ssl_res=ev.get("ssl")
+                )
+            st.toast(f"Tác tử Agentic AI đã hoàn tất điều tra & phân tích RCA!", icon="🧠")
 
     # Xử lý nút Chỉ chụp ảnh màn hình
     if selected_site and quick_shot_clicked:
@@ -170,18 +213,24 @@ def main():
     # 5. Hiển thị Dashboard
     if selected_site:
         current_site_scan = st.session_state["last_scan"].get(selected_site["id"])
+        current_agent_res = st.session_state.get("last_agent_result")
+        if current_agent_res and current_agent_res.get("website_name") != selected_site["name"]:
+            current_agent_res = None
+
         if current_site_scan and current_site_scan.get("http"):
             render_dashboard(
                 selected_site=selected_site,
                 http_res=current_site_scan.get("http"),
                 dns_res=current_site_scan.get("dns"),
                 ssl_res=current_site_scan.get("ssl"),
-                visual_res=current_site_scan.get("visual")
+                visual_res=current_site_scan.get("visual"),
+                agent_result=current_agent_res
             )
         else:
             render_dashboard(
                 selected_site=selected_site,
-                visual_res=current_site_scan.get("visual") if current_site_scan else None
+                visual_res=current_site_scan.get("visual") if current_site_scan else None,
+                agent_result=current_agent_res
             )
 
 if __name__ == "__main__":
