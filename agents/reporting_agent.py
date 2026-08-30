@@ -21,7 +21,7 @@ class ReportingNotificationAgent:
         overall_severity: str = "HEALTHY"
     ) -> Dict[str, Any]:
         """
-        Định dạng báo cáo sự cố và kích hoạt cơ chế gửi cảnh báo Email/Webhook.
+        Định dạng báo cáo sự cố toàn diện 8 phần và kích hoạt cơ chế gửi cảnh báo Email/Webhook.
         """
         http_res = evidence_data.get("http", {})
         dns_res = evidence_data.get("dns", {})
@@ -40,18 +40,25 @@ class ReportingNotificationAgent:
         except Exception:
             email_dispatched = False
 
-        # Chuẩn hóa Report Digest
+        # Chuẩn hóa Report Digest toàn diện
         report_digest = {
             "agent_name": self.name,
             "website_name": website_info.get("name"),
             "url": website_info.get("url"),
             "severity": overall_severity,
+            "incident_id": analysis_result.get("incident_id"),
+            "timestamp": analysis_result.get("timestamp"),
+            "fault_layer": analysis_result.get("fault_layer"),
+            "confidence_score": analysis_result.get("confidence_score", 95.0),
             "title": analysis_result.get("incident_title", "Báo cáo Giám sát Định kỳ"),
             "summary": analysis_result.get("executive_summary"),
-            "root_cause": analysis_result.get("root_cause"),
-            "action_plan": analysis_result.get("action_plan", []),
+            "root_cause": analysis_result.get("root_cause_analysis", {}).get("primary_cause"),
+            "action_plan": analysis_result.get("immediate_action_plan", []),
+            "investigation_runbook": analysis_result.get("investigation_runbook", []),
+            "prevention_strategy": analysis_result.get("prevention_strategy", []),
+            "rfc_citations": analysis_result.get("technical_standards", []),
             "email_dispatched": email_dispatched,
-            "rfc_citations": analysis_result.get("rfc_citations", [])
+            "full_rca_report": analysis_result
         }
 
         return report_digest

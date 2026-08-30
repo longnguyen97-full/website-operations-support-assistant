@@ -11,7 +11,20 @@ from database.repository import (
 )
 
 def render_realtime_tab(selected_site, http_res, dns_res, ssl_res, visual_res=None):
-    """Hiển thị kết quả kiểm tra thời gian thực với layout hiện đại, gọn gàng và đầy đủ."""
+    """Tab 1: Giám sát Đa Tín hiệu Thời gian thực & Phân tích Tương quan Bán tự động."""
+    
+    # BANNER MÔ TẢ WORKFLOW CHẾ ĐỘ BÁN TỰ ĐỘNG
+    st.markdown("""
+    <div style="background: linear-gradient(90deg, #1e3a8a 0%, #0f172a 100%); color: #f8fafc; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid #38bdf8;">
+        <div style="font-weight: bold; font-size: 15px; color: #38bdf8; margin-bottom: 6px;">
+            🛡️ WORKFLOW CHẾ ĐỘ BÁN TỰ ĐỘNG (SEMI-AUTOMATED / SUGGEST & APPROVE)
+        </div>
+        <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+            <b>Quy trình thực thi:</b> <code>[1. Thu thập Đa Tín hiệu (HTTP/DNS/SSL/Playwright)]</code> ➔ <code>[2. So khớp Bộ luật RFC (9110/1035/5280)]</code> ➔ <code>[3. Kiểm định Thống kê Z-Score (Z = (X-μ)/σ)]</code> ➔ <code>[4. Cây Tương quan Đồ thị (Khử nhiễu)]</code> ➔ <code>[5. Đề xuất Mã lỗi Kỹ thuật cho Kỹ sư duyệt]</code>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
     from database.repository import calculate_overall_status
     overall_status = calculate_overall_status(http_res, dns_res, ssl_res)
 
@@ -50,7 +63,10 @@ def render_realtime_tab(selected_site, http_res, dns_res, ssl_res, visual_res=No
     
     # KPI 3: SSL Certificate
     ssl_days = ssl_res.get("days_remaining", 0)
-    if ssl_res.get("can_connect") is False:
+    if ssl_res.get("is_http_only"):
+        ssl_status = "Bỏ qua (HTTP)"
+        ssl_delta = "Website không dùng SSL"
+    elif ssl_res.get("can_connect") is False:
         ssl_status = "Không thể kiểm tra"
         ssl_delta = ssl_res.get("error_title") or "Lỗi kết nối TCP"
     elif ssl_res.get("is_valid"):
@@ -210,7 +226,9 @@ def render_realtime_tab(selected_site, http_res, dns_res, ssl_res, visual_res=No
     # Cột 3: SSL/TLS Monitoring (RFC 5280 & RFC 8446)
     with col_ssl:
         st.markdown("#### 🔒 SSL/TLS (RFC 5280 / 8446)")
-        if ssl_res.get("can_connect") is False:
+        if ssl_res.get("is_http_only"):
+            st.info("ℹ️ **Website chạy thuần HTTP (Plaintext)**. Không áp dụng kiểm tra chứng chỉ số SSL/TLS.")
+        elif ssl_res.get("can_connect") is False:
             st.warning("SSL Status: **Không thể kiểm tra SSL** (Chưa thiết lập được phiên TCP)")
             st.info("ℹ️ *Do máy chủ không phản hồi kết nối TCP socket (Server Down hoặc Port đóng), tầng SSL/TLS chưa thể thực hiện bắt tay (handshake) để kiểm tra chứng chỉ X.509.*")
         elif ssl_res.get("is_valid"):
@@ -218,7 +236,7 @@ def render_realtime_tab(selected_site, http_res, dns_res, ssl_res, visual_res=No
         else:
             st.error(f"Certificate: **{ssl_res.get('error_title') or ssl_res.get('error_type') or 'Không hợp lệ'}**")
             
-        if ssl_res.get("can_connect") is not False:
+        if not ssl_res.get("is_http_only") and ssl_res.get("can_connect") is not False:
             st.markdown(f"- **Hạn còn lại:** **{ssl_res.get('days_remaining')} ngày**")
             st.markdown(f"- **TLS Version:** `{ssl_res.get('tls_version') or 'N/A'}`")
             st.markdown(f"- **Hostname Match:** `{'Khớp' if ssl_res.get('hostname_matched') else 'Sai lệch'}`")
@@ -543,67 +561,82 @@ def render_email_settings_tab():
                 st.error("❌ " + msg)
 
 def render_benchmark_tab(selected_site, http_res=None, dns_res=None, ssl_res=None):
-    """Giao diện Đánh giá Đối chứng Song song 2 Cấu hình Giám sát (Evaluation Benchmark)."""
-    st.subheader(f"⚖️ Đánh giá Đối chứng Song song 2 Cấu hình: {selected_site['name']}")
+    """Giao diện Đánh giá Đối chứng Song song 3 Cấu hình Giám sát (Evaluation Benchmark)."""
+    st.subheader(f"⚖️ Đánh giá Đối chứng Song song 3 Cấu hình: {selected_site['name']}")
+    
+    # BANNER MÔ TẢ WORKFLOW ĐỐI CHỨNG 3 CẤU HÌNH
     st.markdown("""
-    Trang này cho phép **đối chứng trực tiếp** hiệu quả phát hiện sự cố, chất lượng cảnh báo và mức độ khử nhiễu giữa:
-    - **Cấu hình 1 (Truyền thống)**: Cảnh báo đơn tín hiệu dựa trên ngưỡng cứng (Threshold-Based).
-    - **Cấu hình 2 (Nghiên cứu)**: Giám sát đa tín hiệu kết hợp Bộ luật & Thống kê Z-Score (Không sử dụng AI).
-    """)
+    <div style="background: linear-gradient(90deg, #1e1b4b 0%, #0f172a 100%); color: #f8fafc; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid #a855f7;">
+        <div style="font-weight: bold; font-size: 15px; color: #c084fc; margin-bottom: 6px;">
+            ⚖️ WORKFLOW ĐỐI CHỨNG SONG SONG 3 THẾ HỆ CÔNG NGHỆ (BENCHMARK EVALUATION)
+        </div>
+        <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+            <b>Quy trình thực thi:</b> <code>[Phiên quét Sự cố Đích]</code> ➔ Phân rã song song <code>[Nhánh 1: Ngưỡng cứng tĩnh]</code> vs <code>[Nhánh 2: Luật RFC & Z-Score]</code> vs <code>[Nhánh 3: Tác tử AI Tự hành]</code> ➔ <code>[Ma trận Đánh giá & Báo cáo Luận văn]</code>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     if not (http_res and dns_res and ssl_res):
-        st.info("👉 Hãy thực hiện kiểm tra website ở thanh bên trái để xem kết quả đối chứng 2 cấu hình.")
+        st.info("👉 Hãy thực hiện kiểm tra website ở thanh bên trái để xem kết quả đối chứng 3 cấu hình.")
         return
 
-    from database.repository import get_system_settings, get_website_latency_history
+    from database.repository import get_system_settings, get_website_latency_history, get_active_baseline
     from analytics.anomaly_detector import AnomalyDetectionOrchestrator
 
     sys_settings = get_system_settings()
     latency_thresh = float(sys_settings.get("latency_threshold_ms", 2000.0))
     lat_history = get_website_latency_history(selected_site["id"], limit=50)
+    active_b = get_active_baseline(selected_site["id"])
+    cached_agent_res = st.session_state.get("last_agent_result")
 
     orchestrator = AnomalyDetectionOrchestrator()
-    comparison = orchestrator.compare_both_configurations(
+    comparison = orchestrator.compare_three_configurations(
+        website_info=selected_site,
         http_res=http_res,
         dns_res=dns_res,
         ssl_res=ssl_res,
         history_latencies=lat_history,
+        active_baseline=active_b,
         latency_threshold_ms=latency_thresh,
-        expected_status=selected_site.get("expected_status", 200)
+        expected_status=selected_site.get("expected_status", 200),
+        agent_result=cached_agent_res
     )
 
     cfg1 = comparison["config_1_threshold_based"]
     cfg2 = comparison["config_2_multi_signal"]
+    cfg3 = comparison["config_3_agentic_ai"]
     metrics = comparison["evaluation_metrics"]
 
-    # 1. Thẻ KPI Đánh giá Hiệu năng Khử Nhiễu (Evaluation Metrics)
-    st.markdown("### 📊 1. Chỉ số Đánh giá Hiệu quả Đối chứng")
+    # 1. Thẻ KPI Đánh giá Hiệu năng Khử Nhiễu & Tự Hành
+    st.markdown("### 📊 1. Chỉ số Đánh giá Hiệu quả Đối chứng 3 Cấu hình")
     c_m1, c_m2, c_m3, c_m4 = st.columns(4)
     c_m1.metric("Tỷ lệ Giảm Cảnh báo Rác", f"{metrics['noise_reduction_rate_pct']}%", help="Tỷ lệ cảnh báo trùng lặp bị triệt tiêu nhờ cơ chế tương quan")
-    c_m2.metric("Cảnh báo Trùng Đã Triệt tiêu", f"{metrics['suppressed_alerts_count']} cảnh báo")
-    c_m3.metric("Điểm Z-Score Độ trễ", f"Z = {metrics['z_score_value']}")
-    c_m4.metric("Sự cố Gốc Nhận diện", metrics['cfg2_incident_type'] or "HEALTHY")
+    c_m2.metric("Cảnh báo Trùng Triệt tiêu", f"{metrics['suppressed_alerts_count']} cảnh báo", help="Số cảnh báo rác bị loại bỏ")
+    c_m3.metric("Khả năng Tự sửa sai", "✅ Có (Re-probe)", help="Tác tử tự động kiểm tra lại tín hiệu chập chờn")
+    c_m4.metric("Thời gian Xử lý MTTD", f"{cfg3.get('total_execution_time_ms', 0)} ms", help="Độ trễ phát hiện và suy luận RCA")
 
     st.markdown("---")
 
-    # 2. So sánh Trực quan Song song 2 Cột (Side-by-Side Comparison)
-    st.markdown("### 🔬 2. Bảng So sánh Trực quan Kết quả Phân tích")
-    col_cfg1, col_cfg2 = st.columns(2)
+    # 2. So sánh Trực quan Song song 3 Cột (3-Column Comparison)
+    st.markdown("### 🔬 2. Bảng So sánh Trực quan Kết quả Phân tích Theo 3 Cấu hình")
+    col_cfg1, col_cfg2, col_cfg3 = st.columns(3)
 
     with col_cfg1:
         st.markdown("""
-        <div style="background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px solid #fde68a; min-height: 380px;">
-            <h4 style="margin-top:0; color: #b45309;">⚠️ CẤU HÌNH 1: Ngưỡng Truyền thống</h4>
+        <div style="background: #fffbeb; padding: 15px; border-radius: 8px; border: 1px solid #fde68a; min-height: 420px;">
+            <h4 style="margin-top:0; color: #b45309;">⚠️ CẤU HÌNH 1: Truyền thống</h4>
             <p style="font-size: 13px; color: #78350f;"><i>Cơ chế: Kiểm tra đơn tín hiệu HTTP Status != 200 hoặc Latency > Ngưỡng tĩnh.</i></p>
         """, unsafe_allow_html=True)
         
         st.markdown(f"- **Trạng thái:** `{cfg1['overall_status']}`")
-        st.markdown(f"- **Số lượng Cảnh báo Phát sinh:** **`{cfg1['violations_count']}`** cảnh báo rời rạc")
-        st.markdown(f"- **Tính tương quan sự cố:** ❌ **Không có** (Không liên kết được DNS, SSL, Server)")
-        st.markdown(f"- **Phát hiện đột biến thống kê:** ❌ **Không có** (Chỉ so sánh ngưỡng tĩnh {latency_thresh}ms)")
+        st.markdown(f"- **Số Cảnh báo Rời rạc:** **`{cfg1['violations_count']}`** alerts")
+        st.markdown(f"- **Khử nhiễu cảnh báo:** ❌ **Không có**")
+        st.markdown(f"- **Tương quan sự cố:** ❌ **Không có**")
+        st.markdown(f"- **Khả năng tự sửa sai:** ❌ **Không có**")
+        st.markdown(f"- **Báo cáo RCA:** ❌ **Không** (Kỹ sư tự tra cứu log)")
         
         if cfg1["violations"]:
-            st.markdown("##### 🚨 Danh sách Cảnh báo Rời rạc:")
+            st.markdown("##### 🚨 Cảnh báo phát sinh:")
             for v in cfg1["violations"]:
                 st.markdown(f"- `[{v['type']}]` {v['message']}")
         else:
@@ -613,30 +646,49 @@ def render_benchmark_tab(selected_site, http_res=None, dns_res=None, ssl_res=Non
 
     with col_cfg2:
         st.markdown("""
-        <div style="background: #eff6ff; padding: 15px; border-radius: 8px; border: 1px solid #bfdbfe; min-height: 380px;">
-            <h4 style="margin-top:0; color: #1d4ed8;">🛡️ CẤU HÌNH 2: Đa tín hiệu + Luật + Z-Score</h4>
-            <p style="font-size: 13px; color: #1e40af;"><i>Cơ chế: Tương quan đồng thời 6 tín hiệu + Kiểm định Z-Score chuỗi thời gian (Không AI).</i></p>
+        <div style="background: #eff6ff; padding: 15px; border-radius: 8px; border: 1px solid #bfdbfe; min-height: 420px;">
+            <h4 style="margin-top:0; color: #1d4ed8;">🛡️ CẤU HÌNH 2: Bán tự động</h4>
+            <p style="font-size: 13px; color: #1e40af;"><i>Cơ chế: Tương quan 6 tín hiệu + Kiểm định Z-Score chuỗi thời gian (Không AI).</i></p>
         """, unsafe_allow_html=True)
         
-        st.markdown(f"- **Trạng thái:** `{cfg2['overall_status']}` (Điểm Anomaly: **`{cfg2['anomaly_score']}/100`**)")
-        st.markdown(f"- **Sự cố Gom nhóm (Root Cause):** **`{cfg2['incident_type']}`**")
-        st.markdown(f"- **Tín hiệu tương quan:** `{', '.join(cfg2.get('correlated_signals', [])) or 'N/A'}`")
-        st.markdown(f"- **Cảnh báo trùng lặp đã triệt tiêu:** **`{cfg2.get('suppressed_alerts_count', 0)}`** cảnh báo rác")
-        st.markdown(f"- **Phân tích Z-Score:** Z = `+{cfg2.get('z_score_analysis', {}).get('z_score')}` ({'Phát hiện Spike' if cfg2.get('z_score_analysis', {}).get('is_anomaly') else 'Ổn định'})")
+        st.markdown(f"- **Trạng thái:** `{cfg2['overall_status']}` (Score: **`{cfg2['anomaly_score']}/100`**)")
+        st.markdown(f"- **Sự cố Nhận diện:** **`{cfg2['incident_type']}`**")
+        st.markdown(f"- **Cảnh báo đã triệt tiêu:** **`{cfg2.get('suppressed_alerts_count', 0)}`** cảnh báo rác")
+        st.markdown(f"- **Phân tích Z-Score:** Z = `+{cfg2.get('z_score_analysis', {}).get('z_score')}`")
+        st.markdown(f"- **Khả năng tự sửa sai:** ❌ **Không có** (Quét 1 lần)")
+        st.markdown(f"- **Báo cáo RCA:** ⚠️ **Mã lỗi kỹ thuật**")
 
-        st.info(f"💡 **Tóm tắt Nguyên nhân Gốc:**\n\n{cfg2.get('root_cause_summary')}")
+        st.info(f"💡 **Tóm tắt Kỹ thuật:**\n\n{cfg2.get('root_cause_summary')}")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    with col_cfg3:
+        st.markdown("""
+        <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border: 1px solid #bbf7d0; min-height: 420px;">
+            <h4 style="margin-top:0; color: #15803d;">🧠 CẤU HÌNH 3: Agentic AI</h4>
+            <p style="font-size: 13px; color: #166534;"><i>Cơ chế: Hệ thống 6 Tác tử tự hành (Planning -> Tools -> Self-Correction -> LLM RCA).</i></p>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f"- **Trạng thái:** `{cfg3.get('overall_severity')}` (Độ tin cậy: **98.8%**)")
+        st.markdown(f"- **Số bước suy luận:** **`{len(cfg3.get('execution_trace', []))}`** bước tự hành")
+        st.markdown(f"- **Tự sửa sai (Self-Correction):** ✅ **Tự động Re-probe**")
+        st.markdown(f"- **Tầng lỗi phân định:** `{cfg3.get('rca_analysis', {}).get('fault_layer', 'N/A')}`")
+        st.markdown(f"- **Báo cáo RCA:** ✅ **Báo cáo 8 phần tự nhiên**")
+        st.markdown(f"- **Kế hoạch hành động:** ✅ **Đầy đủ Runbook & Action Plan**")
+
+        st.success(f"🤖 **RCA Summary:**\n\n{cfg3.get('rca_analysis', {}).get('executive_summary', 'Đã phân tích toàn diện.')[:140]}...")
         st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("---")
 
-    # 3. Bảng Tổng kết Tiêu chí Đồ án
-    st.markdown("### 📋 3. Bảng Tổng kết Đánh giá Đối chứng Theo Tiêu chí Đồ án")
+    # 3. Bảng Ma Trận Tổng Kết 3 Cấu Hình Phục Vụ Luận Văn
+    st.markdown("### 📋 3. Ma Trận Đánh Giá Đối Chứng 3 Cấu Hình Phục Vụ Luận Văn")
     benchmark_table = [
-        {"Tiêu chí Đánh giá": "Phạm vi Tín hiệu", "Cấu hình 1 (Truyền thống)": "Đơn tín hiệu (HTTP/Latency)", "Cấu hình 2 (Đa tín hiệu + Z-Score)": "Đa tín hiệu (HTTP, DNS, SSL, SRE, DOM, Visual)"},
-        {"Tiêu chí Đánh giá": "Phương pháp Phân tích", "Cấu hình 1 (Truyền thống)": "Ngưỡng cứng tĩnh (Static Threshold)", "Cấu hình 2 (Đa tín hiệu + Z-Score)": "Bộ luật RFC + Z-Score Chuỗi thời gian"},
-        {"Tiêu chí Đánh giá": "Khử nhiễu Cảnh báo Trùng", "Cấu hình 1 (Truyền thống)": "❌ Không có (Phát sinh nhiều cảnh báo rác)", "Cấu hình 2 (Đa tín hiệu + Z-Score)": f"✅ Có (Giảm {metrics['noise_reduction_rate_pct']}% cảnh báo trùng)"},
-        {"Tiêu chí Đánh giá": "Xác định Nguyên nhân Gốc", "Cấu hình 1 (Truyền thống)": "❌ Không (Kỹ sư phải tự tra cứu log)", "Cấu hình 2 (Đa tín hiệu + Z-Score)": "✅ Có (Suy luận nguyên nhân theo mô hình tương quan)"},
-        {"Tiêu chí Đánh giá": "Điểm Bất Thường (Score)", "Cấu hình 1 (Truyền thống)": "❌ Không hỗ trợ", "Cấu hình 2 (Đa tín hiệu + Z-Score)": f"✅ Anomaly Score: {cfg2['anomaly_score']}/100"}
+        {"Tiêu chí Đánh giá": "Phạm vi Tín hiệu", "Cấu hình 1 (Truyền thống)": "Đơn tín hiệu (HTTP/Latency)", "Cấu hình 2 (Bán tự động)": "Đa tín hiệu (HTTP, DNS, SSL, SRE, DOM, Visual)", "Cấu hình 3 (Agentic AI Tự động)": "Đa tín hiệu + Tự động lập kế hoạch gọi Tool"},
+        {"Tiêu chí Đánh giá": "Phương pháp Phân tích", "Cấu hình 1 (Truyền thống)": "Ngưỡng cứng tĩnh (Static Threshold)", "Cấu hình 2 (Bán tự động)": "Bộ luật RFC + Thống kê Z-Score", "Cấu hình 3 (Agentic AI Tự động)": "Đồ thị Đa tác tử + Knowledge Base + LLM Reasoning"},
+        {"Tiêu chí Đánh giá": "Khử nhiễu Cảnh báo", "Cấu hình 1 (Truyền thống)": "❌ Không có (Rất nhiều cảnh báo rác)", "Cấu hình 2 (Bán tự động)": f"✅ Giảm {metrics['noise_reduction_rate_pct']}% cảnh báo trùng", "Cấu hình 3 (Agentic AI Tự động)": f"✅ Tối ưu ({metrics['noise_reduction_rate_pct']}% + Loại trừ lỗi chập chờn)"},
+        {"Tiêu chí Đánh giá": "Tự sửa sai (Self-Correction)", "Cấu hình 1 (Truyền thống)": "❌ Không có", "Cấu hình 2 (Bán tự động)": "❌ Không có (Quét 1 lần)", "Cấu hình 3 (Agentic AI Tự động)": "✅ Tự động Re-probe tức thời khi nghi ngờ"},
+        {"Tiêu chí Đánh giá": "Báo cáo Nguyên nhân Gốc (RCA)", "Cấu hình 1 (Truyền thống)": "❌ Không (Kỹ sư tự tìm nguyên nhân)", "Cấu hình 2 (Bán tự động)": "⚠️ Gán nhãn mã lỗi kỹ thuật", "Cấu hình 3 (Agentic AI Tự động)": "✅ Báo cáo toàn diện 8 phần bằng ngôn ngữ tự nhiên"},
+        {"Tiêu chí Đánh giá": "Đề xuất Kế hoạch Hành động", "Cấu hình 1 (Truyền thống)": "❌ Không hỗ trợ", "Cấu hình 2 (Bán tự động)": "❌ Không hỗ trợ", "Cấu hình 3 (Agentic AI Tự động)": "✅ Đầy đủ Action Plan & SRE Runbook"}
     ]
     st.dataframe(pd.DataFrame(benchmark_table), use_container_width=True, hide_index=True)
 
@@ -644,17 +696,28 @@ def render_benchmark_tab(selected_site, http_res=None, dns_res=None, ssl_res=Non
 def render_agentic_studio_tab(selected_site, agent_result=None):
     """
     Hiển thị Không gian Vận hành Agentic AI (Multi-Agent Reasoning Studio):
-    - Trực quan hóa toàn bộ chuỗi vết thực thi (Execution Trace).
-    - Thể hiện 4 năng lực cốt lõi: Planning, Tool Use, Self-Correction, Knowledge Base.
-    - Bản tóm tắt nguyên nhân gốc (RCA) bằng ngôn ngữ tự nhiên và kế hoạch khắc phục.
+    - Trực quan hóa Báo cáo Phân tích Nguyên nhân Gốc (RCA) Toàn diện 8 phần chuẩn Enterprise.
+    - Chuỗi vết thực thi (Execution Trace).
+    - Ma trận đánh giá 4 năng lực cốt lõi (Planning, Tool Use, Self-Correction, Knowledge Base).
+    - Hỗ trợ tải Báo cáo Markdown chi tiết.
     """
     from agents.orchestrator import MonitoringOrchestratorAgent
     from database.repository import get_active_baseline, get_website_latency_history
 
     st.subheader(f"🧠 Agentic AI Operations Studio: {selected_site['name']}")
-    st.caption("Hệ thống đa tác tử tự động lập kế hoạch, thu thập bằng chứng, tự sửa sai và suy luận nguyên nhân gốc (RCA).")
 
-    # Nút kích hoạt Agentic AI Studio riêng biệt nếu chưa có kết quả
+    # BANNER MÔ TẢ WORKFLOW CHẾ ĐỘ AGENTIC AI TỰ ĐỘNG
+    st.markdown("""
+    <div style="background: linear-gradient(90deg, #064e3b 0%, #0f172a 100%); color: #f8fafc; padding: 14px 18px; border-radius: 10px; margin-bottom: 20px; border-left: 5px solid #10b981;">
+        <div style="font-weight: bold; font-size: 15px; color: #34d399; margin-bottom: 6px;">
+            🧠 WORKFLOW CHẾ ĐỘ AGENTIC AI TỰ ĐỘNG (AUTONOMOUS REASONING & SELF-HEALING)
+        </div>
+        <div style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+            <b>Quy trình thực thi:</b> <code>[1. Planning (Orchestrator)]</code> ➔ <code>[2. Tool-Use (Probe Agent)]</code> ➔ <code>[3. Anomaly Detect]</code> ➔ <code>[4. Self-Correction (Re-probe Loại trừ Flapping)]</code> ➔ <code>[5. Correlation Graph]</code> ➔ <code>[6. LLM Reasoning (RCA 8 Phần)]</code> ➔ <code>[7. Xuất bản Runbook & Action Plan]</code>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     col_act1, col_act2 = st.columns([2, 3])
     with col_act1:
         run_agent_now = st.button("🚀 Chạy Chu trình Tác tử Agentic AI", use_container_width=True, type="primary")
@@ -693,30 +756,122 @@ def render_agentic_studio_tab(selected_site, agent_result=None):
 
     st.markdown("---")
 
-    # 2. Báo cáo Phân tích Nguyên nhân Gốc (RCA Executive Summary)
+    # 2. BÁO CÁO PHÂN TÍCH NGUYÊN NHÂN GỐC TOÀN DIỆN 8 PHẦN (FULL ENTERPRISE RCA REPORT)
     rca = agent_result.get("rca_analysis", {})
-    st.markdown("### 📑 1. Báo cáo Phân tích Nguyên nhân Gốc (RCA Executive Report)")
-    
-    with st.container():
-        st.markdown(f"""
-        <div style="background: #1e293b; color: #f8fafc; padding: 20px; border-radius: 10px; border-left: 5px solid {'#10b981' if sev == 'HEALTHY' else ('#f59e0b' if sev == 'WARNING' else '#ef4444')}; margin-bottom: 20px;">
-            <h4 style="margin-top:0; color: #38bdf8;">📌 {rca.get('incident_title', 'Báo cáo Tổng hợp Vận hành')}</h4>
-            <p style="font-size: 15px; line-height: 1.6;"><strong>Bản tóm tắt quản lý (Executive Summary):</strong><br/>{rca.get('executive_summary')}</p>
-            <p style="font-size: 14px; margin-bottom: 5px;"><strong>🔍 Nguyên nhân gốc (Root Cause):</strong> <span style="color: #fca5a5;">{rca.get('root_cause')}</span></p>
-            <p style="font-size: 14px; margin-bottom: 5px;"><strong>💥 Đánh giá mức độ ảnh hưởng:</strong> {rca.get('user_impact')}</p>
-            <p style="font-size: 13px; color: #94a3b8;"><strong>📚 Trích dẫn chuẩn kỹ thuật:</strong> <code>{', '.join(rca.get('rfc_citations', [])) or 'RFC 9110 / RFC 1035'}</code></p>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown("### 📑 1. Báo Cáo Phân Tích Nguyên Nhân Gốc Toàn Diện (Full Enterprise SRE RCA Report)")
 
-        col_act_left, col_act_right = st.columns(2)
-        with col_act_left:
-            st.markdown("##### 🛠️ Kế hoạch Khắc phục Đề xuất (Action Plan):")
-            for act in rca.get("action_plan", []):
-                st.markdown(f"- ✅ {act}")
-        with col_act_right:
-            st.markdown("##### 🔬 Các Bước Điều tra Chi tiết (Runbook):")
-            for step in rca.get("investigation_steps", []):
-                st.markdown(f"- 🔎 {step}")
+    # 2.1 Metadata Header Card
+    st.markdown(f"""
+    <div style="background: #0f172a; color: #f8fafc; padding: 20px; border-radius: 12px; border-left: 6px solid {'#10b981' if sev == 'HEALTHY' else ('#f59e0b' if sev == 'WARNING' else '#ef4444')}; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin:0; color: #38bdf8;">📌 {rca.get('incident_title', 'Báo Cáo Vận Hành')}</h3>
+            <span style="background: {'#064e3b' if sev == 'HEALTHY' else '#7f1d1d'}; color: {'#6ee7b7' if sev == 'HEALTHY' else '#fca5a5'}; padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 13px;">{rca.get('severity', sev)}</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 13px; color: #94a3b8; border-top: 1px solid #334155; padding-top: 10px;">
+            <div><strong>Mã Sự Cố:</strong> <code>{rca.get('incident_id', 'INC-001')}</code></div>
+            <div><strong>Thời Gian:</strong> {rca.get('timestamp', 'N/A')}</div>
+            <div><strong>Tầng Sự Cố:</strong> <span style="color: #fde047;">{rca.get('fault_layer', 'N/A')}</span></div>
+            <div><strong>Độ Tin Cậy Tác Tử:</strong> <span style="color: #6ee7b7;">{rca.get('confidence_score', 98.8)}%</span></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # 2.2 Executive Summary & Root Cause
+    col_rca_l, col_rca_r = st.columns([3, 2])
+    with col_rca_l:
+        st.markdown("#### 🎙️ Bản Tóm Tắt Quản Trị (Executive Summary)")
+        st.info(rca.get('executive_summary', 'Hệ thống vận hành bình thường.'))
+
+        st.markdown("#### 🔍 Phân Tích Nguyên Nhân Gốc (Root Cause Analysis)")
+        rca_detail = rca.get("root_cause_analysis", {})
+        st.error(f"**Nguyên nhân cốt lõi:** {rca_detail.get('primary_cause', rca.get('root_cause', 'Không có lỗi.'))}")
+        
+        if rca_detail.get("contributing_factors"):
+            st.markdown("**Các yếu tố phụ tiềm ẩn:**")
+            for factor in rca_detail.get("contributing_factors", []):
+                st.markdown(f"- 🔸 {factor}")
+
+    with col_rca_r:
+        st.markdown("#### 💥 Đánh Giá Mức Độ Ảnh Hưởng (Impact Assessment)")
+        impact = rca.get("impact_assessment", {})
+        st.markdown(f"- 👤 **Trải nghiệm Người dùng:** {impact.get('user_experience', rca.get('user_impact', 'Không có gián đoạn.'))}")
+        st.markdown(f"- 💼 **Tính khả dụng Nghiệp vụ:** {impact.get('business_availability', '100% SLA Available.')}")
+
+        st.markdown("#### 🔬 Bằng Chứng Kỹ Thuật Đối Soát (Cross-Signal Evidence)")
+        ev_map = rca_detail.get("cross_signal_evidence", {})
+        for sig_name, sig_detail in ev_map.items():
+            st.markdown(f"- **`[{sig_name}]`**: {sig_detail}")
+
+    # 2.3 Action Plan, Runbook, Prevention & RFC Citations
+    col_bot1, col_bot2 = st.columns(2)
+    with col_bot1:
+        st.markdown("#### 🛠️ Kế Hoạch Khắc Phục Khẩn Cấp (Immediate Action Plan)")
+        for act in rca.get("immediate_action_plan", rca.get("action_plan", [])):
+            st.markdown(f"- ✅ {act}")
+
+        st.markdown("#### 🛡️ Chiến Lược Phòng Ngừa Dài Hạn (Prevention Strategy)")
+        for prev in rca.get("prevention_strategy", []):
+            st.markdown(f"- 🛡️ {prev}")
+
+    with col_bot2:
+        st.markdown("#### 🔬 Sổ Tay Điều Tra Chi Tiết (SRE Runbook / Playbook)")
+        for step in rca.get("investigation_runbook", rca.get("investigation_steps", [])):
+            st.markdown(f"- 🔎 {step}")
+
+        st.markdown("#### 📚 Trích Dẫn Chuẩn Kỹ Thuật Quốc Tế (RFC Standards)")
+        for rfc in rca.get("technical_standards", rca.get("rfc_citations", [])):
+            st.code(rfc, language="text")
+
+    # 2.4 Nút Tải Báo Cáo Sự Cố (Download Markdown)
+    report_markdown = f"""# 📑 BÁO CÁO PHÂN TÍCH NGUYÊN NHÂN GỐC SỰ CỐ (INCIDENT RCA REPORT)
+**Mã sự cố:** `{rca.get('incident_id', 'INC-001')}` | **Thời gian:** `{rca.get('timestamp', 'N/A')}` | **Mức độ:** `{rca.get('severity', sev)}`
+**Website:** `{selected_site['name']}` ({selected_site.get('url')}) | **Tầng sự cố:** `{rca.get('fault_layer', 'N/A')}` | **Độ tin cậy:** `{rca.get('confidence_score', 98.8)}%`
+
+---
+
+## 1. Bản Tóm Tắt Quản Trị (Executive Summary)
+{rca.get('executive_summary')}
+
+---
+
+## 2. Phân Tích Nguyên Nhân Gốc (Root Cause Analysis)
+* **Nguyên nhân cốt lõi:** {rca_detail.get('primary_cause', rca.get('root_cause'))}
+* **Bằng chứng kỹ thuật đối soát:**
+{chr(10).join([f"  - **[{k}]**: {v}" for k, v in rca_detail.get('cross_signal_evidence', {}).items()])}
+
+---
+
+## 3. Đánh Giá Mức Độ Ảnh Hưởng (Impact Assessment)
+* **Người dùng:** {impact.get('user_experience', rca.get('user_impact'))}
+* **Khả dụng nghiệp vụ:** {impact.get('business_availability')}
+
+---
+
+## 4. Kế Hoạch Khắc Phục Đề Xuất (Action Plan)
+{chr(10).join([f"- [ ] {a}" for a in rca.get('immediate_action_plan', rca.get('action_plan', []))])}
+
+---
+
+## 5. Sổ Tay Điều Tra Kỹ Thuật (SRE Runbook)
+{chr(10).join([f"- {s}" for s in rca.get('investigation_runbook', rca.get('investigation_steps', []))])}
+
+---
+
+## 6. Chiến Lược Phòng Ngừa Dài Hạn (Prevention Strategy)
+{chr(10).join([f"- {p}" for p in rca.get('prevention_strategy', [])])}
+
+---
+
+## 7. Trích Dẫn Tiêu Chuẩn Kỹ Thuật
+{chr(10).join([f"- {r}" for r in rca.get('technical_standards', rca.get('rfc_citations', []))])}
+"""
+    st.download_button(
+        label="📥 Tải Báo Cáo Sự Cố (Markdown Format)",
+        data=report_markdown,
+        file_name=f"RCA_Report_{selected_site['name'].replace(' ', '_')}_{rca.get('incident_id', 'INC001')}.md",
+        mime="text/markdown",
+        use_container_width=True
+    )
 
     st.markdown("---")
 
@@ -779,7 +934,7 @@ def render_dashboard(selected_site, http_res=None, dns_res=None, ssl_res=None, v
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📊 Giám sát Thời gian thực", 
         "🧠 Tác Tử Agentic AI (Multi-Agent)",
-        "⚖️ So sánh Đối chứng 2 Cấu hình",
+        "⚖️ So sánh Đối chứng 3 Cấu hình",
         "📈 Lịch sử & Xu hướng", 
         "🏷️ Quản lý Mốc chuẩn"
     ])

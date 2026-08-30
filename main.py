@@ -56,15 +56,35 @@ def main():
         selected_name = st.sidebar.selectbox("Chọn Website cần kiểm tra:", site_names)
         selected_site = next(w for w in websites if w["name"] == selected_name)
         
-        # NÚT KIỂM TRA THỦ CÔNG NẰM NGAY DƯỚI DROPDOWN LIST
-        run_check_clicked = st.sidebar.button(
-            "🚀 Kiểm tra thủ công website này", 
-            use_container_width=True, 
+        # BỘ ĐIỀU KHIỂN 3 CHẾ ĐỘ GIÁM SÁT & ĐỐI CHỨNG
+        st.sidebar.markdown("### 🎛️ Chọn Chế Độ Giám Sát Cần Chạy:")
+        
+        # 1. Chế độ Bán tự động (Đa tín hiệu + Z-Score)
+        btn_mode2_semi = st.sidebar.button(
+            "🛡️ Chạy Giám Sát Bán Tự Động",
+            help="Cơ chế 'Suggest & Approve': Thu thập đa tín hiệu (HTTP, DNS, SSL, Visual), so khớp luật RFC và thống kê Z-Score để lọc nhiễu cảnh báo.",
+            use_container_width=True,
             type="primary"
         )
 
-        run_agent_clicked = st.sidebar.button(
-            "🤖 Chạy Tác tử Agentic AI Điều tra",
+        # 2. Chế độ Tự động Agentic AI (Multi-Agent)
+        btn_mode3_agentic = st.sidebar.button(
+            "🧠 Chạy Giám Sát Agentic AI Tự Động",
+            help="Cơ chế 'Autonomous Reasoning': Hệ thống 6 Tác tử tự hành (Planning -> Tool-use -> Self-correction -> LLM RCA 8 phần).",
+            use_container_width=True
+        )
+
+        # 3. Chế độ Truyền thống (Ngưỡng cứng)
+        btn_mode1_trad = st.sidebar.button(
+            "⚠️ Chạy Giám Sát Truyền Thống",
+            help="Cơ chế 'Detect & Alert': Chỉ kiểm tra mã HTTP và ngưỡng thời gian phản hồi cố định.",
+            use_container_width=True
+        )
+
+        # 4. Chạy Đối chứng Cả 3 Chế độ
+        btn_mode4_benchmark = st.sidebar.button(
+            "⚖️ Chạy Đối Chứng Song Song Cả 3 Chế Độ",
+            help="Kích hoạt đồng thời cả 3 thế hệ giám sát trên cùng 1 phiên quét để so sánh hiệu năng và độ chính xác.",
             use_container_width=True
         )
 
@@ -72,11 +92,6 @@ def main():
             "📸 Kèm chụp ảnh Playwright khi quét", 
             value=True,
             help="Tự động sử dụng Playwright mở trình duyệt headless và chụp ảnh giao diện để so sánh Visual Regression"
-        )
-
-        quick_shot_clicked = st.sidebar.button(
-            "📸 Chỉ chụp ảnh màn hình (Screenshot)",
-            use_container_width=True
         )
 
         # Thông tin tóm tắt nhanh website
@@ -92,21 +107,26 @@ def main():
         st.sidebar.warning("⚠️ Chưa có website nào trong hệ thống CSDL.")
         st.sidebar.info("👉 Vui lòng cấu hình thêm website tại trang `/configuration`.")
         selected_site = None
-        run_check_clicked = False
-        run_agent_clicked = False
+        btn_mode1_trad = False
+        btn_mode2_semi = False
+        btn_mode3_agentic = False
+        btn_mode4_benchmark = False
         enable_screenshot = False
-        quick_shot_clicked = False
 
     # 4. Trạng thái session state cho kết quả quét
     if "last_scan" not in st.session_state:
         st.session_state["last_scan"] = {}
     if "last_agent_result" not in st.session_state:
         st.session_state["last_agent_result"] = None
+    if "active_mode_label" not in st.session_state:
+        st.session_state["active_mode_label"] = "Chưa kích hoạt phiên quét"
 
-    # Xử lý nút Chạy Tác tử Agentic AI từ Sidebar
-    if selected_site and run_agent_clicked:
+    # Xử lý Nút Chạy Tác tử Agentic AI (Mode 3) hoặc Đối chứng (Mode 4)
+    if selected_site and (btn_mode3_agentic or btn_mode4_benchmark):
         from agents.orchestrator import MonitoringOrchestratorAgent
         from database.repository import get_website_latency_history
+        mode_text = "Chế độ 3: Giám sát Agentic AI Tự động" if btn_mode3_agentic else "Chế độ 4: Đối chứng Toàn diện 3 Cấu hình"
+        st.session_state["active_mode_label"] = mode_text
         with st.spinner(f"🤖 Đang điều động chu trình Agentic AI điều tra '{selected_site['name']}'..."):
             orchestrator = MonitoringOrchestratorAgent()
             active_baseline_record = get_active_baseline(selected_site["id"])
@@ -136,23 +156,13 @@ def main():
                     dns_res=ev.get("dns"),
                     ssl_res=ev.get("ssl")
                 )
-            st.toast(f"Tác tử Agentic AI đã hoàn tất điều tra & phân tích RCA!", icon="🧠")
+            st.toast(f"Tác tử Agentic AI đã hoàn tất điều tra & sinh báo cáo RCA!", icon="🧠")
 
-    # Xử lý nút Chỉ chụp ảnh màn hình
-    if selected_site and quick_shot_clicked:
-        with st.spinner(f"Đang sử dụng Playwright chụp ảnh màn hình '{selected_site['name']}'..."):
-            visual_res = check_visual_regression(
-                url=selected_site["url"],
-                website_identifier=selected_site["name"],
-                timeout=20.0
-            )
-            if selected_site["id"] not in st.session_state["last_scan"]:
-                st.session_state["last_scan"][selected_site["id"]] = {}
-            st.session_state["last_scan"][selected_site["id"]]["visual"] = visual_res
-            st.toast("Đã chụp ảnh màn hình với Playwright thành công!", icon="📸")
+    # Xử lý Nút Chạy Giám sát Bán tự động (Mode 2) hoặc Truyền thống (Mode 1)
+    elif selected_site and (btn_mode2_semi or btn_mode1_trad):
+        mode_text = "Chế độ 2: Giám sát Bán tự động (Đa tín hiệu + Z-Score)" if btn_mode2_semi else "Chế độ 1: Giám sát Truyền thống (Ngưỡng cứng)"
+        st.session_state["active_mode_label"] = mode_text
 
-    # Xử lý nút Kiểm tra thủ công đầy đủ
-    if selected_site and run_check_clicked:
         # Lấy active baseline từ DB nếu có
         active_baseline_record = get_active_baseline(selected_site["id"])
         baseline_dns = active_baseline_record.get("baseline_dns") if active_baseline_record else None

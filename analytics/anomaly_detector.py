@@ -137,8 +137,9 @@ class AnomalyDetectionOrchestrator:
             "all_violations": rule_violations
         }
 
-    def compare_both_configurations(
+    def compare_three_configurations(
         self,
+        website_info: Dict[str, Any],
         http_res: Dict[str, Any],
         dns_res: Dict[str, Any],
         ssl_res: Dict[str, Any],
@@ -146,20 +147,25 @@ class AnomalyDetectionOrchestrator:
         dom_res: Optional[Dict[str, Any]] = None,
         visual_res: Optional[Dict[str, Any]] = None,
         history_latencies: Optional[List[float]] = None,
+        active_baseline: Optional[Dict[str, Any]] = None,
         latency_threshold_ms: float = 2000.0,
-        expected_status: int = 200
+        expected_status: int = 200,
+        agent_result: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
         """
-        Thực hiện đánh giá đối chứng song song cả 2 cấu hình trên cùng một phiên quét:
-        - Cấu hình 1: Cảnh báo dựa trên ngưỡng truyền thống (Threshold-Based).
-        - Cấu hình 2: Giám sát đa tín hiệu kết hợp Luật & Z-Score (Multi-Signal & Z-Score).
+        Thực hiện đánh giá đối chứng toàn diện 3 Cấu hình Giám sát trên cùng một phiên quét:
+        - Cấu hình 1 (Truyền thống): Cảnh báo dựa trên ngưỡng cứng (Threshold-Based).
+        - Cấu hình 2 (Bán tự động): Giám sát đa tín hiệu kết hợp Luật RFC & Z-Score (Không AI).
+        - Cấu hình 3 (Agentic AI Tự động): Hệ thống Đa tác tử tự hành (Multi-Agent Reasoning Studio).
         """
+        # 1. Chạy Cấu hình 1
         cfg1_res = self.run_threshold_based_monitoring(
             http_res=http_res,
             latency_threshold_ms=latency_threshold_ms,
             expected_status=expected_status
         )
 
+        # 2. Chạy Cấu hình 2
         cfg2_res = self.run_multi_signal_rule_statistical(
             http_res=http_res,
             dns_res=dns_res,
@@ -170,24 +176,35 @@ class AnomalyDetectionOrchestrator:
             history_latencies=history_latencies
         )
 
+        # 3. Chạy hoặc lấy kết quả Cấu hình 3 (Agentic AI)
+        if agent_result is None:
+            from agents.orchestrator import MonitoringOrchestratorAgent
+            orchestrator = MonitoringOrchestratorAgent()
+            cfg3_res = orchestrator.run_agentic_workflow(
+                website_info=website_info,
+                active_baseline=active_baseline,
+                history_latencies=history_latencies,
+                enable_visual=False
+            )
+        else:
+            cfg3_res = agent_result
+
         raw_alerts = cfg2_res.get("raw_violations_count", 0)
         suppressed_alerts = cfg2_res.get("suppressed_alerts_count", 0)
-        
-        # Tính tỷ lệ khử nhiễu (Noise Reduction Ratio %)
-        if raw_alerts > 0:
-            noise_reduction_pct = round((suppressed_alerts / raw_alerts) * 100, 1)
-        else:
-            noise_reduction_pct = 0.0
+        noise_reduction_pct = round((suppressed_alerts / raw_alerts) * 100, 1) if raw_alerts > 0 else 0.0
 
         return {
             "config_1_threshold_based": cfg1_res,
             "config_2_multi_signal": cfg2_res,
+            "config_3_agentic_ai": cfg3_res,
             "evaluation_metrics": {
                 "noise_reduction_rate_pct": noise_reduction_pct,
                 "raw_alerts_count": raw_alerts,
                 "suppressed_alerts_count": suppressed_alerts,
                 "cfg1_alerts_count": cfg1_res.get("violations_count", 0),
                 "cfg2_incident_type": cfg2_res.get("incident_type"),
+                "cfg3_severity": cfg3_res.get("overall_severity"),
+                "cfg3_execution_steps": len(cfg3_res.get("execution_trace", [])),
                 "has_root_cause_context": bool(cfg2_res.get("root_cause_summary")),
                 "z_score_value": cfg2_res.get("z_score_analysis", {}).get("z_score", 0.0),
                 "is_z_score_spike": cfg2_res.get("z_score_analysis", {}).get("is_anomaly", False)

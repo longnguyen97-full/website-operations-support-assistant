@@ -113,7 +113,8 @@ def capture_screenshot(
             context = browser.new_context(
                 viewport=vp,
                 user_agent=DEFAULT_USER_AGENT,
-                device_scale_factor=1
+                device_scale_factor=1,
+                ignore_https_errors=True
             )
             page = context.new_page()
 

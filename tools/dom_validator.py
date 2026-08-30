@@ -51,7 +51,7 @@ def _validate_with_playwright(
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
-        context = browser.new_context(user_agent=DEFAULT_USER_AGENT)
+        context = browser.new_context(user_agent=DEFAULT_USER_AGENT, ignore_https_errors=True)
         page = context.new_page()
 
         start_time = time.time()
@@ -183,7 +183,7 @@ def _validate_with_bs4(
     from bs4 import BeautifulSoup
 
     start_time = time.time()
-    with httpx.Client(follow_redirects=True, timeout=timeout_seconds) as client:
+    with httpx.Client(follow_redirects=True, timeout=timeout_seconds, verify=False) as client:
         resp = client.get(url, headers={"User-Agent": DEFAULT_USER_AGENT})
         elapsed_ms = round((time.time() - start_time) * 1000, 2)
         html_text = resp.text

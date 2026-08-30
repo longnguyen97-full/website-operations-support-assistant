@@ -137,8 +137,8 @@ class RuleBasedAnomalyEngine:
         if not ssl_res:
             return violations
 
-        # Khi socket không kết nối được (do máy chủ down), bỏ qua lỗi SSL để tránh báo động giả
-        if ssl_res.get("can_connect") is False:
+        # Khi website chạy HTTP thuần hoặc socket không kết nối được (do máy chủ down), bỏ qua lỗi SSL để tránh báo động giả
+        if ssl_res.get("is_http_only") or ssl_res.get("can_connect") is False:
             return violations
 
         is_valid = ssl_res.get("is_valid", False)
@@ -171,7 +171,7 @@ class RuleBasedAnomalyEngine:
             })
 
         # 3. Chứng chỉ tự ký (Self-signed) hoặc Không được CA tin cậy (Broken chain)
-        elif is_self_signed or is_untrusted_ca:
+        elif (is_self_signed or is_untrusted_ca) and not (hostname.endswith(".test") or hostname.endswith(".local") or hostname == "localhost"):
             violations.append({
                 "signal": "SSL",
                 "rule_id": "SSL_UNTRUSTED_CA",

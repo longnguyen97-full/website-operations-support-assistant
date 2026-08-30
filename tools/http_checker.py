@@ -46,7 +46,7 @@ def check_http(url: str, method: str = "GET", expected_status: int = 200, timeou
         return result
 
     try:
-        with httpx.Client(follow_redirects=True, timeout=timeout) as client:
+        with httpx.Client(follow_redirects=True, timeout=timeout, verify=False) as client:
             response = client.request(method_upper, url)
             
             # Ghi nhận redirect chain

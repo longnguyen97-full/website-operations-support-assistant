@@ -34,7 +34,7 @@ def _check_performance_playwright(
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
             browser = p.chromium.launch(headless=True)
-            context = browser.new_context(user_agent=DEFAULT_USER_AGENT)
+            context = browser.new_context(user_agent=DEFAULT_USER_AGENT, ignore_https_errors=True)
             page = context.new_page()
 
             start_t = time.time()
@@ -147,7 +147,7 @@ def _check_performance_httpx_socket(
 
     # 3. HTTP Request & TTFB via HTTPX
     start_req = time.time()
-    with httpx.Client(follow_redirects=True, timeout=timeout_seconds) as client:
+    with httpx.Client(follow_redirects=True, timeout=timeout_seconds, verify=False) as client:
         resp = client.get(url, headers={"User-Agent": DEFAULT_USER_AGENT})
         total_time_ms = round(resp.elapsed.total_seconds() * 1000, 2)
         content_size = len(resp.content)
