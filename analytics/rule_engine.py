@@ -50,14 +50,33 @@ class RuleBasedAnomalyEngine:
 
         # 2. Lỗi máy chủ (5xx Server Error)
         if 500 <= status_code <= 599:
-            violations.append({
-                "signal": "HTTP",
-                "rule_id": "HTTP_5XX_SERVER_ERROR",
-                "severity": "CRITICAL",
-                "title": f"HTTP {status_code} Server Error",
-                "description": f"Máy chủ gặp sự cố nội bộ hoặc không phản hồi kịp (HTTP {status_code}).",
-                "weight": 35
-            })
+            if status_code == 500:
+                violations.append({
+                    "signal": "HTTP",
+                    "rule_id": "HTTP_500_INTERNAL_ERROR",
+                    "severity": "CRITICAL",
+                    "title": "HTTP 500 Internal Server Error",
+                    "description": "Máy chủ gặp ngoại lệ backend hoặc lỗi code ứng dụng (HTTP 500).",
+                    "weight": 35
+                })
+            elif status_code in [502, 503, 504]:
+                violations.append({
+                    "signal": "HTTP",
+                    "rule_id": "HTTP_5XX_SERVER_DOWN",
+                    "severity": "CRITICAL",
+                    "title": f"HTTP {status_code} Bad Gateway / Service Unavailable",
+                    "description": f"Dịch vụ máy chủ sập hoặc proxy không thể kết nối tới cổng upstream backend (HTTP {status_code}).",
+                    "weight": 40
+                })
+            else:
+                violations.append({
+                    "signal": "HTTP",
+                    "rule_id": "HTTP_5XX_SERVER_ERROR",
+                    "severity": "CRITICAL",
+                    "title": f"HTTP {status_code} Server Error",
+                    "description": f"Máy chủ gặp sự cố nội bộ hoặc không phản hồi kịp (HTTP {status_code}).",
+                    "weight": 35
+                })
 
         # 3. Lỗi client (4xx Client Error) - nếu không phải expected
         elif 400 <= status_code <= 499 and not is_expected:

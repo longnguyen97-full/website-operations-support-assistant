@@ -74,10 +74,17 @@ class RuleBasedCorrelationEngine:
             root_cause = "Chứng chỉ SSL tự ký hoặc thiếu Intermediate CA trong chuỗi chứng chỉ."
             suppressed_count = len(violations) - 1
 
-        # Pattern 4: 5xx Backend Application Server Error
-        elif "HTTP_5XX_SERVER_ERROR" in rule_ids:
+        # Pattern 4a: HTTP 502/503/504 Bad Gateway / Service Down
+        elif "HTTP_5XX_SERVER_DOWN" in rule_ids:
+            incident_type = "SERVER_PROCESS_DOWN"
+            primary_issue = next(v for v in violations if v["rule_id"] == "HTTP_5XX_SERVER_DOWN")
+            root_cause = f"Dịch vụ máy chủ ngưng hoạt động hoặc reverse proxy không kết nối được upstream ({primary_issue.get('title')})."
+            suppressed_count = len(violations) - 1
+
+        # Pattern 4b: HTTP 500 Backend Application Exception Error
+        elif "HTTP_500_INTERNAL_ERROR" in rule_ids or "HTTP_5XX_SERVER_ERROR" in rule_ids:
             incident_type = "BACKEND_APPLICATION_ERROR"
-            primary_issue = next(v for v in violations if v["rule_id"] == "HTTP_5XX_SERVER_ERROR")
+            primary_issue = next(v for v in violations if v["rule_id"] in ["HTTP_500_INTERNAL_ERROR", "HTTP_5XX_SERVER_ERROR"])
             root_cause = f"Lỗi phía Backend/Server ({primary_issue.get('title')}): Ứng dụng gặp Exception nội bộ hoặc Database không phản hồi."
             suppressed_count = len(violations) - 1
 

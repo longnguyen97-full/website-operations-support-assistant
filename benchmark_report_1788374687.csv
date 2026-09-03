@@ -1,0 +1,17 @@
+site_id,domain,url,ground_truth_category,detected_category,incident_type,is_correct,anomaly_score,http_status,response_time_ms,dns_resolved,ssl_valid,scan_duration_ms
+site_001,site-001.test,https://site-001.test,BACKEND_500,BACKEND_500,BACKEND_APPLICATION_ERROR,True,35,500,12.33,True,True,192.24
+site_002,site-002.test,https://site-002.test,HIGH_LATENCY,HIGH_LATENCY,NETWORK_GATEWAY_TIMEOUT,True,40,,0.0,True,True,12106.06
+site_003,site-003.test,https://site-003.test,MISSING_DOM,HIGH_LATENCY,FRONTEND_UI_DEFORMATION,False,25,200,11038.69,True,True,11251.3
+site_004,site-004.test,https://site-004.test,SERVER_DOWN,SERVER_DOWN,SERVER_PROCESS_DOWN,True,40,502,16.62,True,True,76.74
+site_005,site-005.test,https://site-005.test,REDIRECT_LOOP,REDIRECT_LOOP,HTTP_CONNECTIVITY_OUTAGE,True,40,,0.0,True,True,99.14
+site_006,site-006.test,https://site-006.test,DNS_FAILURE,DNS_FAILURE,DNS_RESOLUTION_OUTAGE,True,80,,0.0,False,False,21.09
+site_007,site-007.test,https://site-007.test,SSL_EXPIRED,SSL_EXPIRED,SSL_CERT_EXPIRED,True,35,200,9610.5,True,False,9726.09
+site_008,site-008.test,https://site-008.test,SSL_INVALID,SSL_INVALID,SSL_HOSTNAME_MISMATCH,True,30,200,27.96,True,False,124.93
+site_009,site-009.test,https://site-009.test,BACKEND_500,BACKEND_500,BACKEND_APPLICATION_ERROR,True,35,500,26.49,True,True,79.13
+site_010,site-010.test,https://site-010.test,HIGH_LATENCY,HIGH_LATENCY,FRONTEND_UI_DEFORMATION,True,25,200,8177.38,True,True,11271.69
+site_011,site-011.test,https://site-011.test,MISSING_DOM,HIGH_LATENCY,NO_INCIDENT,False,0,200,6663.19,True,True,6729.16
+site_012,site-012.test,https://site-012.test,SERVER_DOWN,SERVER_DOWN,SERVER_PROCESS_DOWN,True,40,502,4.84,True,True,52.42
+site_013,site-013.test,https://site-013.test,REDIRECT_LOOP,REDIRECT_LOOP,HTTP_CONNECTIVITY_OUTAGE,True,40,,0.0,True,True,116.26
+site_014,site-014.test,https://site-014.test,DNS_FAILURE,DNS_FAILURE,DNS_RESOLUTION_OUTAGE,True,80,,0.0,False,False,18.38
+site_015,site-015.test,https://site-015.test,SSL_EXPIRED,SSL_EXPIRED,SSL_CERT_EXPIRED,True,60,200,9600.04,True,False,9669.34
+site_016,site-016.test,https://site-016.test,SSL_INVALID,SSL_INVALID,SSL_HOSTNAME_MISMATCH,True,30,200,6.62,True,False,72.68

@@ -225,13 +225,20 @@ def _validate_with_bs4(
             try:
                 matches = soup.select(sel)
                 if matches:
-                    return {
-                        "found": True,
-                        "visible": True,
-                        "count": len(matches),
-                        "matched_selector": sel,
-                        "status": "OK"
-                    }
+                    # Lọc các element bị ẩn bởi style inline hoặc attribute hidden
+                    visible_matches = [
+                        m for m in matches
+                        if "display:none" not in str(m.get("style", "")).replace(" ", "").lower()
+                        and not m.has_attr("hidden")
+                    ]
+                    if visible_matches:
+                        return {
+                            "found": True,
+                            "visible": True,
+                            "count": len(visible_matches),
+                            "matched_selector": sel,
+                            "status": "OK"
+                        }
             except Exception:
                 continue
         return {"found": False, "visible": False, "count": 0, "matched_selector": None, "status": "MISSING"}
@@ -350,6 +357,12 @@ def validate_dom(
         if result["body_text_length"] < 20:
             missing_critical.append("Body Content")
             anomalies.append("Thân trang web hầu như rỗng hoặc không có nội dung văn bản hiển thị.")
+
+        # 3b. Đánh giá Nút bấm hành động (CTA / Action Buttons)
+        buttons_info = raw_res["components"].get("buttons_cta", {})
+        if not buttons_info.get("found"):
+            missing_critical.append("Action Buttons (button / CTA)")
+            anomalies.append("Trang web thiếu nút bấm hành động hoặc tương tác cốt lõi (Missing CTA Buttons).")
 
         # 4. Đánh giá Custom Selectors (nếu có yêu cầu bắt buộc)
         for sel, c_data in raw_res["custom_selectors"].items():

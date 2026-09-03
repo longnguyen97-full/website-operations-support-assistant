@@ -91,10 +91,15 @@ class ProbeAgent:
             except Exception as ex:
                 results["evidence"]["dom"] = {"error": str(ex), "status": "ERROR"}
 
-        # 6. Tín hiệu Hình ảnh (Visual Regression qua Playwright)
+        # 6. Tín hiệu Hình ảnh (Visual Regression qua Playwright - Full Page)
         if capture_visual or "VISUAL" in probe_signals:
             try:
-                visual_res = check_visual_regression(url=url, website_identifier=website_name, timeout=VISUAL_TIMEOUT_SECONDS)
+                visual_res = check_visual_regression(
+                    url=url, 
+                    website_identifier=website_name, 
+                    full_page=True, 
+                    timeout=VISUAL_TIMEOUT_SECONDS
+                )
                 results["evidence"]["visual"] = visual_res
                 results["probes_executed"].append("visual_checker")
             except Exception as ex:

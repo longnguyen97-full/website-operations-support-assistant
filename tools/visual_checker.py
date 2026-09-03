@@ -54,7 +54,7 @@ def capture_screenshot(
     url: str,
     website_identifier: str = "website",
     output_path: Optional[str] = None,
-    full_page: bool = False,
+    full_page: bool = True,
     viewport: Optional[Dict[str, int]] = None,
     mask_selectors: Optional[List[str]] = None,
     timeout: float = 20.0,
@@ -218,7 +218,7 @@ def check_visual_regression(
     baseline_image_path: Optional[str] = None,
     mask_selectors: Optional[List[str]] = None,
     diff_threshold_percent: float = DEFAULT_DIFF_THRESHOLD_PERCENT,
-    full_page: bool = False,
+    full_page: bool = True,
     update_baseline_if_missing: bool = True,
     timeout: float = 20.0
 ) -> Dict[str, Any]:
