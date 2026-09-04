@@ -95,9 +95,10 @@ def delete_website(website_id: int) -> bool:
     conn.close()
     return deleted
 
-def sync_websites_from_json_file(file_path: Optional[str] = None) -> Dict[str, Any]:
+def sync_websites_from_json_file(file_path: Optional[str] = None, replace_all: bool = True) -> Dict[str, Any]:
     """
     Đồng bộ và nạp toàn bộ danh sách website từ tệp JSON cấu hình (mặc định target_websites.json) vào CSDL SQLite.
+    Nếu replace_all=True: Loại bỏ các website cũ không còn nằm trong file cấu hình để chỉ lưu giữ dataset_200_websites.
     Tự động cập nhật hoặc thêm mới và khởi tạo mốc chuẩn baseline tương ứng.
     """
     from config import TARGET_WEBSITES_FILE
@@ -117,8 +118,18 @@ def sync_websites_from_json_file(file_path: Optional[str] = None) -> Dict[str, A
         conn = get_db_connection()
         cursor = conn.cursor()
         now_iso = datetime.now(TZ_VN).isoformat()
+
+        if replace_all:
+            # Thu thập danh sách tên website mới
+            new_names = {site.get("name") for site in websites_list if site.get("name")}
+            # Xóa các website cũ không nằm trong danh sách mới
+            cursor.execute("SELECT id, name FROM websites;")
+            existing_rows = cursor.fetchall()
+            for row in existing_rows:
+                if row["name"] not in new_names:
+                    cursor.execute("DELETE FROM websites WHERE id = ?;", (row["id"],))
+
         synced_count = 0
-        
         for site in websites_list:
             name = site.get("name")
             url = site.get("url")
@@ -167,7 +178,7 @@ def sync_websites_from_json_file(file_path: Optional[str] = None) -> Dict[str, A
         return {
             "success": True, 
             "count": synced_count, 
-            "message": f"Đã đồng bộ thành công {synced_count} website từ file cấu hình vào CSDL SQLite!"
+            "message": f"Đã đồng bộ thành công {synced_count} website từ dataset_200_websites vào CSDL SQLite!"
         }
     except Exception as e:
         return {"success": False, "count": 0, "message": f"Lỗi trong quá trình đồng bộ website: {e}"}

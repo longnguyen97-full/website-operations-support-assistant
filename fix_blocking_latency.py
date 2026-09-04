@@ -1,7 +1,9 @@
 import re
 from pathlib import Path
 
-SITES_DIR = Path("d:/LAB/do-an-tot-nghiep/dataset/sites")
+BASE_DIR = Path(__file__).resolve().parent
+DATASET_DIR = BASE_DIR.parent / "dataset_200_websites" if (BASE_DIR.parent / "dataset_200_websites").exists() else BASE_DIR.parent / "dataset"
+SITES_DIR = DATASET_DIR / "sites"
 fixed = 0
 
 for server_file in SITES_DIR.glob("*/server.js"):

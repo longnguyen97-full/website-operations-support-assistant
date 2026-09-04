@@ -33,7 +33,7 @@ from analytics.correlation_engine import RuleBasedCorrelationEngine
 from analytics.anomaly_detector import AnomalyDetectionOrchestrator
 
 # Paths
-DATASET_DIR = BASE_DIR.parent / "dataset"
+DATASET_DIR = BASE_DIR.parent / "dataset_200_websites" if (BASE_DIR.parent / "dataset_200_websites").exists() else BASE_DIR.parent / "dataset"
 GROUND_TRUTH_CSV = DATASET_DIR / "ground_truth.csv"
 TARGET_WEBSITES_JSON = BASE_DIR / "target_websites.json"
 

@@ -1,8 +1,10 @@
 import json
 from pathlib import Path
 
-METADATA_FILE = Path("d:/LAB/do-an-tot-nghiep/dataset/metadata.json")
-SITES_DIR = Path("d:/LAB/do-an-tot-nghiep/dataset/sites")
+BASE_DIR = Path(__file__).resolve().parent
+DATASET_DIR = BASE_DIR.parent / "dataset_200_websites" if (BASE_DIR.parent / "dataset_200_websites").exists() else BASE_DIR.parent / "dataset"
+METADATA_FILE = DATASET_DIR / "metadata.json"
+SITES_DIR = DATASET_DIR / "sites"
 
 with open(METADATA_FILE, encoding="utf-8") as f:
     meta = json.load(f)
