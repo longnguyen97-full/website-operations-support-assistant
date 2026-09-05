@@ -36,15 +36,38 @@ class RuleBasedAnomalyEngine:
         error = http_res.get("error")
         error_type = http_res.get("error_type")
 
-        # 1. Lỗi kết nối / Timeout HTTP
-        if status_code is None or error:
+        # 1. Kiểm tra Vòng lặp chuyển hướng (Redirect Loop / RFC 9110 Sec 15.4)
+        if error_type == "TooManyRedirects" or "redirect" in str(error).lower() or http_res.get("is_redirect_loop"):
             violations.append({
                 "signal": "HTTP",
-                "rule_id": "HTTP_CONN_FAILED",
+                "rule_id": "HTTP_REDIRECT_LOOP_DETECTED",
                 "severity": "CRITICAL",
-                "title": http_res.get("error_title") or "Lỗi kết nối HTTP",
-                "description": http_res.get("error_detail") or error or "Không thể thiết lập kết nối HTTP đến máy chủ.",
+                "title": "Vòng lặp chuyển hướng (HTTP Redirect Loop)",
+                "description": f"Phát hiện lỗi TooManyRedirects hoặc chuỗi chuyển tiếp đệ quy: {http_res.get('error_detail') or error}",
                 "weight": 40
+            })
+            return violations
+
+        # 2. Lỗi kết nối / Timeout HTTP
+        if status_code is None or error:
+            if error_type == "Timeout" or "timeout" in str(error).lower():
+                rule_id = "HTTP_TIMEOUT_ERROR"
+                title = "Yêu cầu HTTP bị Timeout"
+                desc = f"Máy chủ không phản hồi trong thời gian chờ quy định ({http_res.get('error_detail') or error})."
+                weight = 35
+            else:
+                rule_id = "HTTP_CONN_FAILED"
+                title = http_res.get("error_title") or "Lỗi kết nối HTTP"
+                desc = http_res.get("error_detail") or error or "Không thể thiết lập kết nối HTTP đến máy chủ."
+                weight = 40
+
+            violations.append({
+                "signal": "HTTP",
+                "rule_id": rule_id,
+                "severity": "CRITICAL",
+                "title": title,
+                "description": desc,
+                "weight": weight
             })
             return violations
 
@@ -224,23 +247,37 @@ class RuleBasedAnomalyEngine:
 
         return violations
 
-    def evaluate_performance_rules(self, perf_res: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Đánh giá các luật hiệu năng theo chuẩn SRE SLA."""
+    def evaluate_performance_rules(
+        self,
+        perf_res: Optional[Dict[str, Any]] = None,
+        http_res: Optional[Dict[str, Any]] = None
+    ) -> List[Dict[str, Any]]:
+        """Đánh giá các luật hiệu năng theo chuẩn SRE SLA qua Navigation Timing hoặc HTTP probe."""
         violations = []
-        if not perf_res:
-            return violations
+        
+        total_time = 0.0
+        is_degraded = False
+        reason = None
 
-        total_time = perf_res.get("total_time_ms", 0.0)
-        is_degraded = perf_res.get("is_degraded", False)
-        reason = perf_res.get("degradation_reason")
+        if perf_res and isinstance(perf_res, dict):
+            total_time = float(perf_res.get("total_time_ms") or 0.0)
+            is_degraded = bool(perf_res.get("is_degraded", False))
+            reason = perf_res.get("degradation_reason")
+
+        # Fallback sang HTTP response_time_ms nếu perf_res không đo được hoặc bằng 0
+        if total_time <= 0.0 and http_res and isinstance(http_res, dict):
+            total_time = float(http_res.get("response_time_ms") or 0.0)
+
+        if total_time <= 0.0:
+            return violations
 
         if total_time >= self.perf_critical_ms:
             violations.append({
                 "signal": "PERFORMANCE",
                 "rule_id": "PERF_CRITICAL_LATENCY",
                 "severity": "CRITICAL",
-                "title": f"Độ trễ Vượt Ngưỡng Nghiêm Trọng ({total_time}ms)",
-                "description": f"Thời gian phản hồi {total_time}ms vượt quá ngưỡng SLA cho phép ({self.perf_critical_ms}ms).",
+                "title": f"Độ trễ Vượt Ngưỡng Nghiêm Trọng ({round(total_time, 1)}ms)",
+                "description": f"Thời gian phản hồi {round(total_time, 1)}ms vượt quá ngưỡng SLA cho phép ({self.perf_critical_ms}ms).",
                 "weight": 30
             })
         elif total_time >= self.perf_warning_ms or is_degraded:
@@ -248,8 +285,8 @@ class RuleBasedAnomalyEngine:
                 "signal": "PERFORMANCE",
                 "rule_id": "PERF_DEGRADED_LATENCY",
                 "severity": "WARNING",
-                "title": f"Hiệu năng Suy Giảm ({total_time}ms)",
-                "description": reason or f"Thời gian phản hồi {total_time}ms vượt ngưỡng cảnh báo ({self.perf_warning_ms}ms).",
+                "title": f"Hiệu năng Suy Giảm ({round(total_time, 1)}ms)",
+                "description": reason or f"Thời gian phản hồi {round(total_time, 1)}ms vượt ngưỡng cảnh báo ({self.perf_warning_ms}ms).",
                 "weight": 15
             })
 
@@ -261,17 +298,22 @@ class RuleBasedAnomalyEngine:
         if not dom_res:
             return violations
 
+        # Bỏ qua nếu việc kiểm tra DOM không thể thực hiện do lỗi mạng/timeout/máy chủ sập
+        if dom_res.get("can_inspect") is False or (dom_res.get("error") and not dom_res.get("components")):
+            return violations
+
         if not dom_res.get("is_structure_valid", True):
             missing = dom_res.get("missing_critical_elements", [])
             anomalies = dom_res.get("structural_anomalies", [])
-            violations.append({
-                "signal": "DOM",
-                "rule_id": "DOM_STRUCTURAL_CORRUPTION",
-                "severity": "CRITICAL" if "Body Content" in missing else "WARNING",
-                "title": "Bất thường Cấu trúc Trang Web (DOM Anomaly)",
-                "description": f"Thiếu các thành phần cốt lõi: {', '.join(missing or anomalies)}",
-                "weight": 25
-            })
+            if missing or anomalies:
+                violations.append({
+                    "signal": "DOM",
+                    "rule_id": "DOM_STRUCTURAL_CORRUPTION",
+                    "severity": "CRITICAL" if any("Body Content" in m for m in missing) else "WARNING",
+                    "title": "Bất thường Cấu trúc Trang Web (DOM Anomaly)",
+                    "description": f"Thiếu các thành phần cốt lõi: {', '.join(missing or anomalies)}",
+                    "weight": 25
+                })
 
         return violations
 
@@ -311,8 +353,8 @@ class RuleBasedAnomalyEngine:
             all_violations.extend(self.evaluate_dns_rules(dns_res))
         if ssl_res:
             all_violations.extend(self.evaluate_ssl_rules(ssl_res))
-        if perf_res:
-            all_violations.extend(self.evaluate_performance_rules(perf_res))
+        # Luôn đánh giá luật hiệu năng qua perf_res hoặc http_res latency
+        all_violations.extend(self.evaluate_performance_rules(perf_res=perf_res, http_res=http_res))
         if dom_res:
             all_violations.extend(self.evaluate_dom_rules(dom_res))
         if visual_res:

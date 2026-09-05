@@ -53,10 +53,21 @@ def execute_single_website_check(site: dict, sys_settings: Optional[dict] = None
         else site.get("expected_status", 200)
     )
 
-    # 1. Chạy 3 Tools với timeout động
+    # 1. Chạy Tools với timeout động
     http_res = check_http(site["url"], expected_status=expected_status, timeout=http_timeout)
     dns_res = check_dns(site["domain"], baseline=baseline_dns, timeout=dns_timeout)
     ssl_res = check_ssl(site["url"], timeout=ssl_timeout)
+
+    # 1b. Quét DOM nhanh qua BS4 parser
+    dom_res = None
+    if http_res.get("status_code") == 200:
+        try:
+            from tools.dom_validator import validate_dom
+            dom_res = validate_dom(site["url"], use_browser=False, timeout=5.0)
+        except Exception:
+            dom_res = None
+
+    overall_status = calculate_overall_status(http_res, dns_res, ssl_res, dom_res=dom_res)
 
     # 2. Ghi nhật ký vào CSDL
     log_id = save_monitoring_log(
@@ -64,13 +75,36 @@ def execute_single_website_check(site: dict, sys_settings: Optional[dict] = None
         website_name=site["name"],
         http_res=http_res,
         dns_res=dns_res,
-        ssl_res=ssl_res
+        ssl_res=ssl_res,
+        dom_res=dom_res,
+        overall_status=overall_status
     )
-
-    # 3. Kích hoạt cảnh báo Email nếu có sự cố hoặc phục hồi
-    overall_status = calculate_overall_status(http_res, dns_res, ssl_res)
     try:
-        check_and_send_alert(site, overall_status, http_res, dns_res, ssl_res)
+        rca_ctx = None
+        if overall_status in ["CRITICAL", "WARNING"]:
+            from analytics.anomaly_detector import AnomalyDetectionOrchestrator
+            det_orch = AnomalyDetectionOrchestrator()
+            cfg2_res = det_orch.run_multi_signal_rule_statistical(
+                http_res=http_res,
+                dns_res=dns_res,
+                ssl_res=ssl_res,
+                dom_res=dom_res
+            )
+            rca_ctx = {
+                "fault_layer": "Hạ Tầng Ứng Dụng & Mạng",
+                "fault_category": cfg2_res.get("incident_type"),
+                "root_cause_analysis": {
+                    "primary_cause": cfg2_res.get("root_cause_summary"),
+                    "contributing_factors": [v.get("description") for v in cfg2_res.get("all_violations", [])[:3]]
+                },
+                "immediate_action_plan": [
+                    "Kiểm tra application logs và tiến trình backend.",
+                    "Xác minh cấu hình DNS và chứng chỉ số SSL/TLS.",
+                    "Xem lại lịch sử thay đổi mã nguồn hoặc cấu hình gần nhất."
+                ],
+                "technical_standards": ["RFC 9110", "RFC 1035", "RFC 5280"]
+            }
+        check_and_send_alert(site, overall_status, http_res, dns_res, ssl_res, rca_report=rca_ctx)
     except Exception as e:
         print(f"Warning: Lỗi gửi email alert cho {site['name']}: {e}")
 
@@ -149,8 +183,8 @@ def get_scheduler() -> BackgroundScheduler:
         _scheduler = BackgroundScheduler(daemon=True, timezone=TZ_VN)
     return _scheduler
 
-def start_background_scheduler(interval_seconds: int = 60):
-    """Bắt đầu chạy scheduler định kỳ với khoảng thời gian (giây)."""
+def start_background_scheduler(interval_seconds: int = DEFAULT_SCHEDULER_INTERVAL_SECONDS):
+    """Bắt đầu chạy scheduler định kỳ với khoảng thời gian (giây) - Mặc định 4 tiếng = 14400s."""
     sched = get_scheduler()
     _scheduler_state["interval_seconds"] = interval_seconds
 

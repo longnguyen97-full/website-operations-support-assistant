@@ -21,18 +21,39 @@ from config import (
     DEFAULT_COOLDOWN_MINUTES,
     DEFAULT_ENABLE_DAILY_REPORT,
     DEFAULT_DAILY_REPORT_TIME,
-    DEFAULT_SCHEDULER_INTERVAL_SECONDS
+    DEFAULT_SCHEDULER_INTERVAL_SECONDS,
+    DEFAULT_GEMINI_API_KEY,
+    DEFAULT_GEMINI_MODEL,
+    DEFAULT_LLM_ENABLED
 )
 
-def calculate_overall_status(http_res: dict, dns_res: dict, ssl_res: dict) -> str:
+def calculate_overall_status(
+    http_res: dict,
+    dns_res: dict,
+    ssl_res: dict,
+    dom_res: Optional[dict] = None,
+    visual_res: Optional[dict] = None
+) -> str:
     """Xác định trạng thái tổng thể: HEALTHY, WARNING, hoặc CRITICAL."""
-    # Nếu có lỗi nghiêm trọng (HTTP không kết nối, DNS thất bại, hoặc SSL không hợp lệ)
+    # 1. Nếu có lỗi nghiêm trọng (HTTP không kết nối / 5xx, DNS thất bại, hoặc SSL không hợp lệ)
     if (not http_res.get("is_expected_status") and not http_res.get("is_success")) or \
        not dns_res.get("resolved") or \
        not ssl_res.get("is_valid"):
         return "CRITICAL"
     
-    # Nếu chứng chỉ sắp hết hạn trong ngưỡng cảnh báo hoặc mã HTTP không đúng như mong đợi (nhưng vẫn có response)
+    # 2. Nếu cấu trúc DOM bị lỗi nghiêm trọng (Missing DOM / Blank Page)
+    if dom_res and not dom_res.get("is_structure_valid", True):
+        missing = dom_res.get("missing_critical_elements", [])
+        if "Body Content" in missing:
+            return "CRITICAL"
+        return "WARNING"
+
+    # 3. Nếu phát hiện biến dạng giao diện (Visual Regression)
+    if visual_res and visual_res.get("is_regression_detected"):
+        diff_pct = visual_res.get("diff_percentage", 0.0)
+        return "CRITICAL" if diff_pct >= 10.0 else "WARNING"
+
+    # 4. Nếu chứng chỉ sắp hết hạn trong ngưỡng cảnh báo hoặc mã HTTP không đúng như mong đợi (nhưng vẫn có response)
     if (ssl_res.get("days_remaining", 0) <= SSL_EXPIRY_WARNING_DAYS) or \
        (not http_res.get("is_expected_status")):
         return "WARNING"
@@ -192,19 +213,35 @@ def save_monitoring_log(
     http_res: dict,
     dns_res: dict,
     ssl_res: dict,
-    timestamp: Optional[str] = None
+    timestamp: Optional[str] = None,
+    dom_res: Optional[dict] = None,
+    visual_res: Optional[dict] = None,
+    agent_res: Optional[dict] = None,
+    overall_status: Optional[str] = None
 ) -> int:
     """Lưu trữ một bản ghi kết quả kiểm tra giám sát vào bảng monitoring_logs."""
     if not timestamp:
         timestamp = datetime.now(TZ_VN).isoformat()
 
-    overall_status = calculate_overall_status(http_res, dns_res, ssl_res)
+    if overall_status is None:
+        overall_status = calculate_overall_status(http_res, dns_res, ssl_res, dom_res=dom_res, visual_res=visual_res)
     
     full_signals = {
         "http": http_res,
         "dns": dns_res,
         "ssl": ssl_res
     }
+    if dom_res:
+        full_signals["dom"] = dom_res
+    if visual_res:
+        full_signals["visual"] = visual_res
+    if agent_res:
+        full_signals["agent"] = {
+            "incident_type": agent_res.get("correlation", {}).get("incident_type"),
+            "severity": agent_res.get("overall_severity"),
+            "root_cause": agent_res.get("correlation", {}).get("root_cause_summary"),
+            "title": agent_res.get("rca_analysis", {}).get("incident_title")
+        }
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -437,8 +474,11 @@ def get_system_settings() -> Dict[str, Any]:
         "http_timeout_seconds": settings.get("http_timeout_seconds") or config.HTTP_TIMEOUT_SECONDS,
         "dns_timeout_seconds": settings.get("dns_timeout_seconds") or config.DNS_TIMEOUT_SECONDS,
         "ssl_timeout_seconds": settings.get("ssl_timeout_seconds") or config.SSL_TIMEOUT_SECONDS,
-        "monitoring_mode": settings.get("monitoring_mode") or "MULTI_SIGNAL_RULE_STATISTICAL",
+        "monitoring_mode": settings.get("monitoring_mode") or "AGENTIC",
         "latency_threshold_ms": float(settings.get("latency_threshold_ms") or 2000.0),
+        "gemini_api_key": settings.get("gemini_api_key") if settings.get("gemini_api_key") is not None else DEFAULT_GEMINI_API_KEY,
+        "gemini_model": settings.get("gemini_model") or DEFAULT_GEMINI_MODEL,
+        "llm_enabled": settings.get("llm_enabled", 1 if DEFAULT_LLM_ENABLED else 0),
         "last_report_sent_at": settings.get("last_report_sent_at")
     }
 
@@ -473,8 +513,11 @@ def sync_settings_from_env() -> Dict[str, Any]:
         "http_timeout_seconds": config.HTTP_TIMEOUT_SECONDS,
         "dns_timeout_seconds": config.DNS_TIMEOUT_SECONDS,
         "ssl_timeout_seconds": config.SSL_TIMEOUT_SECONDS,
-        "monitoring_mode": "MULTI_SIGNAL_RULE_STATISTICAL",
-        "latency_threshold_ms": 2000.0
+        "monitoring_mode": "AGENTIC",
+        "latency_threshold_ms": 2000.0,
+        "gemini_api_key": config.DEFAULT_GEMINI_API_KEY,
+        "gemini_model": config.DEFAULT_GEMINI_MODEL,
+        "llm_enabled": config.DEFAULT_LLM_ENABLED
     }
     update_system_settings(env_settings)
     return env_settings
@@ -493,8 +536,9 @@ def update_system_settings(settings: Dict[str, Any]) -> bool:
             scheduler_interval_seconds, data_retention_days, ssl_warning_days,
             http_timeout_seconds, dns_timeout_seconds, ssl_timeout_seconds,
             monitoring_mode, latency_threshold_ms,
+            gemini_api_key, gemini_model, llm_enabled,
             updated_at
-        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             smtp_server = excluded.smtp_server,
             smtp_port = excluded.smtp_port,
@@ -517,6 +561,9 @@ def update_system_settings(settings: Dict[str, Any]) -> bool:
             ssl_timeout_seconds = excluded.ssl_timeout_seconds,
             monitoring_mode = excluded.monitoring_mode,
             latency_threshold_ms = excluded.latency_threshold_ms,
+            gemini_api_key = excluded.gemini_api_key,
+            gemini_model = excluded.gemini_model,
+            llm_enabled = excluded.llm_enabled,
             updated_at = excluded.updated_at;
     """, (
         settings.get("smtp_server", DEFAULT_SMTP_SERVER),
@@ -538,8 +585,11 @@ def update_system_settings(settings: Dict[str, Any]) -> bool:
         float(settings.get("http_timeout_seconds", 10.0)),
         float(settings.get("dns_timeout_seconds", 5.0)),
         float(settings.get("ssl_timeout_seconds", 10.0)),
-        str(settings.get("monitoring_mode", "MULTI_SIGNAL_RULE_STATISTICAL")),
+        str(settings.get("monitoring_mode", "AGENTIC")),
         float(settings.get("latency_threshold_ms", 2000.0)),
+        str(settings.get("gemini_api_key", DEFAULT_GEMINI_API_KEY)).strip(),
+        str(settings.get("gemini_model", DEFAULT_GEMINI_MODEL)).strip(),
+        1 if settings.get("llm_enabled", DEFAULT_LLM_ENABLED) else 0,
         updated_at
     ))
     conn.commit()
@@ -597,12 +647,25 @@ def generate_periodic_report_data(hours: int = 24) -> Dict[str, Any]:
         ssl_valid = bool(latest_row.get("ssl_is_valid")) if latest_row else True
         http_code = latest_row.get("http_status_code") if latest_row else None
         
+        # Trích xuất chẩn đoán Agentic hoặc DOM nếu có
+        diagnostic_summary = None
+        if latest_row and latest_row.get("full_signals_json"):
+            try:
+                sig_data = json.loads(latest_row["full_signals_json"])
+                if sig_data.get("agent"):
+                    diagnostic_summary = sig_data["agent"].get("title") or sig_data["agent"].get("root_cause")
+                elif sig_data.get("dom") and not sig_data["dom"].get("is_structure_valid", True):
+                    diagnostic_summary = "Thiếu thành phần DOM: " + ", ".join(sig_data["dom"].get("missing_critical_elements", []))
+            except Exception:
+                diagnostic_summary = None
+
         site_summaries.append({
             "website_id": site["id"],
             "name": site["name"],
             "url": site["url"],
             "domain": site["domain"],
             "current_status": current_status,
+            "diagnostic_summary": diagnostic_summary,
             "total_scans": site_total,
             "health_rate": site_health_rate,
             "avg_http_latency_ms": avg_http,
@@ -614,19 +677,33 @@ def generate_periodic_report_data(hours: int = 24) -> Dict[str, Any]:
             "warning_count": site_warning
         })
 
-    # 4. Danh sách các sự cố trong khoảng thời gian (Top 10)
-    incidents = [
-        {
-            "timestamp": r["timestamp"],
-            "website_name": r["website_name"],
-            "status": r["overall_status"],
-            "http_code": r["http_status_code"],
-            "dns_resolved": r["dns_resolved"],
-            "ssl_valid": r["ssl_is_valid"],
-            "ssl_days": r["ssl_days_remaining"]
-        }
-        for r in rows if r.get("overall_status") in ["CRITICAL", "WARNING"]
-    ][:10]
+    # 4. Danh sách các sự cố trong khoảng thời gian
+    incidents = []
+    for r in rows:
+        if r.get("overall_status") in ["CRITICAL", "WARNING"]:
+            detail_msg = None
+            if r.get("full_signals_json"):
+                try:
+                    sig = json.loads(r["full_signals_json"])
+                    if sig.get("agent"):
+                        detail_msg = sig["agent"].get("title") or sig["agent"].get("root_cause")
+                    elif sig.get("dom") and not sig["dom"].get("is_structure_valid", True):
+                        detail_msg = "DOM: " + ", ".join(sig["dom"].get("missing_critical_elements", []))
+                except Exception:
+                    detail_msg = None
+
+            incidents.append({
+                "timestamp": r["timestamp"],
+                "website_name": r["website_name"],
+                "status": r["overall_status"],
+                "http_code": r["http_status_code"],
+                "dns_resolved": r["dns_resolved"],
+                "ssl_valid": r["ssl_is_valid"],
+                "ssl_days": r["ssl_days_remaining"],
+                "details": detail_msg or ("HTTP " + str(r.get("http_status_code") or "Error"))
+            })
+            if len(incidents) >= 50:
+                break
 
     return {
         "report_generated_at": now_str,

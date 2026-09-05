@@ -33,7 +33,8 @@
         "injected_line": 12,
         "fault_detail": "Ném ngoại lệ kết nối Cơ sở dữ liệu thất bại (HTTP 500)",
         "ground_truth_fix": "Khắc phục kết nối DB hoặc cấu hình lại pooling"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 002 (site-002.test)",
@@ -66,7 +67,8 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 12 giây do vòng lặp xử lý nặng",
         "ground_truth_fix": "Loại bỏ vòng lặp đồng bộ hoặc chuyển sang xử lý bất đồng bộ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 003 (site-003.test)",
@@ -99,7 +101,8 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 004 (site-004.test)",
@@ -132,7 +135,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 005 (site-005.test)",
@@ -165,7 +169,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 006 (site-006.test)",
@@ -197,7 +202,8 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 007 (site-007.test)",
@@ -229,7 +235,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 008 (site-008.test)",
@@ -261,7 +268,8 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 009 (site-009.test)",
@@ -294,7 +302,8 @@
         "injected_line": 12,
         "fault_detail": "Ném ngoại lệ kết nối Cơ sở dữ liệu thất bại (HTTP 500)",
         "ground_truth_fix": "Khắc phục kết nối DB hoặc cấu hình lại pooling"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 010 (site-010.test)",
@@ -327,7 +336,8 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 9 giây",
         "ground_truth_fix": "Gỡ bỏ hàm delay cố ý trong middleware"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 011 (site-011.test)",
@@ -360,7 +370,8 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 012 (site-012.test)",
@@ -393,7 +404,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 013 (site-013.test)",
@@ -426,7 +438,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 014 (site-014.test)",
@@ -458,7 +471,8 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 015 (site-015.test)",
@@ -490,7 +504,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 016 (site-016.test)",
@@ -522,7 +537,8 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 017 (site-017.test)",
@@ -555,7 +571,8 @@
         "injected_line": 12,
         "fault_detail": "Truy cập biến chưa khai báo gây Uncaught ReferenceError trong middleware",
         "ground_truth_fix": "Khai báo hoặc kiểm tra biến unassignedVariable trước khi gọi"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 018 (site-018.test)",
@@ -588,7 +605,8 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 12 giây do vòng lặp xử lý nặng",
         "ground_truth_fix": "Loại bỏ vòng lặp đồng bộ hoặc chuyển sang xử lý bất đồng bộ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 019 (site-019.test)",
@@ -621,7 +639,8 @@
         "injected_line": 50,
         "fault_detail": "Nút thêm người dùng bị xóa khỏi bảng điều khiển",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='add-user-btn'>"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 020 (site-020.test)",
@@ -654,7 +673,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 021 (site-021.test)",
@@ -687,7 +707,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 022 (site-022.test)",
@@ -719,7 +740,8 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 023 (site-023.test)",
@@ -751,7 +773,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 024 (site-024.test)",
@@ -783,7 +806,8 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 025 (site-025.test)",
@@ -816,7 +840,8 @@
         "injected_line": 12,
         "fault_detail": "Truy cập biến chưa khai báo gây Uncaught ReferenceError trong middleware",
         "ground_truth_fix": "Khai báo hoặc kiểm tra biến unassignedVariable trước khi gọi"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 026 (site-026.test)",
@@ -849,7 +874,8 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 12 giây do vòng lặp xử lý nặng",
         "ground_truth_fix": "Loại bỏ vòng lặp đồng bộ hoặc chuyển sang xử lý bất đồng bộ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 027 (site-027.test)",
@@ -882,7 +908,8 @@
         "injected_line": 50,
         "fault_detail": "Nút thêm người dùng bị xóa khỏi bảng điều khiển",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='add-user-btn'>"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 028 (site-028.test)",
@@ -915,7 +942,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 029 (site-029.test)",
@@ -948,7 +976,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 030 (site-030.test)",
@@ -980,7 +1009,8 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 031 (site-031.test)",
@@ -1012,7 +1042,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 032 (site-032.test)",
@@ -1044,7 +1075,8 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 033 (site-033.test)",
@@ -1077,7 +1109,8 @@
         "injected_line": 12,
         "fault_detail": "Lỗi Parse JSON chuỗi không hợp lệ gây Server Crash 500",
         "ground_truth_fix": "Sửa lại chuỗi JSON hợp lệ và bọc trong khối try-catch"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 034 (site-034.test)",
@@ -1110,7 +1143,8 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 12 giây do vòng lặp xử lý nặng",
         "ground_truth_fix": "Loại bỏ vòng lặp đồng bộ hoặc chuyển sang xử lý bất đồng bộ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 035 (site-035.test)",
@@ -1143,7 +1177,8 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 036 (site-036.test)",
@@ -1176,7 +1211,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 037 (site-037.test)",
@@ -1209,7 +1245,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 038 (site-038.test)",
@@ -1241,7 +1278,8 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 039 (site-039.test)",
@@ -1273,7 +1311,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 040 (site-040.test)",
@@ -1305,7 +1344,8 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 041 (site-041.test)",
@@ -1338,7 +1378,8 @@
         "injected_line": 12,
         "fault_detail": "Truy cập biến chưa khai báo gây Uncaught ReferenceError trong middleware",
         "ground_truth_fix": "Khai báo hoặc kiểm tra biến unassignedVariable trước khi gọi"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 042 (site-042.test)",
@@ -1371,7 +1412,8 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 12 giây do vòng lặp xử lý nặng",
         "ground_truth_fix": "Loại bỏ vòng lặp đồng bộ hoặc chuyển sang xử lý bất đồng bộ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 043 (site-043.test)",
@@ -1404,7 +1446,8 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 044 (site-044.test)",
@@ -1437,7 +1480,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 045 (site-045.test)",
@@ -1470,7 +1514,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 046 (site-046.test)",
@@ -1502,7 +1547,8 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 047 (site-047.test)",
@@ -1534,7 +1580,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 048 (site-048.test)",
@@ -1566,7 +1613,8 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 049 (site-049.test)",
@@ -1599,7 +1647,8 @@
         "injected_line": 12,
         "fault_detail": "Ném ngoại lệ kết nối Cơ sở dữ liệu thất bại (HTTP 500)",
         "ground_truth_fix": "Khắc phục kết nối DB hoặc cấu hình lại pooling"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 050 (site-050.test)",
@@ -1632,7 +1681,8 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 12 giây do vòng lặp xử lý nặng",
         "ground_truth_fix": "Loại bỏ vòng lặp đồng bộ hoặc chuyển sang xử lý bất đồng bộ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 051 (site-051.test)",
@@ -1665,7 +1715,8 @@
         "injected_line": 50,
         "fault_detail": "Nút thêm người dùng bị xóa khỏi bảng điều khiển",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='add-user-btn'>"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 052 (site-052.test)",
@@ -1698,7 +1749,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 053 (site-053.test)",
@@ -1731,7 +1783,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 054 (site-054.test)",
@@ -1763,7 +1816,8 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 055 (site-055.test)",
@@ -1795,7 +1849,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 056 (site-056.test)",
@@ -1827,7 +1882,8 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 057 (site-057.test)",
@@ -1860,7 +1916,8 @@
         "injected_line": 12,
         "fault_detail": "Truy cập biến chưa khai báo gây Uncaught ReferenceError trong middleware",
         "ground_truth_fix": "Khai báo hoặc kiểm tra biến unassignedVariable trước khi gọi"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 058 (site-058.test)",
@@ -1893,7 +1950,8 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 9 giây",
         "ground_truth_fix": "Gỡ bỏ hàm delay cố ý trong middleware"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 059 (site-059.test)",
@@ -1926,7 +1984,8 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 060 (site-060.test)",
@@ -1959,7 +2018,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 061 (site-061.test)",
@@ -1992,7 +2052,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 062 (site-062.test)",
@@ -2024,7 +2085,8 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 063 (site-063.test)",
@@ -2056,7 +2118,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 064 (site-064.test)",
@@ -2088,7 +2151,8 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 065 (site-065.test)",
@@ -2121,7 +2185,8 @@
         "injected_line": 12,
         "fault_detail": "Lỗi Parse JSON chuỗi không hợp lệ gây Server Crash 500",
         "ground_truth_fix": "Sửa lại chuỗi JSON hợp lệ và bọc trong khối try-catch"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 066 (site-066.test)",
@@ -2154,7 +2219,8 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 9 giây",
         "ground_truth_fix": "Gỡ bỏ hàm delay cố ý trong middleware"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 067 (site-067.test)",
@@ -2187,7 +2253,8 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 068 (site-068.test)",
@@ -2220,7 +2287,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 069 (site-069.test)",
@@ -2253,7 +2321,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 070 (site-070.test)",
@@ -2285,7 +2354,8 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 071 (site-071.test)",
@@ -2317,7 +2387,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 072 (site-072.test)",
@@ -2349,7 +2420,8 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 073 (site-073.test)",
@@ -2382,7 +2454,8 @@
         "injected_line": 12,
         "fault_detail": "Truy cập biến chưa khai báo gây Uncaught ReferenceError trong middleware",
         "ground_truth_fix": "Khai báo hoặc kiểm tra biến unassignedVariable trước khi gọi"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 074 (site-074.test)",
@@ -2415,7 +2488,8 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 9 giây",
         "ground_truth_fix": "Gỡ bỏ hàm delay cố ý trong middleware"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 075 (site-075.test)",
@@ -2448,7 +2522,8 @@
         "injected_line": 111,
         "fault_detail": "Thanh điều hướng chính Navigation bị ẩn do CSS display:none",
         "ground_truth_fix": "Xóa thuộc tính `display: none !important;` khỏi CSS của navigation"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 076 (site-076.test)",
@@ -2481,7 +2556,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 077 (site-077.test)",
@@ -2514,7 +2590,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 078 (site-078.test)",
@@ -2546,7 +2623,8 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 079 (site-079.test)",
@@ -2578,7 +2656,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 080 (site-080.test)",
@@ -2610,7 +2689,8 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 081 (site-081.test)",
@@ -2643,7 +2723,8 @@
         "injected_line": 12,
         "fault_detail": "Lỗi Parse JSON chuỗi không hợp lệ gây Server Crash 500",
         "ground_truth_fix": "Sửa lại chuỗi JSON hợp lệ và bọc trong khối try-catch"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 082 (site-082.test)",
@@ -2676,7 +2757,8 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 12 giây do vòng lặp xử lý nặng",
         "ground_truth_fix": "Loại bỏ vòng lặp đồng bộ hoặc chuyển sang xử lý bất đồng bộ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 083 (site-083.test)",
@@ -2709,7 +2791,8 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 084 (site-084.test)",
@@ -2742,7 +2825,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 085 (site-085.test)",
@@ -2775,7 +2859,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 086 (site-086.test)",
@@ -2807,7 +2892,8 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 087 (site-087.test)",
@@ -2839,7 +2925,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 088 (site-088.test)",
@@ -2871,7 +2958,8 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 089 (site-089.test)",
@@ -2904,7 +2992,8 @@
         "injected_line": 12,
         "fault_detail": "Lỗi Parse JSON chuỗi không hợp lệ gây Server Crash 500",
         "ground_truth_fix": "Sửa lại chuỗi JSON hợp lệ và bọc trong khối try-catch"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 090 (site-090.test)",
@@ -2937,7 +3026,8 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 12 giây do vòng lặp xử lý nặng",
         "ground_truth_fix": "Loại bỏ vòng lặp đồng bộ hoặc chuyển sang xử lý bất đồng bộ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 091 (site-091.test)",
@@ -2970,7 +3060,8 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 092 (site-092.test)",
@@ -3003,7 +3094,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 093 (site-093.test)",
@@ -3036,7 +3128,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 094 (site-094.test)",
@@ -3068,7 +3161,8 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 095 (site-095.test)",
@@ -3100,7 +3194,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 096 (site-096.test)",
@@ -3132,7 +3227,8 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 097 (site-097.test)",
@@ -3165,7 +3261,8 @@
         "injected_line": 12,
         "fault_detail": "Lỗi Parse JSON chuỗi không hợp lệ gây Server Crash 500",
         "ground_truth_fix": "Sửa lại chuỗi JSON hợp lệ và bọc trong khối try-catch"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 098 (site-098.test)",
@@ -3198,22 +3295,15 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 12 giây do vòng lặp xử lý nặng",
         "ground_truth_fix": "Loại bỏ vòng lặp đồng bộ hoặc chuyển sang xử lý bất đồng bộ"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 099 (site-099.test)",
       "url": "https://site-099.test",
       "domain": "site-099.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_099",
         "domain": "site-099.test",
@@ -3231,22 +3321,15 @@
         "injected_line": 111,
         "fault_detail": "Thanh điều hướng chính Navigation bị ẩn do CSS display:none",
         "ground_truth_fix": "Xóa thuộc tính `display: none !important;` khỏi CSS của navigation"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 100 (site-100.test)",
       "url": "https://site-100.test",
       "domain": "site-100.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_100",
         "domain": "site-100.test",
@@ -3264,7 +3347,8 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 101 (site-101.test)",
@@ -3297,22 +3381,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 102 (site-102.test)",
       "url": "https://site-102.test",
       "domain": "site-102.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_102",
         "domain": "site-102.test",
@@ -3329,7 +3406,8 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 103 (site-103.test)",
@@ -3361,22 +3439,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": true
     },
     {
       "name": "Site 104 (site-104.test)",
       "url": "https://site-104.test",
       "domain": "site-104.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_104",
         "domain": "site-104.test",
@@ -3393,22 +3464,15 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 105 (site-105.test)",
       "url": "https://site-105.test",
       "domain": "site-105.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_105",
         "domain": "site-105.test",
@@ -3426,22 +3490,15 @@
         "injected_line": 12,
         "fault_detail": "Lỗi Parse JSON chuỗi không hợp lệ gây Server Crash 500",
         "ground_truth_fix": "Sửa lại chuỗi JSON hợp lệ và bọc trong khối try-catch"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 106 (site-106.test)",
       "url": "https://site-106.test",
       "domain": "site-106.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_106",
         "domain": "site-106.test",
@@ -3459,22 +3516,15 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 9 giây",
         "ground_truth_fix": "Gỡ bỏ hàm delay cố ý trong middleware"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 107 (site-107.test)",
       "url": "https://site-107.test",
       "domain": "site-107.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_107",
         "domain": "site-107.test",
@@ -3492,22 +3542,15 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 108 (site-108.test)",
       "url": "https://site-108.test",
       "domain": "site-108.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_108",
         "domain": "site-108.test",
@@ -3525,22 +3568,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 109 (site-109.test)",
       "url": "https://site-109.test",
       "domain": "site-109.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_109",
         "domain": "site-109.test",
@@ -3558,22 +3594,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 110 (site-110.test)",
       "url": "https://site-110.test",
       "domain": "site-110.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_110",
         "domain": "site-110.test",
@@ -3590,22 +3619,15 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 111 (site-111.test)",
       "url": "https://site-111.test",
       "domain": "site-111.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_111",
         "domain": "site-111.test",
@@ -3622,22 +3644,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 112 (site-112.test)",
       "url": "https://site-112.test",
       "domain": "site-112.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_112",
         "domain": "site-112.test",
@@ -3654,22 +3669,15 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 113 (site-113.test)",
       "url": "https://site-113.test",
       "domain": "site-113.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_113",
         "domain": "site-113.test",
@@ -3687,22 +3695,15 @@
         "injected_line": 12,
         "fault_detail": "Ném ngoại lệ kết nối Cơ sở dữ liệu thất bại (HTTP 500)",
         "ground_truth_fix": "Khắc phục kết nối DB hoặc cấu hình lại pooling"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 114 (site-114.test)",
       "url": "https://site-114.test",
       "domain": "site-114.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_114",
         "domain": "site-114.test",
@@ -3720,22 +3721,15 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 9 giây",
         "ground_truth_fix": "Gỡ bỏ hàm delay cố ý trong middleware"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 115 (site-115.test)",
       "url": "https://site-115.test",
       "domain": "site-115.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_115",
         "domain": "site-115.test",
@@ -3753,22 +3747,15 @@
         "injected_line": 50,
         "fault_detail": "Nút thêm người dùng bị xóa khỏi bảng điều khiển",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='add-user-btn'>"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 116 (site-116.test)",
       "url": "https://site-116.test",
       "domain": "site-116.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_116",
         "domain": "site-116.test",
@@ -3786,22 +3773,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 117 (site-117.test)",
       "url": "https://site-117.test",
       "domain": "site-117.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_117",
         "domain": "site-117.test",
@@ -3819,22 +3799,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 118 (site-118.test)",
       "url": "https://site-118.test",
       "domain": "site-118.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_118",
         "domain": "site-118.test",
@@ -3851,22 +3824,15 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 119 (site-119.test)",
       "url": "https://site-119.test",
       "domain": "site-119.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_119",
         "domain": "site-119.test",
@@ -3883,22 +3849,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 120 (site-120.test)",
       "url": "https://site-120.test",
       "domain": "site-120.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_120",
         "domain": "site-120.test",
@@ -3915,22 +3874,15 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 121 (site-121.test)",
       "url": "https://site-121.test",
       "domain": "site-121.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_121",
         "domain": "site-121.test",
@@ -3948,22 +3900,15 @@
         "injected_line": 12,
         "fault_detail": "Truy cập biến chưa khai báo gây Uncaught ReferenceError trong middleware",
         "ground_truth_fix": "Khai báo hoặc kiểm tra biến unassignedVariable trước khi gọi"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 122 (site-122.test)",
       "url": "https://site-122.test",
       "domain": "site-122.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_122",
         "domain": "site-122.test",
@@ -3981,22 +3926,15 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 9 giây",
         "ground_truth_fix": "Gỡ bỏ hàm delay cố ý trong middleware"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 123 (site-123.test)",
       "url": "https://site-123.test",
       "domain": "site-123.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_123",
         "domain": "site-123.test",
@@ -4014,22 +3952,15 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 124 (site-124.test)",
       "url": "https://site-124.test",
       "domain": "site-124.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_124",
         "domain": "site-124.test",
@@ -4047,22 +3978,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 125 (site-125.test)",
       "url": "https://site-125.test",
       "domain": "site-125.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_125",
         "domain": "site-125.test",
@@ -4080,22 +4004,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 126 (site-126.test)",
       "url": "https://site-126.test",
       "domain": "site-126.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_126",
         "domain": "site-126.test",
@@ -4112,22 +4029,15 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 127 (site-127.test)",
       "url": "https://site-127.test",
       "domain": "site-127.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_127",
         "domain": "site-127.test",
@@ -4144,22 +4054,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 128 (site-128.test)",
       "url": "https://site-128.test",
       "domain": "site-128.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_128",
         "domain": "site-128.test",
@@ -4176,22 +4079,15 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 129 (site-129.test)",
       "url": "https://site-129.test",
       "domain": "site-129.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_129",
         "domain": "site-129.test",
@@ -4209,22 +4105,15 @@
         "injected_line": 12,
         "fault_detail": "Ném ngoại lệ kết nối Cơ sở dữ liệu thất bại (HTTP 500)",
         "ground_truth_fix": "Khắc phục kết nối DB hoặc cấu hình lại pooling"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 130 (site-130.test)",
       "url": "https://site-130.test",
       "domain": "site-130.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_130",
         "domain": "site-130.test",
@@ -4242,22 +4131,15 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 9 giây",
         "ground_truth_fix": "Gỡ bỏ hàm delay cố ý trong middleware"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 131 (site-131.test)",
       "url": "https://site-131.test",
       "domain": "site-131.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_131",
         "domain": "site-131.test",
@@ -4275,22 +4157,15 @@
         "injected_line": 50,
         "fault_detail": "Nút thêm người dùng bị xóa khỏi bảng điều khiển",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='add-user-btn'>"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 132 (site-132.test)",
       "url": "https://site-132.test",
       "domain": "site-132.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_132",
         "domain": "site-132.test",
@@ -4308,22 +4183,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 133 (site-133.test)",
       "url": "https://site-133.test",
       "domain": "site-133.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_133",
         "domain": "site-133.test",
@@ -4341,22 +4209,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 134 (site-134.test)",
       "url": "https://site-134.test",
       "domain": "site-134.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_134",
         "domain": "site-134.test",
@@ -4373,22 +4234,15 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 135 (site-135.test)",
       "url": "https://site-135.test",
       "domain": "site-135.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_135",
         "domain": "site-135.test",
@@ -4405,22 +4259,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 136 (site-136.test)",
       "url": "https://site-136.test",
       "domain": "site-136.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_136",
         "domain": "site-136.test",
@@ -4437,22 +4284,15 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 137 (site-137.test)",
       "url": "https://site-137.test",
       "domain": "site-137.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_137",
         "domain": "site-137.test",
@@ -4470,22 +4310,15 @@
         "injected_line": 12,
         "fault_detail": "Ném ngoại lệ kết nối Cơ sở dữ liệu thất bại (HTTP 500)",
         "ground_truth_fix": "Khắc phục kết nối DB hoặc cấu hình lại pooling"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 138 (site-138.test)",
       "url": "https://site-138.test",
       "domain": "site-138.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_138",
         "domain": "site-138.test",
@@ -4503,22 +4336,15 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 9 giây",
         "ground_truth_fix": "Gỡ bỏ hàm delay cố ý trong middleware"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 139 (site-139.test)",
       "url": "https://site-139.test",
       "domain": "site-139.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_139",
         "domain": "site-139.test",
@@ -4536,22 +4362,15 @@
         "injected_line": 50,
         "fault_detail": "Nút thêm người dùng bị xóa khỏi bảng điều khiển",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='add-user-btn'>"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 140 (site-140.test)",
       "url": "https://site-140.test",
       "domain": "site-140.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_140",
         "domain": "site-140.test",
@@ -4569,22 +4388,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 141 (site-141.test)",
       "url": "https://site-141.test",
       "domain": "site-141.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_141",
         "domain": "site-141.test",
@@ -4602,22 +4414,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 142 (site-142.test)",
       "url": "https://site-142.test",
       "domain": "site-142.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_142",
         "domain": "site-142.test",
@@ -4634,22 +4439,15 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 143 (site-143.test)",
       "url": "https://site-143.test",
       "domain": "site-143.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_143",
         "domain": "site-143.test",
@@ -4666,22 +4464,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 144 (site-144.test)",
       "url": "https://site-144.test",
       "domain": "site-144.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_144",
         "domain": "site-144.test",
@@ -4698,22 +4489,15 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 145 (site-145.test)",
       "url": "https://site-145.test",
       "domain": "site-145.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_145",
         "domain": "site-145.test",
@@ -4731,22 +4515,15 @@
         "injected_line": 12,
         "fault_detail": "Truy cập biến chưa khai báo gây Uncaught ReferenceError trong middleware",
         "ground_truth_fix": "Khai báo hoặc kiểm tra biến unassignedVariable trước khi gọi"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 146 (site-146.test)",
       "url": "https://site-146.test",
       "domain": "site-146.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_146",
         "domain": "site-146.test",
@@ -4764,22 +4541,15 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 12 giây do vòng lặp xử lý nặng",
         "ground_truth_fix": "Loại bỏ vòng lặp đồng bộ hoặc chuyển sang xử lý bất đồng bộ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 147 (site-147.test)",
       "url": "https://site-147.test",
       "domain": "site-147.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_147",
         "domain": "site-147.test",
@@ -4797,22 +4567,15 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 148 (site-148.test)",
       "url": "https://site-148.test",
       "domain": "site-148.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_148",
         "domain": "site-148.test",
@@ -4830,22 +4593,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 149 (site-149.test)",
       "url": "https://site-149.test",
       "domain": "site-149.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_149",
         "domain": "site-149.test",
@@ -4863,22 +4619,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 150 (site-150.test)",
       "url": "https://site-150.test",
       "domain": "site-150.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_150",
         "domain": "site-150.test",
@@ -4895,22 +4644,15 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 151 (site-151.test)",
       "url": "https://site-151.test",
       "domain": "site-151.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_151",
         "domain": "site-151.test",
@@ -4927,22 +4669,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 152 (site-152.test)",
       "url": "https://site-152.test",
       "domain": "site-152.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_152",
         "domain": "site-152.test",
@@ -4959,22 +4694,15 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 153 (site-153.test)",
       "url": "https://site-153.test",
       "domain": "site-153.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_153",
         "domain": "site-153.test",
@@ -4992,22 +4720,15 @@
         "injected_line": 12,
         "fault_detail": "Ném ngoại lệ kết nối Cơ sở dữ liệu thất bại (HTTP 500)",
         "ground_truth_fix": "Khắc phục kết nối DB hoặc cấu hình lại pooling"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 154 (site-154.test)",
       "url": "https://site-154.test",
       "domain": "site-154.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_154",
         "domain": "site-154.test",
@@ -5025,22 +4746,15 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 12 giây do vòng lặp xử lý nặng",
         "ground_truth_fix": "Loại bỏ vòng lặp đồng bộ hoặc chuyển sang xử lý bất đồng bộ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 155 (site-155.test)",
       "url": "https://site-155.test",
       "domain": "site-155.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_155",
         "domain": "site-155.test",
@@ -5058,22 +4772,15 @@
         "injected_line": 216,
         "fault_detail": "Thanh điều hướng chính Navigation bị ẩn do CSS display:none",
         "ground_truth_fix": "Xóa thuộc tính `display: none !important;` khỏi CSS của navigation"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 156 (site-156.test)",
       "url": "https://site-156.test",
       "domain": "site-156.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_156",
         "domain": "site-156.test",
@@ -5091,22 +4798,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 157 (site-157.test)",
       "url": "https://site-157.test",
       "domain": "site-157.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_157",
         "domain": "site-157.test",
@@ -5124,22 +4824,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 158 (site-158.test)",
       "url": "https://site-158.test",
       "domain": "site-158.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_158",
         "domain": "site-158.test",
@@ -5156,22 +4849,15 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 159 (site-159.test)",
       "url": "https://site-159.test",
       "domain": "site-159.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_159",
         "domain": "site-159.test",
@@ -5188,22 +4874,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 160 (site-160.test)",
       "url": "https://site-160.test",
       "domain": "site-160.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_160",
         "domain": "site-160.test",
@@ -5220,22 +4899,15 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 161 (site-161.test)",
       "url": "https://site-161.test",
       "domain": "site-161.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_161",
         "domain": "site-161.test",
@@ -5253,22 +4925,15 @@
         "injected_line": 12,
         "fault_detail": "Truy cập biến chưa khai báo gây Uncaught ReferenceError trong middleware",
         "ground_truth_fix": "Khai báo hoặc kiểm tra biến unassignedVariable trước khi gọi"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 162 (site-162.test)",
       "url": "https://site-162.test",
       "domain": "site-162.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_162",
         "domain": "site-162.test",
@@ -5286,22 +4951,15 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 12 giây do vòng lặp xử lý nặng",
         "ground_truth_fix": "Loại bỏ vòng lặp đồng bộ hoặc chuyển sang xử lý bất đồng bộ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 163 (site-163.test)",
       "url": "https://site-163.test",
       "domain": "site-163.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_163",
         "domain": "site-163.test",
@@ -5319,22 +4977,15 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 164 (site-164.test)",
       "url": "https://site-164.test",
       "domain": "site-164.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_164",
         "domain": "site-164.test",
@@ -5352,22 +5003,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 165 (site-165.test)",
       "url": "https://site-165.test",
       "domain": "site-165.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_165",
         "domain": "site-165.test",
@@ -5385,22 +5029,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 166 (site-166.test)",
       "url": "https://site-166.test",
       "domain": "site-166.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_166",
         "domain": "site-166.test",
@@ -5417,22 +5054,15 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 167 (site-167.test)",
       "url": "https://site-167.test",
       "domain": "site-167.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_167",
         "domain": "site-167.test",
@@ -5449,22 +5079,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 168 (site-168.test)",
       "url": "https://site-168.test",
       "domain": "site-168.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_168",
         "domain": "site-168.test",
@@ -5481,22 +5104,15 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 169 (site-169.test)",
       "url": "https://site-169.test",
       "domain": "site-169.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_169",
         "domain": "site-169.test",
@@ -5514,22 +5130,15 @@
         "injected_line": 12,
         "fault_detail": "Lỗi Parse JSON chuỗi không hợp lệ gây Server Crash 500",
         "ground_truth_fix": "Sửa lại chuỗi JSON hợp lệ và bọc trong khối try-catch"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 170 (site-170.test)",
       "url": "https://site-170.test",
       "domain": "site-170.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_170",
         "domain": "site-170.test",
@@ -5547,22 +5156,15 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 9 giây",
         "ground_truth_fix": "Gỡ bỏ hàm delay cố ý trong middleware"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 171 (site-171.test)",
       "url": "https://site-171.test",
       "domain": "site-171.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_171",
         "domain": "site-171.test",
@@ -5580,22 +5182,15 @@
         "injected_line": 111,
         "fault_detail": "Thanh điều hướng chính Navigation bị ẩn do CSS display:none",
         "ground_truth_fix": "Xóa thuộc tính `display: none !important;` khỏi CSS của navigation"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 172 (site-172.test)",
       "url": "https://site-172.test",
       "domain": "site-172.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_172",
         "domain": "site-172.test",
@@ -5613,22 +5208,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 173 (site-173.test)",
       "url": "https://site-173.test",
       "domain": "site-173.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_173",
         "domain": "site-173.test",
@@ -5646,22 +5234,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 174 (site-174.test)",
       "url": "https://site-174.test",
       "domain": "site-174.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_174",
         "domain": "site-174.test",
@@ -5678,22 +5259,15 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 175 (site-175.test)",
       "url": "https://site-175.test",
       "domain": "site-175.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_175",
         "domain": "site-175.test",
@@ -5710,22 +5284,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 176 (site-176.test)",
       "url": "https://site-176.test",
       "domain": "site-176.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_176",
         "domain": "site-176.test",
@@ -5742,22 +5309,15 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 177 (site-177.test)",
       "url": "https://site-177.test",
       "domain": "site-177.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_177",
         "domain": "site-177.test",
@@ -5775,22 +5335,15 @@
         "injected_line": 12,
         "fault_detail": "Ném ngoại lệ kết nối Cơ sở dữ liệu thất bại (HTTP 500)",
         "ground_truth_fix": "Khắc phục kết nối DB hoặc cấu hình lại pooling"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 178 (site-178.test)",
       "url": "https://site-178.test",
       "domain": "site-178.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_178",
         "domain": "site-178.test",
@@ -5808,22 +5361,15 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 9 giây",
         "ground_truth_fix": "Gỡ bỏ hàm delay cố ý trong middleware"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 179 (site-179.test)",
       "url": "https://site-179.test",
       "domain": "site-179.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_179",
         "domain": "site-179.test",
@@ -5841,22 +5387,15 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 180 (site-180.test)",
       "url": "https://site-180.test",
       "domain": "site-180.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_180",
         "domain": "site-180.test",
@@ -5874,22 +5413,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 181 (site-181.test)",
       "url": "https://site-181.test",
       "domain": "site-181.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_181",
         "domain": "site-181.test",
@@ -5907,22 +5439,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 182 (site-182.test)",
       "url": "https://site-182.test",
       "domain": "site-182.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_182",
         "domain": "site-182.test",
@@ -5939,22 +5464,15 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 183 (site-183.test)",
       "url": "https://site-183.test",
       "domain": "site-183.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_183",
         "domain": "site-183.test",
@@ -5971,22 +5489,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 184 (site-184.test)",
       "url": "https://site-184.test",
       "domain": "site-184.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_184",
         "domain": "site-184.test",
@@ -6003,22 +5514,15 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 185 (site-185.test)",
       "url": "https://site-185.test",
       "domain": "site-185.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_185",
         "domain": "site-185.test",
@@ -6036,22 +5540,15 @@
         "injected_line": 12,
         "fault_detail": "Lỗi Parse JSON chuỗi không hợp lệ gây Server Crash 500",
         "ground_truth_fix": "Sửa lại chuỗi JSON hợp lệ và bọc trong khối try-catch"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 186 (site-186.test)",
       "url": "https://site-186.test",
       "domain": "site-186.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_186",
         "domain": "site-186.test",
@@ -6069,22 +5566,15 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 9 giây",
         "ground_truth_fix": "Gỡ bỏ hàm delay cố ý trong middleware"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 187 (site-187.test)",
       "url": "https://site-187.test",
       "domain": "site-187.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_187",
         "domain": "site-187.test",
@@ -6102,22 +5592,15 @@
         "injected_line": 50,
         "fault_detail": "Nút hành động chính (Submit / Checkout) bị xóa khỏi DOM",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='checkout-btn'> trong template"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 188 (site-188.test)",
       "url": "https://site-188.test",
       "domain": "site-188.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_188",
         "domain": "site-188.test",
@@ -6135,22 +5618,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 189 (site-189.test)",
       "url": "https://site-189.test",
       "domain": "site-189.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_189",
         "domain": "site-189.test",
@@ -6168,22 +5644,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 190 (site-190.test)",
       "url": "https://site-190.test",
       "domain": "site-190.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_190",
         "domain": "site-190.test",
@@ -6200,22 +5669,15 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 191 (site-191.test)",
       "url": "https://site-191.test",
       "domain": "site-191.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_191",
         "domain": "site-191.test",
@@ -6232,22 +5694,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 192 (site-192.test)",
       "url": "https://site-192.test",
       "domain": "site-192.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_192",
         "domain": "site-192.test",
@@ -6264,22 +5719,15 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 193 (site-193.test)",
       "url": "https://site-193.test",
       "domain": "site-193.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_193",
         "domain": "site-193.test",
@@ -6297,22 +5745,15 @@
         "injected_line": 12,
         "fault_detail": "Ném ngoại lệ kết nối Cơ sở dữ liệu thất bại (HTTP 500)",
         "ground_truth_fix": "Khắc phục kết nối DB hoặc cấu hình lại pooling"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 194 (site-194.test)",
       "url": "https://site-194.test",
       "domain": "site-194.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_194",
         "domain": "site-194.test",
@@ -6330,22 +5771,15 @@
         "injected_line": 12,
         "fault_detail": "Backend bị trì hoãn phản hồi 9 giây",
         "ground_truth_fix": "Gỡ bỏ hàm delay cố ý trong middleware"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 195 (site-195.test)",
       "url": "https://site-195.test",
       "domain": "site-195.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_195",
         "domain": "site-195.test",
@@ -6363,22 +5797,15 @@
         "injected_line": 50,
         "fault_detail": "Nút thêm người dùng bị xóa khỏi bảng điều khiển",
         "ground_truth_fix": "Khôi phục lại thẻ <button id='add-user-btn'>"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 196 (site-196.test)",
       "url": "https://site-196.test",
       "domain": "site-196.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_196",
         "domain": "site-196.test",
@@ -6396,22 +5823,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx proxy_pass tới cổng dịch vụ không tồn tại (ECONNREFUSED)",
         "ground_truth_fix": "Khởi động dịch vụ backend hoặc sửa lại cổng proxy_pass chính xác trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 197 (site-197.test)",
       "url": "https://site-197.test",
       "domain": "site-197.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_197",
         "domain": "site-197.test",
@@ -6429,22 +5849,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx trả về mã 302 chuyển hướng vòng tròn về chính domain đó",
         "ground_truth_fix": "Sửa lại cấu hình rewrite / return trong file virtual host của Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 198 (site-198.test)",
       "url": "https://site-198.test",
       "domain": "site-198.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_198",
         "domain": "site-198.test",
@@ -6461,22 +5874,15 @@
         "injected_line": -1,
         "fault_detail": "Domain intentionally missing or mapped to 0.0.0.0",
         "ground_truth_fix": "Khai báo bản ghi A chính xác cho tên miền trỏ về IP máy chủ"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 199 (site-199.test)",
       "url": "https://site-199.test",
       "domain": "site-199.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_199",
         "domain": "site-199.test",
@@ -6493,22 +5899,15 @@
         "injected_line": 1,
         "fault_detail": "Nginx sử dụng chứng chỉ số có hạn sử dụng trong quá khứ (-days -365)",
         "ground_truth_fix": "Gia hạn chứng chỉ số và cập nhật đường dẫn ssl_certificate trong Nginx"
-      }
+      },
+      "has_baseline": false
     },
     {
       "name": "Site 200 (site-200.test)",
       "url": "https://site-200.test",
       "domain": "site-200.test",
       "expected_status": 200,
-      "baseline_dns": {
-        "a": [
-          "127.0.0.1"
-        ],
-        "aaaa": [],
-        "cname": null,
-        "mx": [],
-        "txt": []
-      },
+      "baseline_dns": null,
       "metadata": {
         "site_id": "site_200",
         "domain": "site-200.test",
@@ -6525,7 +5924,8 @@
         "injected_line": 1,
         "fault_detail": "Chứng chỉ số cấp cho domain không khớp (CN mismatch) hoặc tự ký không tin cậy",
         "ground_truth_fix": "Cấp phát chứng chỉ số khớp đúng tên miền Common Name (CN/SAN)"
-      }
+      },
+      "has_baseline": false
     }
   ]
 }

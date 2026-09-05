@@ -18,12 +18,17 @@ from database import (
     inspect_sqlite_bytes,
     restore_db_from_bytes,
     restore_db_from_file,
-    delete_db_backup
+    delete_db_backup,
+    generate_periodic_report_data
 )
+import streamlit.components.v1 as components
 from notifications.email_service import (
     send_test_email,
-    send_periodic_report_email
+    send_periodic_report_email,
+    build_incident_alert_html,
+    build_periodic_report_html
 )
+from tools.gemini_client import test_gemini_connection
 from scheduler import (
     get_scheduler_info,
     update_scheduler_interval,
@@ -115,7 +120,12 @@ def render_configuration_page():
         "Trạng thái Bộ lập lịch", 
         "🟢 Đang Chạy Tự Động" if sched_info["is_running"] else "🔴 Đang Tạm Dừng"
     )
-    c_s2.metric("Chu kỳ quét hiện tại", f"{sched_info['interval_seconds']} giây")
+    cur_sec = sched_info['interval_seconds']
+    cur_display = (
+        f"{cur_sec // 3600} tiếng ({cur_sec:,}s)" if cur_sec >= 3600 
+        else (f"{cur_sec // 60} phút ({cur_sec}s)" if cur_sec >= 60 else f"{cur_sec} giây")
+    )
+    c_s2.metric("Chu kỳ quét hiện tại", cur_display)
     c_s3.metric("Tổng số lần quét nền", f"{sched_info['total_runs']} lần")
 
     if sched_info.get("next_run_time"):
@@ -126,15 +136,29 @@ def render_configuration_page():
     # Điều khiển Scheduler
     col_ctl1, col_ctl2, col_ctl3 = st.columns([2, 1, 1])
     with col_ctl1:
+        sched_options = [60, 300, 600, 1800, 3600, 7200, 14400, 28800, 86400]
+        cur_val = sched_info["interval_seconds"]
+        if cur_val not in sched_options:
+            sched_options = sorted(sched_options + [cur_val])
+
+        def _fmt_interval(x):
+            if x < 60:
+                return f"{x} giây"
+            elif x < 3600:
+                return f"{x//60} phút"
+            else:
+                h = x / 3600
+                return f"{int(h) if h.is_integer() else h} tiếng"
+
         new_sched_interval = st.select_slider(
             "Thay đổi chu kỳ quét định kỳ:",
-            options=[10, 30, 60, 120, 300, 600, 1800, 3600],
-            value=sched_info["interval_seconds"] if sched_info["interval_seconds"] in [10, 30, 60, 120, 300, 600, 1800, 3600] else 60,
-            format_func=lambda x: f"{x} giây" if x < 60 else f"{x//60} phút"
+            options=sched_options,
+            value=cur_val,
+            format_func=_fmt_interval
         )
         if new_sched_interval != sched_info["interval_seconds"]:
             update_scheduler_interval(new_sched_interval)
-            st.toast(f"Đã đổi chu kỳ quét thành {new_sched_interval}s!", icon="⏱️")
+            st.toast(f"Đã đổi chu kỳ quét thành {_fmt_interval(new_sched_interval)} ({new_sched_interval}s)!", icon="⏱️")
             st.rerun()
 
     with col_ctl2:
@@ -242,8 +266,9 @@ def render_configuration_page():
         c11, c12, c13 = st.columns(3)
         sched_interval_val = c11.number_input(
             "Chu kỳ quét định kỳ mặc định (giây):", 
-            min_value=10, max_value=3600, 
-            value=int(settings.get("scheduler_interval_seconds", config.DEFAULT_SCHEDULER_INTERVAL_SECONDS))
+            min_value=10, max_value=86400, step=60,
+            value=int(settings.get("scheduler_interval_seconds", config.DEFAULT_SCHEDULER_INTERVAL_SECONDS)),
+            help="14400 giây = 4 tiếng; 3600 giây = 1 tiếng; 600 giây = 10 phút."
         )
         retention_days = c12.number_input(
             "Số ngày lưu giữ lịch sử logs (Data Retention):", 
@@ -279,31 +304,42 @@ def render_configuration_page():
             help="Thời gian tối đa chờ thiết lập bắt tay mã hóa SSL/TLS socket."
         )
 
-        # 6. Cấu hình Chế độ Giám sát & Phát hiện Bất thường (Evaluation Modes)
-        st.markdown("#### F. 🔬 Chế độ Giám sát & Phát hiện Bất thường (Evaluation & Benchmark Modes)")
-        current_mode = settings.get("monitoring_mode", "MULTI_SIGNAL_RULE_STATISTICAL")
-        mode_options = [
-            "MULTI_SIGNAL_RULE_STATISTICAL",
-            "THRESHOLD_BASED"
-        ]
-        mode_labels = {
-            "MULTI_SIGNAL_RULE_STATISTICAL": "🛡️ Giám sát Đa tín hiệu + Luật + Thống kê Z-Score/IQR (Không AI - Khuyến nghị)",
-            "THRESHOLD_BASED": "⚠️ Cảnh báo Ngưỡng truyền thống (Single-threshold / Baseline đối chứng)"
-        }
-        selected_mode = st.radio(
-            "Chọn chế độ vận hành và phát hiện sự cố:",
-            options=mode_options,
-            index=0 if current_mode == "MULTI_SIGNAL_RULE_STATISTICAL" else 1,
-            format_func=lambda x: mode_labels.get(x, x),
-            help="Chuyển đổi giữa chế độ cảnh báo ngưỡng truyền thống và chế độ giám sát đa tín hiệu kết hợp luật & thống kê."
+        # 6. Cấu hình Gemini LLM
+        st.markdown("#### F. 🤖 Cấu hình Mô hình Ngôn ngữ Lớn (Google Gemini LLM Reasoning)")
+        st.caption("Tích hợp Gemini LLM cho Tác tử Phân tích Sự cố (Incident Analysis Agent) để tự động sinh bản tóm tắt nguyên nhân gốc (RCA), đánh giá rủi ro chuỗi và khuyến nghị Runbook bằng ngôn ngữ tự nhiên.")
+
+        llm_enabled_val = st.toggle(
+            "🧠 Kích hoạt Google Gemini AI cho Incident Analysis Agent",
+            value=bool(settings.get("llm_enabled", 0)),
+            help="Khi bật, hệ thống sẽ gọi Gemini API để phân tích chuyên sâu sự cố. Khi tắt hoặc khi mất mạng, hệ thống tự động fallback về Knowledge Base & SRE Rules."
         )
 
-        latency_thresh_val = st.number_input(
-            "Ngưỡng thời gian phản hồi cảnh báo (ms) cho chế độ truyền thống:",
-            min_value=100.0, max_value=30000.0, step=100.0,
-            value=float(settings.get("latency_threshold_ms", 2000.0)),
-            help="Ngưỡng latency cứng dùng trong chế độ Threshold-based."
+        c_llm1, c_llm2 = st.columns([1, 2])
+        model_options = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-2.5-flash"]
+        curr_model = settings.get("gemini_model", config.DEFAULT_GEMINI_MODEL)
+        model_idx = model_options.index(curr_model) if curr_model in model_options else 0
+        gemini_model_val = c_llm1.selectbox(
+            "Chọn mô hình Gemini:",
+            options=model_options,
+            index=model_idx,
+            help="gemini-1.5-flash: Tốc độ phản hồi cực nhanh, chi phí thấp, tối ưu cho giám sát vận hành SRE."
         )
+        gemini_key_val = c_llm2.text_input(
+            "Gemini API Key:",
+            value=settings.get("gemini_api_key", config.DEFAULT_GEMINI_API_KEY),
+            type="password",
+            placeholder="Dán mã API Key của bạn (ví dụ: AIzaSy...)",
+            help="Khóa API lấy từ Google AI Studio (miễn phí)."
+        )
+
+        with st.expander("ℹ️ Hướng dẫn nhận Gemini API Key miễn phí từ Google AI Studio"):
+            st.markdown("""
+            1. Truy cập vào **[Google AI Studio - API Keys](https://aistudio.google.com/app/apikey)**.
+            2. Đăng nhập bằng tài khoản Google cá nhân hoặc tổ chức.
+            3. Nhấp vào nút **Create API Key** (Tạo khóa API mới).
+            4. Sao chép chuỗi mã API (`AIzaSy...`) và dán vào ô **Gemini API Key** ở trên.
+            5. Nhấp nút **Lưu Toàn Bộ Cấu Hình Động Vào CSDL** và sử dụng nút **Kiểm Tra Kết Nối Gemini API** bên dưới để xác thực.
+            """)
 
         btn_save = st.form_submit_button("💾 Lưu Toàn Bộ Cấu Hình Động Vào CSDL", type="primary")
         if btn_save:
@@ -327,18 +363,21 @@ def render_configuration_page():
                 "http_timeout_seconds": http_timeout_val,
                 "dns_timeout_seconds": dns_timeout_val,
                 "ssl_timeout_seconds": ssl_timeout_val,
-                "monitoring_mode": selected_mode,
-                "latency_threshold_ms": latency_thresh_val
+                "monitoring_mode": "AGENTIC",
+                "latency_threshold_ms": float(settings.get("latency_threshold_ms", 2000.0)),
+                "gemini_api_key": gemini_key_val.strip(),
+                "gemini_model": gemini_model_val.strip(),
+                "llm_enabled": llm_enabled_val
             }
             update_system_settings(updated_data)
             update_scheduler_interval(int(sched_interval_val))
             st.success("✅ Đã cập nhật và lưu cấu hình động thành công vào Database!")
             st.toast("Đã lưu cấu hình thành công!", icon="💾")
 
-    # Thao tác gửi email kiểm thử
+    # Thao tác gửi email và kiểm thử
     st.markdown("#### 🚀 Thao tác Kiểm thử Nhanh")
-    col_act1, col_act2 = st.columns(2)
-    if col_act1.button("📊 Gửi Báo Cáo Định Kỳ 24h Ngay Lập Tức", type="primary", use_container_width=True):
+    col_act1, col_act2, col_act3 = st.columns(3)
+    if col_act1.button("📊 Gửi Báo Cáo Định Kỳ 24h", type="primary", use_container_width=True):
         current_cfg = get_system_settings()
         with st.spinner("Đang tổng hợp dữ liệu 24h qua và gửi email báo cáo..."):
             success, msg = send_periodic_report_email(hours=24, settings=current_cfg)
@@ -347,7 +386,7 @@ def render_configuration_page():
             else:
                 st.error("❌ " + msg)
 
-    if col_act2.button("🧪 Gửi Email Thử Nghiệm Kết Nối SMTP", use_container_width=True):
+    if col_act2.button("🧪 Kiểm Tra Kết Nối SMTP", use_container_width=True):
         current_cfg = get_system_settings()
         with st.spinner("Đang kết nối tới máy chủ SMTP và gửi email thử nghiệm..."):
             success, msg = send_test_email(current_cfg)
@@ -355,6 +394,153 @@ def render_configuration_page():
                 st.success("🎉 " + msg)
             else:
                 st.error("❌ " + msg)
+
+    if col_act3.button("🤖 Kiểm Tra Kết Nối Gemini API", use_container_width=True):
+        current_cfg = get_system_settings()
+        target_key = (current_cfg.get("gemini_api_key") or gemini_key_val).strip()
+        target_model = current_cfg.get("gemini_model") or gemini_model_val
+        with st.spinner("Đang gửi lệnh kiểm tra tới Google Gemini API..."):
+            res = test_gemini_connection(api_key=target_key, model=target_model)
+            if res["success"]:
+                st.success("🎉 " + res["message"])
+            else:
+                st.error("❌ " + res["message"])
+
+    st.markdown("---")
+
+    # ==========================================
+    # PHẦN 3.1: XEM TRƯỚC MẪU EMAIL THÔNG BÁO (LIVE EMAIL PREVIEW)
+    # ==========================================
+    st.markdown("## 📨 3.1. Xem Trước Cấu Trúc & Nội Dung 2 Mẫu Email")
+    st.markdown("Giúp Quản trị viên nắm bắt trực quan mẫu giao diện HTML, các trường số liệu, mã màu trạng thái và nội dung email được gửi về hòm thư mà không cần phải kích hoạt gửi email thật.")
+
+    with st.expander("👁️ Mở Bảng Xem Trước Giao Diện Mẫu Email (Email Templates Live Preview)", expanded=True):
+        tab_tpl1, tab_tpl2 = st.tabs([
+            "📊 Mẫu 1: Báo Cáo Sức Khỏe Định Kỳ Hàng Ngày (Daily Health Digest)",
+            "🚨 Mẫu 2: Cảnh Báo Sự Cố Khẩn Cấp (Emergency Incident Alert)"
+        ])
+
+        with tab_tpl1:
+            st.markdown("##### 📌 Tiêu Đề Email Dự Kiến:")
+            st.code("📊 [Báo cáo Định kỳ 24h] Tổng hợp Sức khỏe Hệ thống Website", language="text")
+            st.caption("Báo cáo tự động tổng hợp toàn bộ website đang giám sát, tỷ lệ SLA Uptime, độ trễ mạng HTTP/DNS, hạn chứng chỉ SSL và danh sách sự cố trong 24 giờ qua.")
+            
+            try:
+                live_rep_data = generate_periodic_report_data(hours=24)
+                preview_digest_html = build_periodic_report_html(live_rep_data)
+            except Exception as e:
+                preview_digest_html = f"<div style='padding:20px; color:red;'>Lỗi nạp dữ liệu báo cáo: {e}</div>"
+
+            components.html(preview_digest_html, height=650, scrolling=True)
+
+        with tab_tpl2:
+            st.caption("Chọn kịch bản sự cố mô phỏng bên dưới để xem trước mẫu email cảnh báo tương ứng:")
+            col_sc1, col_sc2 = st.columns([2, 3])
+            with col_sc1:
+                scenario = st.selectbox(
+                    "Chọn kịch bản sự cố mô phỏng:",
+                    options=[
+                        "🚨 CRITICAL: HTTP 500 Backend Crash (Server Error)",
+                        "🚨 CRITICAL: Lỗi Phân giải Tên miền (DNS Outage)",
+                        "🚨 CRITICAL: Chứng chỉ SSL Hết hạn (SSL Expired)",
+                        "⚠️ WARNING: Chứng chỉ SSL Sắp hết hạn (< 14 ngày)",
+                        "✅ RECOVERY: Hệ thống đã khôi phục hoạt động"
+                    ]
+                )
+            
+            now_str = datetime.now(config.TZ_VN).strftime("%d/%m/%Y %H:%M:%S")
+            sample_site_name = "Site 001 (site-001.test)"
+            sample_site_url = "https://site-001.test"
+
+            if "HTTP 500" in scenario:
+                p_status = "CRITICAL"
+                p_http = {"status_code": 500, "status_category": "5xx Server Error", "response_time_ms": 145.2, "is_expected_status": False, "error": "Internal Server Error (Database connection pool exhausted)"}
+                p_dns = {"resolved": True, "resolution_time_ms": 4.8}
+                p_ssl = {"is_valid": True, "days_remaining": 89, "tls_version": "TLSv1.3"}
+                p_subject = f"🚨 [CRITICAL] Cảnh báo khẩn cấp sự cố Website '{sample_site_name}'"
+            elif "DNS" in scenario:
+                p_status = "CRITICAL"
+                p_http = {"status_code": None, "status_category": "Error", "response_time_ms": 0.0, "is_expected_status": False, "error": "Failed to resolve domain name (NXDOMAIN)"}
+                p_dns = {"resolved": False, "resolution_time_ms": 0.0, "error": "DNS query failed: NXDOMAIN"}
+                p_ssl = {"can_connect": False, "is_valid": False, "days_remaining": 0}
+                p_subject = f"🚨 [CRITICAL] Cảnh báo khẩn cấp sự cố Website '{sample_site_name}'"
+            elif "Hết hạn" in scenario:
+                p_status = "CRITICAL"
+                p_http = {"status_code": 200, "status_category": "2xx Success", "response_time_ms": 82.0, "is_expected_status": True}
+                p_dns = {"resolved": True, "resolution_time_ms": 6.1}
+                p_ssl = {"is_valid": False, "days_remaining": 0, "error_title": "Certificate Expired", "error": "Chứng chỉ đã quá hạn sử dụng", "tls_version": "TLSv1.3"}
+                p_subject = f"🚨 [CRITICAL] Cảnh báo khẩn cấp sự cố Website '{sample_site_name}'"
+            elif "WARNING" in scenario:
+                p_status = "WARNING"
+                p_http = {"status_code": 200, "status_category": "2xx Success", "response_time_ms": 65.4, "is_expected_status": True}
+                p_dns = {"resolved": True, "resolution_time_ms": 5.0}
+                p_ssl = {"is_valid": True, "days_remaining": 7, "tls_version": "TLSv1.3"}
+                p_subject = f"⚠️ [WARNING] Cảnh báo sự cố Website '{sample_site_name}'"
+            else:
+                p_status = "HEALTHY"
+                p_http = {"status_code": 200, "status_category": "2xx Success", "response_time_ms": 42.1, "is_expected_status": True}
+                p_dns = {"resolved": True, "resolution_time_ms": 3.9}
+                p_ssl = {"is_valid": True, "days_remaining": 89, "tls_version": "TLSv1.3"}
+                p_subject = f"✅ [Phục hồi] Website '{sample_site_name}' đã hoạt động bình thường trở lại"
+
+            # Mock dữ liệu RCA chuẩn Agentic AI phục vụ Preview trực quan
+            sample_rca = {
+                "incident_id": "INC-20260905-001",
+                "fault_layer": "Application / Backend DB" if "HTTP 500" in scenario else ("Network / DNS" if "DNS" in scenario else "Security / TLS"),
+                "fault_category": "BACKEND_500" if "HTTP 500" in scenario else ("DNS_FAILURE" if "DNS" in scenario else "SSL_EXPIRED"),
+                "confidence_score": 98.8,
+                "root_cause_analysis": {
+                    "primary_cause": "Ngoại lệ gián đoạn kết nối cơ sở dữ liệu: DatabaseConnectionTimeout tại MySQL (10.0.0.5:3306) khiến tiến trình backend trả về HTTP 500." if "HTTP 500" in scenario else ("Không tìm thấy bản ghi A hợp lệ (NXDOMAIN) cho tên miền." if "DNS" in scenario else "Chứng chỉ X.509 quá hạn 358 ngày."),
+                    "contributing_factors": [
+                        "Cạn kiệt Connection Pool của Database do lưu lượng tăng đột biến.",
+                        "Tắc nghẽn mạng nội bộ giữa Web Server và CSDL máy chủ.",
+                        "Thiếu cơ chế Circuit Breaker tự ngắt khi DB quá tải."
+                    ] if "HTTP 500" in scenario else ["Cấu hình DNS Authoritative bị gián đoạn."],
+                    "cross_signal_evidence": {
+                        "HTTP": "Status Code: 500 (5xx Server Error) | Response Time: 145.2ms | Error: Internal Server Error",
+                        "DNS": "Status: Resolved | Resolution Time: 4.8ms | Records A: ['127.0.0.1']",
+                        "SSL/TLS": "Status: VALID | Issuer: Let's Encrypt | Days Remaining: 89 days",
+                        "Performance": "Total Load Time: 145.2ms | Grade: Critical",
+                        "DOM": "Root element found, dynamic checkout block empty"
+                    }
+                },
+                "immediate_action_plan": [
+                    "Khởi động lại ngay tiến trình Backend hoặc container ứng dụng.",
+                    "Kiểm tra lại thông tin cấu hình kết nối DB (Host, Port, User, Password) trong file .env.",
+                    "Kiểm tra sức khỏe cụm Database và tăng số lượng kết nối tối đa (Max Connections Pool)."
+                ] if "HTTP 500" in scenario else ["Cập nhật lại bản ghi A trên DNS Server."],
+                "investigation_runbook": [
+                    "systemctl status mysql",
+                    "tail -n 100 /var/log/nginx/error.log",
+                    "mysqladmin ping -h 10.0.0.5 -u root -p"
+                ] if "HTTP 500" in scenario else ["dig @8.8.8.8 site-001.test A"],
+                "impact_assessment": {
+                    "user_experience": "Toàn bộ người dùng truy cập nhận thông báo lỗi 500, không thể xem sản phẩm hoặc đặt hàng.",
+                    "business_availability": "Gián đoạn luồng nghiệp vụ kinh doanh, suy giảm độ tin cậy và gây thiệt hại doanh thu trực tiếp."
+                },
+                "prevention_strategy": [
+                    "Bổ sung khối try/catch toàn cục và Middleware xử lý lỗi tập trung.",
+                    "Thiết lập cơ chế Circuit Breaker & Retry có giới hạn đối với kết nối Database.",
+                    "Tích hợp công cụ giám sát APM (OpenTelemetry) để tự động bắt Exception."
+                ],
+                "technical_standards": ["RFC 9110 (HTTP 500)", "RFC 1035 (DNS)", "SRE Golden Signals: Errors"]
+            }
+
+            with col_sc2:
+                st.markdown("##### 📌 Tiêu Đề Email Dự Kiến:")
+                st.code(p_subject, language="text")
+
+            preview_alert_html = build_incident_alert_html(
+                site_name=sample_site_name,
+                site_url=sample_site_url,
+                overall_status=p_status,
+                http_res=p_http,
+                dns_res=p_dns,
+                ssl_res=p_ssl,
+                timestamp=now_str,
+                rca_report=sample_rca if p_status != "HEALTHY" else None
+            )
+            components.html(preview_alert_html, height=750, scrolling=True)
 
     st.markdown("---")
 

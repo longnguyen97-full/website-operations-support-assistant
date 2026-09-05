@@ -33,9 +33,9 @@ DATA_RETENTION_DAYS = int(os.getenv("DATA_RETENTION_DAYS", 30))
 TARGET_WEBSITES_FILE = BASE_DIR / os.getenv("TARGET_WEBSITES_FILE", "target_websites.json")
 
 # ==================== 3. BỘ LẬP LỊCH (APSCHEDULER) ====================
-DEFAULT_SCHEDULER_INTERVAL_SECONDS = int(os.getenv("SCHEDULER_INTERVAL_SECONDS", 60))
+DEFAULT_SCHEDULER_INTERVAL_SECONDS = int(os.getenv("SCHEDULER_INTERVAL_SECONDS", 14400))  # 4 tiếng
 MIN_SCHEDULER_INTERVAL_SECONDS = 10
-MAX_SCHEDULER_INTERVAL_SECONDS = 3600
+MAX_SCHEDULER_INTERVAL_SECONDS = 86400  # 24 tiếng
 
 # ==================== 4. CẤU HÌNH EMAIL & BÁO CÁO (FALLBACK) ====================
 DEFAULT_SMTP_SERVER = os.getenv("SMTP_SERVER", "smtp.gmail.com")
@@ -76,3 +76,8 @@ VISUAL_DIFF_THRESHOLD_PERCENT = float(os.getenv("VISUAL_DIFF_THRESHOLD_PERCENT",
 
 # User-Agent mặc định cho HTTP & Browser Probes
 DEFAULT_USER_AGENT = os.getenv("USER_AGENT", "WebsiteOperationsSupportAssistant/1.0")
+
+# ==================== 6. CẤU HÌNH AI & MÔ HÌNH NGÔN NGỮ LỚN (GEMINI LLM) ====================
+DEFAULT_GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "") or os.getenv("GOOGLE_API_KEY", "")
+DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+DEFAULT_LLM_ENABLED = os.getenv("LLM_ENABLED", "false").lower() in ("true", "1", "yes")

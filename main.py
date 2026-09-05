@@ -15,7 +15,10 @@ st.set_page_config(layout="wide", page_title="Agentic AI Monitoring Dashboard", 
 def setup_background_monitoring():
     """Khởi chạy Background Scheduler 1 lần duy nhất trong vòng đời ứng dụng."""
     init_db()
-    start_background_scheduler(interval_seconds=DEFAULT_SCHEDULER_INTERVAL_SECONDS)
+    from database import get_system_settings
+    sys_settings = get_system_settings()
+    interval = int(sys_settings.get("scheduler_interval_seconds") or DEFAULT_SCHEDULER_INTERVAL_SECONDS)
+    start_background_scheduler(interval_seconds=interval)
     return True
 
 def main():
@@ -36,8 +39,19 @@ def main():
     # 3. Sidebar: Quản lý Mục tiêu Giám sát (Đã làm gọn, loại bỏ các nút chế độ ở sidebar)
     st.sidebar.header("🎯 Mục tiêu Giám sát")
     if site_names:
-        selected_name = st.sidebar.selectbox("Chọn Website cần kiểm tra:", site_names)
-        selected_site = next(w for w in websites if w["name"] == selected_name)
+        # Tra cứu nhanh danh sách site_id có active baseline
+        site_map = {w["name"]: w for w in websites}
+        
+        def format_site_label(name):
+            site_obj = site_map.get(name)
+            if site_obj:
+                b = get_active_baseline(site_obj["id"])
+                tag = "🏷️ Baseline" if b else "⚪ No Baseline"
+                return f"[{tag}] {name}"
+            return name
+
+        selected_name = st.sidebar.selectbox("Chọn Website cần kiểm tra:", site_names, format_func=format_site_label)
+        selected_site = site_map[selected_name]
 
         # Thông tin tóm tắt nhanh website
         st.sidebar.markdown("---")
@@ -47,7 +61,9 @@ def main():
         
         active_b = get_active_baseline(selected_site["id"])
         if active_b:
-            st.sidebar.caption(f"📌 **Baseline đang active:** {active_b.get('note', 'N/A')}")
+            st.sidebar.success(f"🏷️ **Baseline:** Đang kích hoạt (#{active_b['id']})")
+        else:
+            st.sidebar.warning("⚪ **Baseline:** Chưa có (Cold-start / Unmanaged)")
         
         st.sidebar.markdown("---")
         st.sidebar.info("💡 **Ghi chú:** Mỗi Cấu hình Giám sát có nút thực thi độc lập bên trong từng Tab tương ứng.")

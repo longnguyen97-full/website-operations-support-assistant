@@ -24,15 +24,26 @@ from config import (
     DEFAULT_DAILY_REPORT_TIME,
     DEFAULT_SCHEDULER_INTERVAL_SECONDS,
     DATA_RETENTION_DAYS,
-    SSL_EXPIRY_WARNING_DAYS
+    SSL_EXPIRY_WARNING_DAYS,
+    DEFAULT_GEMINI_API_KEY,
+    DEFAULT_GEMINI_MODEL,
+    DEFAULT_LLM_ENABLED
 )
 
-def get_db_connection() -> sqlite3.Connection:
-    """Tạo kết nối tới cơ sở dữ liệu SQLite với row_factory hỗ trợ truy xuất theo tên cột."""
+def get_db_connection(timeout: float = 30.0) -> sqlite3.Connection:
+    """
+    Tạo kết nối tới cơ sở dữ liệu SQLite:
+    - row_factory hỗ trợ truy xuất theo tên cột (sqlite3.Row).
+    - Chế độ WAL (Write-Ahead Logging) cho phép đọc và ghi đồng thời, triệt tiêu lỗi 'database is locked'.
+    - busy_timeout 30s giúp tự động xếp hàng và chờ các giao dịch ghi khi tải cao.
+    """
     os.makedirs(DATA_DIR, exist_ok=True)
-    conn = sqlite3.connect(str(DB_PATH))
+    conn = sqlite3.connect(str(DB_PATH), timeout=timeout)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
+    conn.execute("PRAGMA journal_mode = WAL;")
+    conn.execute("PRAGMA busy_timeout = 30000;")
+    conn.execute("PRAGMA synchronous = NORMAL;")
     return conn
 
 def init_db() -> None:
@@ -113,17 +124,21 @@ def init_db() -> None:
         enable_daily_report BOOLEAN DEFAULT 0,
         daily_report_time TEXT DEFAULT '08:00',
         last_report_sent_at TEXT,
-        -- Cấu hình Scheduler & Vận hành (Dynamic)
-        scheduler_interval_seconds INTEGER DEFAULT 60,
+        -- Cấu hình Scheduler & Vận hành (Dynamic - Mặc định 4 tiếng = 14400s)
+        scheduler_interval_seconds INTEGER DEFAULT 14400,
         data_retention_days INTEGER DEFAULT 30,
         ssl_warning_days INTEGER DEFAULT 14,
         -- Cấu hình Timeout Mạng / Probes (Dynamic)
         http_timeout_seconds REAL DEFAULT 10.0,
         dns_timeout_seconds REAL DEFAULT 5.0,
         ssl_timeout_seconds REAL DEFAULT 10.0,
-        -- Cấu hình Chế độ Giám sát Đối chứng (Evaluation Mode)
-        monitoring_mode TEXT DEFAULT 'MULTI_SIGNAL_RULE_STATISTICAL',
+        -- Cấu hình Chế độ Giám sát (Mặc định: AGENTIC)
+        monitoring_mode TEXT DEFAULT 'AGENTIC',
         latency_threshold_ms REAL DEFAULT 2000.0,
+        -- Cấu hình AI & LLM Reasoning (Gemini)
+        gemini_api_key TEXT DEFAULT '',
+        gemini_model TEXT DEFAULT 'gemini-1.5-flash',
+        llm_enabled BOOLEAN DEFAULT 0,
         updated_at TEXT
     );
     """)
@@ -134,14 +149,17 @@ def init_db() -> None:
         ("enable_daily_report", "BOOLEAN DEFAULT 0"),
         ("daily_report_time", "TEXT DEFAULT '08:00'"),
         ("last_report_sent_at", "TEXT"),
-        ("scheduler_interval_seconds", "INTEGER DEFAULT 60"),
+        ("scheduler_interval_seconds", "INTEGER DEFAULT 14400"),
         ("data_retention_days", "INTEGER DEFAULT 30"),
         ("ssl_warning_days", "INTEGER DEFAULT 14"),
         ("http_timeout_seconds", "REAL DEFAULT 10.0"),
         ("dns_timeout_seconds", "REAL DEFAULT 5.0"),
         ("ssl_timeout_seconds", "REAL DEFAULT 10.0"),
-        ("monitoring_mode", "TEXT DEFAULT 'MULTI_SIGNAL_RULE_STATISTICAL'"),
-        ("latency_threshold_ms", "REAL DEFAULT 2000.0")
+        ("monitoring_mode", "TEXT DEFAULT 'AGENTIC'"),
+        ("latency_threshold_ms", "REAL DEFAULT 2000.0"),
+        ("gemini_api_key", "TEXT DEFAULT ''"),
+        ("gemini_model", "TEXT DEFAULT 'gemini-1.5-flash'"),
+        ("llm_enabled", "BOOLEAN DEFAULT 0")
     ]:
         try:
             cursor.execute(f"ALTER TABLE system_settings ADD COLUMN {col} {col_type};")
@@ -158,8 +176,9 @@ def init_db() -> None:
                 notify_on_critical, notify_on_warning, notify_on_recovery, 
                 cooldown_minutes, enable_daily_report, daily_report_time,
                 scheduler_interval_seconds, data_retention_days, ssl_warning_days,
-                http_timeout_seconds, dns_timeout_seconds, ssl_timeout_seconds
-            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                http_timeout_seconds, dns_timeout_seconds, ssl_timeout_seconds,
+                gemini_api_key, gemini_model, llm_enabled
+            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """, (
             DEFAULT_SMTP_SERVER,
             DEFAULT_SMTP_PORT,
@@ -179,7 +198,10 @@ def init_db() -> None:
             SSL_EXPIRY_WARNING_DAYS,
             10.0,
             5.0,
-            10.0
+            10.0,
+            DEFAULT_GEMINI_API_KEY,
+            DEFAULT_GEMINI_MODEL,
+            1 if DEFAULT_LLM_ENABLED else 0
         ))
 
     # Tạo indexes để tăng tốc truy vấn lịch sử theo website và thời gian
@@ -208,21 +230,22 @@ def init_db() -> None:
                 ))
                 website_id = cursor.lastrowid
                 
-                # Seed baseline ban đầu nếu có
-                baseline_dns = site.get("baseline_dns", {})
-                cursor.execute("""
-                    INSERT INTO milestone_baselines (
-                        website_id, website_name, created_at, baseline_dns_json, 
-                        expected_http_status, note, is_active
-                    ) VALUES (?, ?, ?, ?, ?, ?, 1)
-                """, (
-                    website_id,
-                    site["name"],
-                    now_iso,
-                    json.dumps(baseline_dns, ensure_ascii=False),
-                    site.get("expected_status", 200),
-                    "Mốc chuẩn khởi tạo từ cấu hình ban đầu"
-                ))
+                # Seed baseline ban đầu nếu website được cấu hình có Baseline (Managed Site)
+                if site.get("has_baseline", True) and site.get("baseline_dns"):
+                    baseline_dns = site.get("baseline_dns", {})
+                    cursor.execute("""
+                        INSERT INTO milestone_baselines (
+                            website_id, website_name, created_at, baseline_dns_json, 
+                            expected_http_status, note, is_active
+                        ) VALUES (?, ?, ?, ?, ?, ?, 1)
+                    """, (
+                        website_id,
+                        site["name"],
+                        now_iso,
+                        json.dumps(baseline_dns, ensure_ascii=False),
+                        site.get("expected_status", 200),
+                        "Mốc chuẩn khởi tạo từ cấu hình ban đầu (Managed Site)"
+                    ))
         except Exception as e:
             print(f"Warning: Không thể seed dữ liệu ban đầu: {e}")
 

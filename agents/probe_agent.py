@@ -43,7 +43,7 @@ class ProbeAgent:
         Mặc định: ['HTTP', 'DNS', 'SSL'] và tùy chọn ['PERF', 'DOM', 'VISUAL'].
         """
         if probe_signals is None:
-            probe_signals = ["HTTP", "DNS", "SSL"]
+            probe_signals = ["HTTP", "DNS", "SSL", "DOM"]
 
         start_time = time.time()
         results: Dict[str, Any] = {
@@ -85,7 +85,7 @@ class ProbeAgent:
         # 5. Tín hiệu Cấu trúc DOM (Structural Integrity)
         if "DOM" in probe_signals:
             try:
-                dom_res = validate_dom(url=url, timeout_seconds=DOM_TIMEOUT_SECONDS)
+                dom_res = validate_dom(url=url, use_browser=capture_visual, timeout=DOM_TIMEOUT_SECONDS)
                 results["evidence"]["dom"] = dom_res
                 results["probes_executed"].append("dom_validator")
             except Exception as ex:

@@ -33,7 +33,8 @@ class MonitoringOrchestratorAgent:
         website_info: Dict[str, Any],
         active_baseline: Optional[Dict[str, Any]] = None,
         history_latencies: Optional[List[float]] = None,
-        enable_visual: bool = False
+        enable_visual: bool = False,
+        enable_notifications: bool = True
     ) -> Dict[str, Any]:
         """
         Thực thi toàn bộ quy trình Agentic AI:
@@ -54,7 +55,7 @@ class MonitoringOrchestratorAgent:
         # =========================================================================
         # BƯỚC 1: LẬP KẾ HOẠCH (PLANNING)
         # =========================================================================
-        planned_signals = ["HTTP", "DNS", "SSL"]
+        planned_signals = ["HTTP", "DNS", "SSL", "DOM"]
         if enable_visual:
             planned_signals.append("VISUAL")
 
@@ -65,7 +66,7 @@ class MonitoringOrchestratorAgent:
             "agent": self.name,
             "action": "Generate Execution Plan",
             "details": plan_desc,
-            "planned_tools": ["http_checker", "dns_checker", "ssl_checker"] + (["visual_checker"] if enable_visual else []),
+            "planned_tools": ["http_checker", "dns_checker", "ssl_checker", "dom_validator"] + (["visual_checker"] if enable_visual else []),
             "timestamp": time.strftime("%H:%M:%S")
         })
 
@@ -184,7 +185,8 @@ class MonitoringOrchestratorAgent:
             website_info=website_info,
             analysis_result=analysis_result,
             evidence_data=evidence,
-            overall_severity=correlation_result.get("overall_severity", "HEALTHY")
+            overall_severity=correlation_result.get("overall_severity", "HEALTHY"),
+            dispatch_alert=enable_notifications
         )
 
         execution_trace.append({

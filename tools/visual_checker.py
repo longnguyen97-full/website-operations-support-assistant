@@ -16,7 +16,7 @@ VISUAL_BASELINES_DIR = DATA_DIR / "visual_baselines"
 VISUAL_DIFFS_DIR = DATA_DIR / "visual_diffs"
 
 DEFAULT_VIEWPORT = {"width": 1280, "height": 800}
-DEFAULT_DIFF_THRESHOLD_PERCENT = 3.0  # Chênh lệch > 3.0% diện tích pixel được coi là biến dạng giao diện (Visual Regression)
+DEFAULT_DIFF_THRESHOLD_PERCENT = 1.0  # Chênh lệch > 1.0% diện tích pixel được coi là biến dạng giao diện (Visual Regression)
 COLOR_DIFF_TOLERANCE = 15  # Sai số màu chấp nhận được cho từng kênh R, G, B để chống khử răng cưa font (anti-aliasing)
 
 def _sanitize_name(name: str) -> str:
@@ -219,7 +219,7 @@ def check_visual_regression(
     mask_selectors: Optional[List[str]] = None,
     diff_threshold_percent: float = DEFAULT_DIFF_THRESHOLD_PERCENT,
     full_page: bool = True,
-    update_baseline_if_missing: bool = True,
+    update_baseline_if_missing: bool = False,
     timeout: float = 20.0
 ) -> Dict[str, Any]:
     """
@@ -230,8 +230,8 @@ def check_visual_regression(
     2. Che phủ (Mask) các vùng nội dung động (quảng cáo, đồng hồ, banner xoay vòng) để chống false positive.
     3. Chụp ảnh màn hình hiện tại (screenshot) qua hàm capture_screenshot.
     4. So sánh với ảnh baseline chuẩn:
-       - Nếu chưa có baseline: Tự động khởi tạo baseline mới từ ảnh chụp đầu tiên.
        - Nếu đã có baseline: So sánh chi tiết từng pixel, đo tỷ lệ chênh lệch (%) và tạo ảnh Diff trực quan.
+       - Nếu chưa có baseline: Báo trạng thái NO_BASELINE (không tự tiện lấy ảnh lỗi gán làm mốc chuẩn).
     """
     _ensure_dirs()
     safe_name = _sanitize_name(website_identifier)
@@ -285,7 +285,7 @@ def check_visual_regression(
     # 2. Kiểm tra Baseline
     if not target_baseline_path.exists():
         if update_baseline_if_missing:
-            # Khởi tạo ảnh baseline đầu tiên
+            # Chỉ khởi tạo nếu được yêu cầu tường minh
             shutil.copyfile(str(current_img_path), str(target_baseline_path))
             result["is_baseline_created"] = True
             result["baseline_image_path"] = str(target_baseline_path)
@@ -293,7 +293,7 @@ def check_visual_regression(
             return result
         else:
             result["status"] = "NO_BASELINE"
-            result["error"] = f"Chưa có ảnh baseline chuẩn tại '{target_baseline_path}'."
+            result["baseline_image_path"] = None
             return result
 
     # 3. Thực hiện so sánh Pixel với Baseline

@@ -10,6 +10,8 @@ from datetime import datetime
 from typing import Dict, Any, Optional, List
 from agents.knowledge_base import OperationalKnowledgeBase
 from config import TZ_VN
+from database.repository import get_system_settings
+from tools.gemini_client import generate_gemini_analysis
 
 class IncidentAnalysisAgent:
     """Tác tử phân tích nguyên nhân gốc và đề xuất giải pháp toàn diện 8 phần."""
@@ -158,6 +160,39 @@ class IncidentAnalysisAgent:
                 "SRE Golden Signals: Errors & Latency Assessment"
             ]
 
+        elif any(k in incident_type for k in ["SERVER_DOWN", "SERVER_PROCESS_DOWN"]):
+            incident_title = "Sự cố Ngừng Hoạt Động Máy Chủ: Web Server Process Down"
+            exec_summary = (
+                f"Phát hiện sự cố ngưng hoạt động máy chủ web (Server Down / Connection Refused) trên website '{site_name}'. "
+                f"Cổng dịch vụ web không mở hoặc tiến trình máy chủ (Nginx/Node.js/Gunicorn) đã bị dừng."
+            )
+            primary_cause = "Tiến trình dịch vụ máy chủ web ngưng hoạt động (Process Terminated / Crashed) hoặc cổng dịch vụ bị từ chối kết nối (Connection Refused)."
+            potential_causes = [
+                "Tiến trình máy chủ web (Node.js/Nginx/Apache) bị crash hoặc bị dừng bởi hệ điều hành (OOM Killer).",
+                "Cổng mạng (Port) bị chiếm dụng hoặc bị đóng bởi chính sách tường lửa (Firewall/UFW/iptables).",
+                "Lỗi cấu hình cổng lắng nghe hoặc crash do ngoại lệ chưa bắt trong tiến trình khởi động."
+            ]
+            user_impact = "Người dùng không thể truy cập, trình duyệt thông báo lỗi `ERR_CONNECTION_REFUSED`."
+            biz_impact = "Toàn bộ lưu lượng truy cập bị gián đoạn hoàn toàn, chỉ số khả dụng giảm về 0%."
+            action_plan = [
+                "Khởi động lại tiến trình web server hoặc dịch vụ nền (`systemctl restart nginx` hoặc `node server.js`).",
+                "Kiểm tra xem cổng dịch vụ có đang lắng nghe: `netstat -tuln` hoặc `ss -tulpn`.",
+                "Kiểm tra nhật ký hệ thống: `journalctl -xe` hoặc file `error.log` của Nginx."
+            ]
+            runbook_steps = [
+                "1. Kiểm tra trạng thái tiến trình: `ps aux | grep node` hoặc `systemctl status nginx`",
+                "2. Kiểm tra log sập của hệ điều hành: `dmesg -T | grep -i oom`",
+                "3. Thử kết nối socket cục bộ: `curl -v http://127.0.0.1:<port>`"
+            ]
+            prevention = [
+                "Cấu hình Process Manager tự động phục hồi khi sập (PM2 / Systemd `Restart=always` / Docker Restart Policies).",
+                "Thiết lập Health Check liveness/readiness tự động trong cụm điều phối container."
+            ]
+            rfc_refs = [
+                "RFC 9110: HTTP Semantics - Transport Layer Connectivity",
+                "RFC 793: Transmission Control Protocol (TCP Connection State)"
+            ]
+
         elif "REDIRECT_LOOP" in incident_type:
             incident_title = "Sự cố Vòng Lặp Chuyển Hướng: HTTP 302 Redirect Loop"
             exec_summary = (
@@ -291,6 +326,42 @@ class IncidentAnalysisAgent:
                 "Google Core Web Vitals: TTFB & Page Load Standards"
             ]
 
+        elif any(k in incident_type for k in ["DOM", "FRONTEND_UI_DEFORMATION", "VISUAL", "MISSING_DOM"]):
+            incident_title = "Lỗi Bất Thường Giao Diện: Missing DOM / UI Elements"
+            missing_items = dom_evidence.get("missing_critical_elements") or []
+            missing_desc = ", ".join(missing_items) if missing_items else str(primary_issue)
+            exec_summary = (
+                f"Phát hiện sự cố giao diện người dùng (Frontend UI / DOM Anomaly) trên website '{site_name}'. "
+                f"Tầng mạng (DNS, SSL, HTTP Status 200 OK) phản hồi bình thường nhưng cấu trúc DOM bị khuyết thiếu hoặc phần tử cốt lõi bị ẩn bất thường ({missing_desc})."
+            )
+            primary_cause = f"Thành phần giao diện người dùng cốt lõi bị khuyết thiếu hoặc bị ẩn bất thường: {missing_desc}."
+            potential_causes = [
+                "Lớp CSS vô tình áp dụng quy tắc `display: none` hoặc `visibility: hidden` lên thanh điều hướng / nút hành động.",
+                "Lỗi cú pháp JavaScript trong file bundle khiến quá trình hydrate / render DOM bị ngắt quãng.",
+                "Mã HTML bị can thiệp xóa nhầm các phần tử semantic (<nav>, <button>, <main>) trong quá trình triển khai mã nguồn mới."
+            ]
+            user_impact = "Người dùng không thể nhìn thấy menu điều hướng hoặc không thể click nút thực hiện hành động chính, làm gián đoạn luồng trải nghiệm trên trang."
+            biz_impact = "Suy giảm tỷ lệ tương tác (Engagement Rate) và nguy cơ mất khách hàng do không thể thao tác các chức năng chính."
+            action_plan = [
+                "Kiểm tra file HTML và style CSS, gỡ bỏ thuộc tính `display: none` trên phần tử giao diện.",
+                "Kiểm tra console log trình duyệt xem có lỗi JavaScript runtime gây chặn render hay không.",
+                "Khôi phục lại phiên bản giao diện chuẩn từ mốc Baseline đã được kiểm định."
+            ]
+            runbook_steps = [
+                "1. Kiểm tra phần tử trong DevTools: Mở Inspect Element và tìm selector bị ẩn.",
+                "2. Kiểm tra CSS áp dụng: Kiểm tra tab Styles để xác định nguồn gốc rule `display: none`.",
+                "3. Đối chiếu ảnh chụp màn hình hiện tại với ảnh Baseline chuẩn để khoanh vùng biến dạng giao diện."
+            ]
+            prevention = [
+                "Bổ sung bước kiểm thử tự động E2E / Visual Regression Testing trong quy trình CI/CD.",
+                "Thiết lập cơ chế kiểm định cấu trúc DOM (DOM Structural Validation) định kỳ trước khi phát hành tính năng mới."
+            ]
+            rfc_refs = [
+                "W3C DOM (Document Object Model) Technical Specification",
+                "W3C HTML5 Semantic Elements Standard (Section 4.4: Grouping & Navigation)",
+                "WCAG 2.1 Success Criterion 4.1.2: Name, Role, Value"
+            ]
+
         else:
             incident_title = f"Sự cố Vận Hành: {incident_type}"
             exec_summary = f"Phát hiện bất thường kỹ thuật mức độ {severity} trên website '{site_name}': {primary_issue}."
@@ -301,7 +372,46 @@ class IncidentAnalysisAgent:
             action_plan = ["Tiến hành kiểm tra chi tiết các tín hiệu lỗi và khôi phục dịch vụ."]
             runbook_steps = ["1. Kiểm tra trạng thái toàn bộ dịch vụ phụ thuộc.", "2. Kiểm tra error log hệ thống."]
             prevention = ["Tăng cường giám sát thời gian thực và tự động hồi phục."]
-            rfc_refs = ["RFC 9110 / RFC 1035 Standards"]
+        # =========================================================================
+        # TÍCH HỢP LLM-POWERED REASONING (GOOGLE GEMINI AI SRE)
+        # =========================================================================
+        llm_insights = None
+        is_llm_enhanced = False
+        try:
+            sys_settings = get_system_settings()
+            gemini_key = (sys_settings.get("gemini_api_key") or "").strip()
+            llm_enabled = bool(sys_settings.get("llm_enabled", 0))
+            gemini_model = sys_settings.get("gemini_model") or "gemini-1.5-flash"
+
+            if llm_enabled and gemini_key:
+                prompt = (
+                    f"Bạn là Chuyên gia Site Reliability Engineer (Senior SRE / DevOps) phân tích sự cố website.\n"
+                    f"Thông tin website: {site_name} ({site_url}, domain: {site_domain})\n"
+                    f"Sự cố ghi nhận: {incident_title} (Mức độ: {severity})\n"
+                    f"Phân tầng lỗi: {fault_layer} | Loại sự cố: {incident_type}\n"
+                    f"Nguyên nhân gốc sơ bộ: {primary_cause}\n"
+                    f"Bằng chứng tín hiệu kỹ thuật: {cross_evidence}\n\n"
+                    f"Yêu cầu:\n"
+                    f"1. Nhận định chuyên sâu về nguyên nhân gốc và rủi ro chuỗi (2-3 câu súc tích).\n"
+                    f"2. Đề xuất hành động khắc phục khẩn cấp ưu tiên số 1 cho kỹ sư vận hành."
+                )
+                system_instruction = (
+                    "Bạn là Trợ lý Vận hành Hệ thống AI (AI SRE Assistant). "
+                    "Hãy phản hồi bằng tiếng Việt chuyên nghiệp, ngắn gọn, chuẩn thuật ngữ SRE/DevOps quốc tế."
+                )
+                llm_resp = generate_gemini_analysis(
+                    prompt=prompt,
+                    api_key=gemini_key,
+                    model=gemini_model,
+                    system_instruction=system_instruction,
+                    timeout=15.0
+                )
+                if llm_resp:
+                    llm_insights = llm_resp
+                    is_llm_enhanced = True
+                    exec_summary = f"{exec_summary}\n\n🤖 [AI SRE Reasoning - {gemini_model}]:\n{llm_resp}"
+        except Exception as e:
+            print(f"[!] Warning: IncidentAnalysisAgent LLM enrichment failed: {e}")
 
         return {
             "agent_name": self.name,
@@ -314,6 +424,8 @@ class IncidentAnalysisAgent:
             "confidence_score": 98.8,
             "incident_title": incident_title,
             "executive_summary": exec_summary,
+            "llm_enhanced": is_llm_enhanced,
+            "llm_insights": llm_insights,
             "root_cause_analysis": {
                 "primary_cause": primary_cause,
                 "contributing_factors": potential_causes,

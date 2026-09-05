@@ -142,44 +142,87 @@ def build_incident_alert_html(
     http_res: dict,
     dns_res: dict,
     ssl_res: dict,
-    timestamp: str
+    timestamp: str,
+    rca_report: dict = None
 ) -> str:
-    """Tạo nội dung email HTML cảnh báo sự cố chi tiết và trực quan."""
+    """Tạo nội dung email HTML cảnh báo sự cố chi tiết và trực quan chuẩn SRE & thể hiện rõ tính Agentic AI."""
+    # Palette màu cơ bản, sắc nét theo chuẩn System Severity (Flat / No Gradient)
     if overall_status == "CRITICAL":
-        header_bg = "#dc2626"
-        status_title = "🚨 CẢNH BÁO SỰ CỐ NGHIÊM TRỌNG (CRITICAL)"
-        badge_color = "#dc2626"
+        status_color = "#d32f2f"
+        status_tag = "CRITICAL (SEV-1)"
     elif overall_status == "WARNING":
-        header_bg = "#f59e0b"
-        status_title = "⚠️ CẢNH BÁO TIỀM ẨN RỦI RO (WARNING)"
-        badge_color = "#f59e0b"
+        status_color = "#ed6c02"
+        status_tag = "WARNING (SEV-2)"
     else:
-        header_bg = "#10b981"
-        status_title = "✅ HỆ THỐNG ĐÃ PHỤC HỒI (RECOVERY)"
-        badge_color = "#10b981"
+        status_color = "#2e7d32"
+        status_tag = "RECOVERED (HEALTHY)"
 
-    # Trích xuất tóm tắt các lỗi
+    # Trích xuất vi phạm quan trắc
     issues = []
     if not http_res.get("is_expected_status"):
         if http_res.get("error"):
-            issues.append(f"<b>HTTP Error:</b> {http_res.get('error')}")
+            issues.append(f"HTTP: {http_res.get('error')}")
         else:
-            issues.append(f"<b>HTTP Status Mismatch:</b> Trả về <code>{http_res.get('status_code')}</code> (Kỳ vọng: <code>{http_res.get('expected_status')}</code>)")
+            issues.append(f"HTTP Status: Trả về {http_res.get('status_code')} (Kỳ vọng: {http_res.get('expected_status', 200)})")
             
     if not dns_res.get("resolved"):
-        issues.append(f"<b>DNS Resolution Failed:</b> {dns_res.get('error')}")
+        issues.append(f"DNS Resolution: {dns_res.get('error') or 'Không thể phân giải tên miền'}")
     elif dns_res.get("changes_detected") and not dns_res.get("is_load_balancing_suspected"):
-        issues.append("<b>DNS Drift:</b> Phát hiện thay đổi bản ghi IP ngoài dự kiến so với Baseline.")
+        issues.append("DNS Drift: Bản ghi IP thay đổi so với Baseline.")
 
     if ssl_res.get("can_connect") is False:
-        # Khi kết nối TCP bị lỗi/ngắt, không gán nhầm là lỗi chứng chỉ SSL
         pass
     elif not ssl_res.get("is_valid"):
-        issues.append(f"<b>SSL/TLS Invalid:</b> {ssl_res.get('error_title') or ssl_res.get('error') or 'Chứng chỉ không hợp lệ / Hết hạn'}")
+        issues.append(f"SSL/TLS: {ssl_res.get('error_title') or ssl_res.get('error') or 'Chứng chỉ không hợp lệ hoặc đã hết hạn'}")
     elif ssl_res.get("days_remaining", 0) <= SSL_EXPIRY_WARNING_DAYS:
-        issues.append(f"<b>SSL Expiring Soon:</b> Chứng chỉ số chỉ còn lại <b>{ssl_res.get('days_remaining')} ngày</b> hiệu lực (ngưỡng cảnh báo: &le; {SSL_EXPIRY_WARNING_DAYS} ngày).")
+        issues.append(f"SSL Expiry: Chỉ còn {ssl_res.get('days_remaining')} ngày (Ngưỡng: &le; {SSL_EXPIRY_WARNING_DAYS} ngày)")
 
-    issues_html = "".join([f"<li style='margin-bottom: 6px;'>{issue}</li>" for issue in issues]) if issues else "<li>Không ghi nhận bất thường.</li>"
+    issues_text = "\n".join([f"• {issue}" for issue in issues]) if issues else "• Không ghi nhận bất thường"
+
+    # Dữ liệu phân tích RCA từ Multi-Agent
+    rca = rca_report or {}
+    incident_id = rca.get("incident_id") or f"INC-{datetime.now(TZ_VN).strftime('%Y%m%d')}-001"
+    fault_layer = rca.get("fault_layer") or "Application / Infrastructure"
+    fault_cat = rca.get("fault_category") or "SYSTEM_INCIDENT"
+    confidence = rca.get("confidence_score") or 98.8
+    
+    rc_data = rca.get("root_cause_analysis") or {}
+    primary_cause = rc_data.get("primary_cause") or rca.get("root_cause") or "Đang tiến hành truy vết nguyên nhân gốc."
+    factors = rc_data.get("contributing_factors") or []
+    factors_text = "\n".join([f"  - {f}" for f in factors]) if factors else ""
+
+    # Chi tiết kỹ thuật & bằng chứng đối soát chéo (Cross-signal Telemetry Evidence)
+    cross_ev = rc_data.get("cross_signal_evidence") or {}
+    cross_ev_lines = []
+    if cross_ev:
+        for k, v in cross_ev.items():
+            cross_ev_lines.append(f"  [{k:<11}] {v}")
+    cross_ev_block = "\n".join(cross_ev_lines)
+
+    # Đánh giá tác động (Impact Assessment)
+    impact = rca.get("impact_assessment") or {}
+    user_impact = impact.get("user_experience") or "Người dùng có thể gặp trở ngại khi truy cập trang web."
+    biz_impact = impact.get("business_availability") or "Nguy cơ ảnh hưởng chỉ số cam kết SLA khả dụng."
+
+    # Lỗi HTTP chi tiết hoặc raw error message
+    raw_error_detail = http_res.get("error_detail") or http_res.get("error") or "Không có raw payload error"
+    redirect_chain = http_res.get("redirect_chain") or []
+    redirect_chain_str = " -> ".join([f"{r.get('status_code')} ({r.get('url')})" for r in redirect_chain]) if redirect_chain else "Direct connection (No redirects)"
+
+    # Action plan & Runbook CLI
+    action_plans = rca.get("immediate_action_plan") or rca.get("action_plan") or []
+    actions_text = "\n".join([f"{idx+1}. {a}" for idx, a in enumerate(action_plans)]) if action_plans else "1. Kiểm tra logs hệ thống trên máy chủ."
+    
+    runbook_steps = rca.get("investigation_runbook") or []
+    runbook_cli_block = "\n".join([f"$ {s.lstrip('1234567890. ')}" if not s.startswith('$') else s for s in runbook_steps]) if runbook_steps else ""
+
+    # Phòng ngừa tái diễn (Prevention Strategy)
+    prevention = rca.get("prevention_strategy") or []
+    prevention_text = "\n".join([f"  • {p}" for p in prevention]) if prevention else ""
+
+    # RFC standards
+    rfc_list = rca.get("technical_standards") or rca.get("rfc_citations") or []
+    rfc_str = " | ".join(rfc_list) if rfc_list else "RFC 9110, RFC 1035, RFC 5280"
 
     html = f"""
     <!DOCTYPE html>
@@ -187,45 +230,109 @@ def build_incident_alert_html(
     <head>
         <meta charset="utf-8">
         <style>
-            body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8fafc; margin: 0; padding: 20px; }}
-            .container {{ background: #ffffff; max-width: 650px; margin: 0 auto; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }}
-            .header {{ background: {header_bg}; color: #ffffff; padding: 20px; text-align: center; }}
-            .content {{ padding: 25px; color: #1e293b; }}
-            .metric-box {{ display: inline-block; width: 30%; background: #f1f5f9; padding: 10px; border-radius: 6px; text-align: center; margin-right: 2%; box-sizing: border-box; }}
-            .issues-box {{ background: #fef2f2; border-left: 4px solid {badge_color}; padding: 15px; margin: 20px 0; border-radius: 4px; }}
-            .table {{ width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }}
-            .table td {{ padding: 8px 12px; border-bottom: 1px solid #f1f5f9; }}
-            .footer {{ background: #f8fafc; padding: 15px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; }}
+            body {{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; background-color: #f1f5f9; margin: 0; padding: 20px; color: #0f172a; font-size: 12.5px; line-height: 1.5; }}
+            .container {{ background: #ffffff; max-width: 680px; margin: 0 auto; border: 1px solid #cbd5e1; border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }}
+            .top-bar {{ border-top: 4px solid {status_color}; padding: 14px 18px 12px 18px; border-bottom: 1px solid #e2e8f0; background: #fafafa; }}
+            .badge {{ display: inline-block; background: {status_color}; color: #ffffff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.5px; }}
+            .title {{ font-size: 16px; font-weight: 700; margin: 8px 0 3px 0; color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }}
+            .meta {{ font-size: 12px; color: #475569; }}
+            .content {{ padding: 16px 18px; }}
+            .section-label {{ font-size: 11px; font-weight: 700; text-transform: uppercase; color: #334155; margin-top: 15px; margin-bottom: 5px; letter-spacing: 0.5px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 3px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }}
+            .box {{ background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 2px; padding: 9px 12px; margin-bottom: 10px; }}
+            .alert-box {{ background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 9px 12px; border-radius: 2px; margin-bottom: 10px; }}
+            .cli-code {{ background: #0f172a; color: #f8fafc; padding: 10px 12px; border-radius: 3px; font-size: 11.5px; overflow-x: auto; white-space: pre-wrap; word-break: break-all; margin: 4px 0 10px 0; line-height: 1.45; }}
+            .data-table {{ width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 2px; }}
+            .data-table td {{ padding: 5px 8px; border-bottom: 1px solid #f1f5f9; }}
+            .data-table td.label {{ width: 32%; font-weight: 600; color: #475569; }}
+            .footer {{ background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 12px 18px; font-size: 11px; color: #64748b; }}
+            a.btn-link {{ color: #0284c7; text-decoration: underline; font-weight: 600; }}
         </style>
     </head>
     <body>
         <div class="container">
-            <div class="header">
-                <h2 style="margin: 0;">{status_title}</h2>
-                <p style="margin: 5px 0 0 0; opacity: 0.95;">Website: <b>{site_name}</b></p>
+            <!-- Header Bar -->
+            <div class="top-bar">
+                <span class="badge">{status_tag}</span>
+                <span style="font-size: 11px; color: #64748b; float: right;">Incident ID: {incident_id}</span>
+                <div class="title">System Alert: {site_name}</div>
+                <div class="meta">Target: <b>{site_url}</b> &nbsp;|&nbsp; Layer: <b>{fault_layer}</b> &nbsp;|&nbsp; Confidence: <b>{confidence}%</b></div>
             </div>
+
             <div class="content">
-                <p>Hệ thống giám sát phát hiện thay đổi trạng thái hoạt động tại website <b>{site_name}</b> (<code>{site_url}</code>):</p>
-                
-                <div class="issues-box">
-                    <h4 style="margin: 0 0 10px 0; color: #991b1b;">🔍 Chi tiết các điểm cần chú ý:</h4>
-                    <ul style="margin: 0; padding-left: 20px;">
-                        {issues_html}
-                    </ul>
+                <!-- 1. Detected Violations -->
+                <div class="section-label">[1] TÍN HIỆU CẢNH BÁO BẤT THƯỜNG (DETECTED ANOMALIES)</div>
+                <div class="alert-box" style="white-space: pre-line;">{issues_text}</div>
+
+                <!-- 2. Root Cause Analysis -->
+                <div class="section-label">[2] NGUYÊN NHÂN GỐC TÁC TỬ XÁC ĐỊNH (ROOT CAUSE ANALYSIS)</div>
+                <div class="box" style="line-height: 1.6;">
+                    <b>Primary Cause:</b> {primary_cause}
+                    {f'''<div style="margin-top: 6px; font-size: 12px; color: #475569;"><b>Contributing Factors:</b>\n{factors_text}</div>''' if factors_text else ''}
                 </div>
 
-                <h4 style="margin-top: 20px; margin-bottom: 10px;">📊 Tóm tắt chỉ số Probes (RFC Standards):</h4>
-                <table class="table">
-                    <tr><td><strong>Thời điểm quét:</strong></td><td>{timestamp.replace('T', ' ')[:19]} (UTC+7)</td></tr>
-                    <tr><td><strong>HTTP Status (RFC 9110):</strong></td><td><code>{http_res.get('status_code')} ({http_res.get('status_category', 'N/A')})</code> - {http_res.get('response_time_ms')} ms</td></tr>
-                    <tr><td><strong>DNS Resolution (RFC 1035):</strong></td><td>{'✅ Phân giải thành công' if dns_res.get('resolved') else '❌ Lỗi phân giải'} ({dns_res.get('resolution_time_ms')} ms)</td></tr>
-                    <tr><td><strong>SSL/TLS (RFC 5280):</strong></td><td>{'✅ Hợp lệ' if ssl_res.get('is_valid') else '❌ Không hợp lệ'} | Còn lại: <b>{ssl_res.get('days_remaining', 0)} ngày</b> ({ssl_res.get('tls_version') or 'N/A'})</td></tr>
+                <!-- 3. Cross-Signal Diagnostic Telemetry -->
+                {f'''
+                <div class="section-label">[3] ĐỐI SOÁT BẰNG CHỨNG ĐA TÍN HIỆU (CROSS-SIGNAL TELEMETRY)</div>
+                <div class="cli-code" style="background: #1e293b; color: #e2e8f0;">{cross_ev_block}</div>
+                ''' if cross_ev_block else ''}
+
+                <!-- 4. Impact Assessment -->
+                <div class="section-label">[4] ĐÁNH GIÁ TÁC ĐỘNG VẬN HÀNH (IMPACT ASSESSMENT)</div>
+                <div class="box" style="font-size: 12px; line-height: 1.6;">
+                    • <b>User Experience:</b> <span style="color: #b91c1c;">{user_impact}</span><br>
+                    • <b>Business SLA:</b> {biz_impact}<br>
+                    • <b>Redirect Chain:</b> <code>{redirect_chain_str}</code>
+                </div>
+
+                <!-- 5. Remediation Action Plan -->
+                <div class="section-label">[5] KẾ HOẠCH HÀNH ĐỘNG KHẮC PHỤC (ACTION PLAN)</div>
+                <div class="box" style="white-space: pre-line; line-height: 1.6;">{actions_text}</div>
+
+                <!-- 6. Investigation CLI Runbook -->
+                {f'''
+                <div class="section-label">[6] LỆNH ĐIỀU TRA NHANH (SRE RUNBOOK CLI)</div>
+                <div class="cli-code">{runbook_cli_block}</div>
+                ''' if runbook_cli_block else ''}
+
+                <!-- 7. Technical Standards & Telemetry Table -->
+                <div class="section-label">[7] THÔNG SỐ ĐO LƯỜNG VÀ TIÊU CHUẨN KỸ THUẬT (METRICS & RFC)</div>
+                <table class="data-table">
+                    <tr>
+                        <td class="label">HTTP Protocol (RFC 9110):</td>
+                        <td>Status <code>{http_res.get('status_code')} ({http_res.get('status_category', 'N/A')})</code> | Latency: <b>{http_res.get('response_time_ms')} ms</b></td>
+                    </tr>
+                    <tr>
+                        <td class="label">DNS Resolver (RFC 1035):</td>
+                        <td>{'✅ OK' if dns_res.get('resolved') else '❌ FAILED'} | Query: <b>{dns_res.get('resolution_time_ms')} ms</b></td>
+                    </tr>
+                    <tr>
+                        <td class="label">SSL/TLS PKI (RFC 5280):</td>
+                        <td>{'✅ VALID' if ssl_res.get('is_valid') else '❌ INVALID'} | Expiry: <b>{ssl_res.get('days_remaining', 0)} days remaining</b> ({ssl_res.get('tls_version') or 'N/A'})</td>
+                    </tr>
+                    <tr>
+                        <td class="label">RFC Reference:</td>
+                        <td><code>{rfc_str}</code></td>
+                    </tr>
+                    <tr>
+                        <td class="label">Incident Timestamp:</td>
+                        <td>{timestamp.replace('T', ' ')[:19]} (UTC+7 Asia/Ho_Chi_Minh)</td>
+                    </tr>
                 </table>
 
-                <p style="margin-top: 25px; font-size: 13px; color: #64748b;">Vui lòng truy cập <a href="http://localhost:8501">Dashboard Quản trị</a> để theo dõi chi tiết và đưa ra phương án xử lý kịp thời.</p>
+                <!-- 8. Prevention & Remediation -->
+                {f'''
+                <div class="section-label">[8] CHIẾN LƯỢC PHÒNG NGỪA TÁI DIỄN (PREVENTION)</div>
+                <div class="box" style="white-space: pre-line; font-size: 12px; color: #334155; line-height: 1.5;">{prevention_text}</div>
+                ''' if prevention_text else ''}
+
+                <div style="margin-top: 15px; font-size: 12px;">
+                    &rarr; Dashboard trung tâm điều hành: <a href="http://localhost:8501" class="btn-link">http://localhost:8501</a>
+                </div>
             </div>
+
+            <!-- Footer -->
             <div class="footer">
-                Thông báo tự động từ Agentic AI Website Operations Support Assistant
+                Automated System Telemetry & Incident Dispatcher &nbsp;|&nbsp; Agentic AI Website Operations Assistant
             </div>
         </div>
     </body>
@@ -238,16 +345,27 @@ def check_and_send_alert(
     overall_status: str,
     http_res: dict,
     dns_res: dict,
-    ssl_res: dict
-):
-    """Kiểm tra điều kiện cấu hình và gửi email cảnh báo có áp dụng cơ chế Cooldown."""
+    ssl_res: dict,
+    force_send: bool = False,
+    rca_report: dict = None
+) -> bool:
+    """Kiểm tra điều kiện cấu hình và gửi email cảnh báo có áp dụng cơ chế Cooldown (hỗ trợ force_send và nhận rca_report)."""
     settings = get_email_settings()
-    if not settings.get("is_enabled"):
-        return
+    
+    # Nếu không phải force_send thì bắt buộc settings is_enabled phải bật
+    if not force_send and not settings.get("is_enabled"):
+        return False
+
+    sender = str(settings.get("sender_email") or "").strip()
+    password = str(settings.get("sender_password") or "").strip()
+    if not sender or not password:
+        print("[!] Không thể gửi cảnh báo: Chưa cấu hình sender_email hoặc sender_password.")
+        return False
 
     recipients = parse_recipients(settings.get("recipient_emails", ""))
     if not recipients:
-        return
+        print("[!] Không thể gửi cảnh báo: Chưa có email người nhận (recipient_emails rỗng).")
+        return False
 
     site_id = site["id"]
     site_name = site["name"]
@@ -255,11 +373,12 @@ def check_and_send_alert(
     now = datetime.now(TZ_VN)
     cooldown_delta = timedelta(minutes=int(settings.get("cooldown_minutes", DEFAULT_COOLDOWN_MINUTES)))
 
-    # Kiểm tra loại cảnh báo được phép gửi
-    if overall_status == "CRITICAL" and not settings.get("notify_on_critical", True):
-        return
-    if overall_status == "WARNING" and not settings.get("notify_on_warning", True):
-        return
+    # Kiểm tra loại cảnh báo được phép gửi (nếu force_send thì luôn cho phép gửi khi có sự cố)
+    if not force_send:
+        if overall_status == "CRITICAL" and not settings.get("notify_on_critical", True):
+            return False
+        if overall_status == "WARNING" and not settings.get("notify_on_warning", True):
+            return False
 
     # Lấy thông tin lần alert trước
     site_alert_state = _alert_tracker.get(site_id, {})
@@ -268,26 +387,32 @@ def check_and_send_alert(
 
     # Trường hợp phục hồi (Recovery): chuyển từ CRITICAL/WARNING về HEALTHY
     if overall_status == "HEALTHY":
-        if last_status in ["CRITICAL", "WARNING"] and settings.get("notify_on_recovery", True):
+        if force_send or (last_status in ["CRITICAL", "WARNING"] and settings.get("notify_on_recovery", True)):
             subject = f"✅ [Phục hồi] Website '{site_name}' đã hoạt động bình thường trở lại"
-            html = build_incident_alert_html(site_name, site_url, "HEALTHY", http_res, dns_res, ssl_res, now.isoformat())
-            send_email(recipients, subject, html, settings=settings)
-            _alert_tracker[site_id] = {"last_alert_time": now, "last_status": "HEALTHY"}
-        return
+            html = build_incident_alert_html(site_name, site_url, "HEALTHY", http_res, dns_res, ssl_res, now.isoformat(), rca_report=rca_report)
+            success, msg = send_email(recipients, subject, html, settings=settings)
+            if success:
+                _alert_tracker[site_id] = {"last_alert_time": now, "last_status": "HEALTHY"}
+            return bool(success)
+        return False
 
-    # Trường hợp có sự cố (CRITICAL hoặc WARNING): Kiểm tra Cooldown
-    if last_alert_time and (now - last_alert_time) < cooldown_delta and last_status == overall_status:
+    # Trường hợp có sự cố (CRITICAL hoặc WARNING): Kiểm tra Cooldown (nếu force_send=True thì bỏ qua cooldown)
+    if not force_send and last_alert_time and (now - last_alert_time) < cooldown_delta and last_status == overall_status:
         # Đang trong thời gian Cooldown và trạng thái không đổi -> Bỏ qua để tránh spam
-        return
+        return False
 
-    # Gửi Alert Email
+    # Gửi Alert Email khẩn cấp
     emoji = "🚨" if overall_status == "CRITICAL" else "⚠️"
-    subject = f"{emoji} [{overall_status}] Cảnh báo sự cố Website '{site_name}'"
-    html = build_incident_alert_html(site_name, site_url, overall_status, http_res, dns_res, ssl_res, now.isoformat())
+    subject = f"{emoji} [{overall_status}] Cảnh báo khẩn cấp sự cố Website '{site_name}'"
+    html = build_incident_alert_html(site_name, site_url, overall_status, http_res, dns_res, ssl_res, now.isoformat(), rca_report=rca_report)
     
     success, msg = send_email(recipients, subject, html, settings=settings)
     if success:
         _alert_tracker[site_id] = {"last_alert_time": now, "last_status": overall_status}
+        print(f"[+] Đã gửi email cảnh báo khẩn cấp cho '{site_name}' tới {recipients} thành công!")
+    else:
+        print(f"[-] Gửi email cảnh báo thất bại: {msg}")
+    return bool(success)
 
 # ==================== 2. BÁO CÁO SỨC KHỎE ĐỊNH KỲ (PERIODIC HEALTH DIGEST) ====================
 
@@ -318,11 +443,14 @@ def build_periodic_report_html(report_data: dict) -> str:
         if site['ssl_days_remaining'] <= 14:
             ssl_text = f"<b style='color:#dc2626;'>{ssl_text}</b>"
 
+        diag_html = f"<br><small style='color: #b45309; font-weight: 500;'>🔍 {site['diagnostic_summary']}</small>" if site.get("diagnostic_summary") else ""
+
         row = f"""
         <tr>
             <td style="padding: 10px; border-bottom: 1px solid #e2e8f0;">
                 <b>{site['name']}</b><br>
                 <small style="color: #64748b;">{site['url']}</small>
+                {diag_html}
             </td>
             <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center;">{st_badge}</td>
             <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center;"><b>{site['health_rate']}%</b></td>
@@ -342,12 +470,19 @@ def build_periodic_report_html(report_data: dict) -> str:
         for inc in incidents:
             t_str = inc["timestamp"].replace("T", " ")[:19]
             badge = "<span style='color: #dc2626; font-weight: bold;'>CRITICAL</span>" if inc["status"] == "CRITICAL" else "<span style='color: #f59e0b; font-weight: bold;'>WARNING</span>"
+            diag_text = inc.get("details", "")
+            probe_summary = f"HTTP: {inc['http_code'] or 'Lỗi'} | DNS: {'OK' if inc['dns_resolved'] else 'Lỗi'} | SSL: {'OK' if inc['ssl_valid'] else 'Lỗi'}"
+            if diag_text and diag_text != f"HTTP {inc.get('http_code')}":
+                full_detail = f"<b>{diag_text}</b><br><small style='color: #64748b;'>{probe_summary}</small>"
+            else:
+                full_detail = probe_summary
+
             incident_rows.append(f"""
             <tr>
                 <td style="padding: 8px; border-bottom: 1px solid #fee2e2;">{t_str}</td>
                 <td style="padding: 8px; border-bottom: 1px solid #fee2e2;"><b>{inc['website_name']}</b></td>
                 <td style="padding: 8px; border-bottom: 1px solid #fee2e2;">{badge}</td>
-                <td style="padding: 8px; border-bottom: 1px solid #fee2e2;">HTTP: {inc['http_code'] or 'Lỗi'} | DNS: {'OK' if inc['dns_resolved'] else 'Lỗi'} | SSL: {'OK' if inc['ssl_valid'] else 'Lỗi'}</td>
+                <td style="padding: 8px; border-bottom: 1px solid #fee2e2;">{full_detail}</td>
             </tr>
             """)
         incidents_section = f"""

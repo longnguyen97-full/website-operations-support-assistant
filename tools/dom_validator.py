@@ -16,7 +16,7 @@ CORE_DOM_CATEGORIES = {
     },
     "navigation": {
         "description": "Thanh điều hướng / Menu (nav, navbar, menu)",
-        "selectors": ["nav", "[role='navigation']", ".navbar", ".nav-menu", "#menu", "header nav"],
+        "selectors": ["nav", "[role='navigation']", ".nav-menu", "header nav", "#menu", ".navbar"],
         "critical": False
     },
     "main_content": {
@@ -26,7 +26,7 @@ CORE_DOM_CATEGORIES = {
     },
     "buttons_cta": {
         "description": "Nút bấm hành động / CTA (button, .btn, [role='button'])",
-        "selectors": ["button", "a.btn", "a.button", "[role='button']", "input[type='submit']", "input[type='button']"],
+        "selectors": ["button.btn-primary", "a.btn-primary", ".btn-primary", "button[type='submit']", "input[type='submit']", "button", "a.btn", "a.button", "[role='button']", "input[type='button']"],
         "critical": False
     },
     "forms": {
@@ -95,25 +95,58 @@ def _validate_with_playwright(
 
         # 3. Helper kiểm tra nhóm selector trong Playwright
         def check_group_selectors(selector_list: List[str]):
+            hidden_match = None
             for sel in selector_list:
                 try:
                     loc = page.locator(sel)
                     cnt = loc.count()
                     if cnt > 0:
-                        # Kiểm tra xem có ít nhất 1 element hiển thị (visible)
                         visible_cnt = 0
+                        has_explicitly_hidden = False
                         for i in range(min(cnt, 5)):
                             if loc.nth(i).is_visible():
                                 visible_cnt += 1
-                        return {
-                            "found": True,
-                            "visible": visible_cnt > 0,
-                            "count": cnt,
-                            "matched_selector": sel,
-                            "status": "OK" if visible_cnt > 0 else "HIDDEN"
-                        }
+                            else:
+                                has_explicitly_hidden = True
+
+                        # Kiểm tra trường hợp đặc biệt cho container wrapper (.navbar, header):
+                        # Nếu wrapper hiển thị nhưng chứa nav/menu bên trong bị ẩn hoàn toàn
+                        if sel in [".navbar", "header"]:
+                            inner_loc = page.locator(f"{sel} nav, {sel} .nav-menu, {sel} [role='navigation']")
+                            inner_cnt = inner_loc.count()
+                            if inner_cnt > 0:
+                                inner_visible = any(inner_loc.nth(j).is_visible() for j in range(min(inner_cnt, 3)))
+                                if not inner_visible:
+                                    return {
+                                        "found": True,
+                                        "visible": False,
+                                        "count": inner_cnt,
+                                        "matched_selector": f"{sel} > nav",
+                                        "status": "HIDDEN"
+                                    }
+
+                        if visible_cnt > 0 and not has_explicitly_hidden:
+                            return {
+                                "found": True,
+                                "visible": True,
+                                "count": visible_cnt,
+                                "matched_selector": sel,
+                                "status": "OK"
+                            }
+                        elif has_explicitly_hidden and hidden_match is None:
+                            hidden_match = {
+                                "found": True,
+                                "visible": False,
+                                "count": cnt,
+                                "matched_selector": sel,
+                                "status": "HIDDEN"
+                            }
+                            if sel in ["nav", "[role='navigation']", ".nav-menu", "button.btn-primary", "a.btn-primary", ".btn-primary", "main"]:
+                                return hidden_match
                 except Exception:
                     continue
+            if hidden_match:
+                return hidden_match
             return {"found": False, "visible": False, "count": 0, "matched_selector": None, "status": "MISSING"}
 
         # 4. Kiểm tra Navigation, Main Content, Buttons/CTA, Forms, Footer
@@ -221,6 +254,7 @@ def _validate_with_bs4(
 
     # Helper nhóm selector BS4
     def check_bs4_group(selector_list: List[str]):
+        hidden_match = None
         for sel in selector_list:
             try:
                 matches = soup.select(sel)
@@ -231,7 +265,31 @@ def _validate_with_bs4(
                         if "display:none" not in str(m.get("style", "")).replace(" ", "").lower()
                         and not m.has_attr("hidden")
                     ]
-                    if visible_matches:
+                    has_explicitly_hidden = any(
+                        "display:none" in str(m.get("style", "")).replace(" ", "").lower() or m.has_attr("hidden")
+                        for m in matches
+                    )
+
+                    # Kiểm tra đặc biệt cho container wrapper (.navbar, header):
+                    # Nếu bên trong container này có nav hoặc menu nhưng tất cả đều bị ẩn
+                    if sel in [".navbar", "header"]:
+                        inner_navs = soup.select(f"{sel} nav, {sel} .nav-menu, {sel} [role='navigation']")
+                        if inner_navs:
+                            visible_inner = [
+                                n for n in inner_navs
+                                if "display:none" not in str(n.get("style", "")).replace(" ", "").lower()
+                                and not n.has_attr("hidden")
+                            ]
+                            if not visible_inner:
+                                return {
+                                    "found": True,
+                                    "visible": False,
+                                    "count": len(inner_navs),
+                                    "matched_selector": f"{sel} > nav",
+                                    "status": "HIDDEN"
+                                }
+
+                    if visible_matches and not has_explicitly_hidden:
                         return {
                             "found": True,
                             "visible": True,
@@ -239,8 +297,20 @@ def _validate_with_bs4(
                             "matched_selector": sel,
                             "status": "OK"
                         }
+                    elif has_explicitly_hidden and hidden_match is None:
+                        hidden_match = {
+                            "found": True,
+                            "visible": False,
+                            "count": len(matches),
+                            "matched_selector": sel,
+                            "status": "HIDDEN"
+                        }
+                        if sel in ["nav", "[role='navigation']", ".nav-menu", "button.btn-primary", "a.btn-primary", ".btn-primary", "main"]:
+                            return hidden_match
             except Exception:
                 continue
+        if hidden_match:
+            return hidden_match
         return {"found": False, "visible": False, "count": 0, "matched_selector": None, "status": "MISSING"}
 
     components["navigation"] = check_bs4_group(CORE_DOM_CATEGORIES["navigation"]["selectors"])
@@ -293,8 +363,11 @@ def validate_dom(
     url: str,
     expected_selectors: Optional[List[str]] = None,
     use_browser: bool = True,
-    timeout: float = 15.0
+    timeout: float = 15.0,
+    timeout_seconds: Optional[float] = None
 ) -> Dict[str, Any]:
+    if timeout_seconds is not None:
+        timeout = timeout_seconds
     """
     Công cụ DOM Validation dựa trên tiêu chuẩn Structural Monitoring (RULE_BUILD_TOOLS.md mục 5).
     
@@ -345,7 +418,7 @@ def validate_dom(
             missing_critical.append("Page Title (<title>)")
             anomalies.append("Trang web thiếu thẻ <title> hoặc tiêu đề rỗng.")
 
-        # 2. Đánh giá Headings
+        # 2. Đánh giá Headings (Cấu trúc phân cấp nội dung)
         headings_info = raw_res["components"].get("headings", {})
         if not headings_info.get("found"):
             missing_critical.append("Headings (h1/h2/h3)")
@@ -353,23 +426,40 @@ def validate_dom(
         elif not headings_info.get("has_h1"):
             anomalies.append("Trang web có heading nhưng thiếu thẻ <h1> cấp cao nhất (SEO / Accessibility Warning).")
 
-        # 3. Đánh giá Body Content
-        if result["body_text_length"] < 20:
-            missing_critical.append("Body Content")
+        # 3. Đánh giá Body Content (Trang trắng / Blank Page)
+        if result["body_text_length"] < 20 or raw_res["stats"].get("total_nodes", 0) < 10:
+            missing_critical.append("Body Content (Blank Page / Empty DOM)")
             anomalies.append("Thân trang web hầu như rỗng hoặc không có nội dung văn bản hiển thị.")
 
-        # 3b. Đánh giá Nút bấm hành động (CTA / Action Buttons)
-        buttons_info = raw_res["components"].get("buttons_cta", {})
-        if not buttons_info.get("found"):
-            missing_critical.append("Action Buttons (button / CTA)")
-            anomalies.append("Trang web thiếu nút bấm hành động hoặc tương tác cốt lõi (Missing CTA Buttons).")
+        # 4. Đánh giá thành phần cấu trúc cốt lõi bị ẩn bất thường (Hidden UI / Missing DOM Elements)
+        nav_info = raw_res["components"].get("navigation", {})
+        if nav_info.get("status") == "HIDDEN":
+            missing_critical.append(f"Thanh điều hướng bị ẩn ({nav_info.get('matched_selector', 'navigation')})")
+            anomalies.append("Thanh điều hướng chính của website bị ẩn bất thường (display: none / hidden).")
 
-        # 4. Đánh giá Custom Selectors (nếu có yêu cầu bắt buộc)
+        content_info = raw_res["components"].get("main_content", {})
+        if content_info.get("status") == "HIDDEN":
+            missing_critical.append(f"Khu vực nội dung chính bị ẩn ({content_info.get('matched_selector', 'main')})")
+            anomalies.append("Khu vực nội dung chính bị ẩn bất thường (display: none / hidden).")
+
+        buttons_info = raw_res["components"].get("buttons_cta", {})
+        if buttons_info.get("status") == "HIDDEN":
+            missing_critical.append(f"Thành phần tương tác bị ẩn ({buttons_info.get('matched_selector', 'buttons/CTA')})")
+            anomalies.append("Các nút bấm hoặc thành phần tương tác của trang bị ẩn bất thường (display: none).")
+
+        # 5. Đánh giá tính toàn vẹn của khung xương giao diện (Semantic Skeleton)
+        # Nếu website thiếu đồng thời cả Navigation, Main Content và Headings -> Vỡ layout toàn diện
+        if nav_info.get("status") == "MISSING" and content_info.get("status") == "MISSING" and not headings_info.get("found"):
+            missing_critical.append("Khung giao diện cơ bản (Thiếu đồng thời Navigation, Content & Headings)")
+            anomalies.append("Trang web bị vỡ khung giao diện cơ bản.")
+
+        # 6. Đánh giá Custom Selectors (nếu có yêu cầu từ cấu hình)
         for sel, c_data in raw_res["custom_selectors"].items():
             if not c_data.get("found"):
                 missing_critical.append(f"Custom Element: '{sel}'")
                 anomalies.append(f"Không tìm thấy thành phần bắt buộc '{sel}' trên trang.")
             elif not c_data.get("visible"):
+                missing_critical.append(f"Custom Element Hidden: '{sel}'")
                 anomalies.append(f"Thành phần '{sel}' tồn tại trong DOM nhưng đang bị ẩn (hidden).")
 
         result["missing_critical_elements"] = missing_critical
@@ -377,8 +467,11 @@ def validate_dom(
         result["is_structure_valid"] = len(missing_critical) == 0
 
     except Exception as e:
-        result["error"] = str(e)
-        result["is_structure_valid"] = False
-        result["structural_anomalies"] = [f"Lỗi khi kiểm tra cấu trúc DOM: {e}"]
+        err_msg = str(e)
+        result["error"] = err_msg
+        result["can_inspect"] = False
+        # Nếu lỗi là do timeout hoặc không kết nối được mạng, cấu trúc trang không bị phán quyết là vỡ
+        result["is_structure_valid"] = True
+        result["structural_anomalies"] = [f"Không thể kiểm tra DOM do lỗi mạng/kết nối: {err_msg}"]
 
     return result

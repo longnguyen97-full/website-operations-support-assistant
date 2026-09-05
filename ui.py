@@ -7,7 +7,14 @@ from database.repository import (
     get_monitoring_logs,
     get_all_milestones,
     set_active_milestone,
-    get_active_baseline
+    get_active_baseline,
+    save_monitoring_log,
+    calculate_overall_status,
+    get_system_settings,
+    get_website_latency_history,
+    generate_periodic_report_data,
+    get_email_settings,
+    update_email_settings
 )
 
 def render_traditional_tab(selected_site):
@@ -174,11 +181,21 @@ def render_realtime_tab(selected_site):
         dns_timeout = float(sys_settings.get("dns_timeout_seconds") or DNS_TIMEOUT_SECONDS)
         ssl_timeout = float(sys_settings.get("ssl_timeout_seconds") or SSL_TIMEOUT_SECONDS)
 
-        with st.spinner(f"🛡️ [Cấu hình 2] Đang thu thập Đa tín hiệu (HTTP/DNS/SSL/Visual) và tính Z-Score cho '{selected_site['name']}'..."):
+        with st.spinner(f"🛡️ [Cấu hình 2] Đang thu thập Đa tín hiệu (HTTP/DNS/SSL/DOM/Visual) và tính Z-Score cho '{selected_site['name']}'..."):
             http_res = check_http(selected_site["url"], expected_status=expected_status, timeout=http_timeout)
             dns_res = check_dns(selected_site["domain"], baseline=baseline_dns, timeout=dns_timeout)
             ssl_res = check_ssl(selected_site["url"], timeout=ssl_timeout)
             
+            # Quét cấu trúc DOM (Missing DOM / Broken UI)
+            from tools.dom_validator import validate_dom
+            dom_res = None
+            if http_res.get("status_code") == 200:
+                try:
+                    dom_timeout = min(http_timeout, 12.0)
+                    dom_res = validate_dom(selected_site["url"], use_browser=False, timeout=dom_timeout)
+                except Exception as ex:
+                    dom_res = {"error": str(ex), "can_inspect": False, "is_structure_valid": True, "missing_critical_elements": []}
+
             visual_res = None
             if enable_screenshot:
                 try:
@@ -191,19 +208,47 @@ def render_realtime_tab(selected_site):
                 except Exception as ex:
                     visual_res = {"error": str(ex), "status": "ERROR"}
 
+            overall_status = calculate_overall_status(http_res, dns_res, ssl_res, dom_res=dom_res, visual_res=visual_res)
             save_monitoring_log(
                 website_id=selected_site["id"],
                 website_name=selected_site["name"],
                 http_res=http_res,
                 dns_res=dns_res,
-                ssl_res=ssl_res
+                ssl_res=ssl_res,
+                dom_res=dom_res,
+                visual_res=visual_res,
+                overall_status=overall_status
             )
-            
-            overall_status = calculate_overall_status(http_res, dns_res, ssl_res)
             try:
-                check_and_send_alert(selected_site, overall_status, http_res, dns_res, ssl_res)
-            except Exception:
-                pass
+                # Nếu có sự cố, tự động sinh phân tích RCA sơ bộ từ Anomaly Orchestrator để đưa vào Email Cảnh Báo
+                rca_ctx = None
+                if overall_status in ["CRITICAL", "WARNING"]:
+                    from analytics.anomaly_detector import AnomalyDetectionOrchestrator
+                    det_orch = AnomalyDetectionOrchestrator()
+                    cfg2_res = det_orch.run_multi_signal_rule_statistical(
+                        http_res=http_res,
+                        dns_res=dns_res,
+                        ssl_res=ssl_res,
+                        dom_res=dom_res,
+                        visual_res=visual_res
+                    )
+                    rca_ctx = {
+                        "fault_layer": "Hạ Tầng Ứng Dụng & Mạng",
+                        "fault_category": cfg2_res.get("incident_type"),
+                        "root_cause_analysis": {
+                            "primary_cause": cfg2_res.get("root_cause_summary"),
+                            "contributing_factors": [v.get("description") for v in cfg2_res.get("all_violations", [])[:3]]
+                        },
+                        "immediate_action_plan": [
+                            "Kiểm tra nhật ký lỗi máy chủ ứng dụng.",
+                            "Xác minh kết nối cơ sở dữ liệu và cấu hình Virtual Host proxy.",
+                            "Kích hoạt chu trình tác tử Agentic AI Studio để phân tích sâu bằng LLM."
+                        ],
+                        "technical_standards": ["RFC 9110", "RFC 1035", "RFC 5280"]
+                    }
+                check_and_send_alert(selected_site, overall_status, http_res, dns_res, ssl_res, rca_report=rca_ctx)
+            except Exception as e:
+                print(f"[!] Warning: check_and_send_alert failed: {e}")
 
             if "last_scan" not in st.session_state:
                 st.session_state["last_scan"] = {}
@@ -211,6 +256,7 @@ def render_realtime_tab(selected_site):
                 "http": http_res,
                 "dns": dns_res,
                 "ssl": ssl_res,
+                "dom": dom_res,
                 "visual": visual_res
             }
             st.toast("Đã hoàn tất phân tích Đa tín hiệu & Z-Score (Cấu hình 2)!", icon="🛡️")
@@ -220,6 +266,7 @@ def render_realtime_tab(selected_site):
     http_res = site_scan.get("http")
     dns_res = site_scan.get("dns")
     ssl_res = site_scan.get("ssl")
+    dom_res = site_scan.get("dom")
     visual_res = site_scan.get("visual")
 
     if not (http_res and dns_res and ssl_res):
@@ -227,7 +274,7 @@ def render_realtime_tab(selected_site):
         return
 
     from database.repository import calculate_overall_status
-    overall_status = calculate_overall_status(http_res, dns_res, ssl_res)
+    overall_status = calculate_overall_status(http_res, dns_res, ssl_res, dom_res=dom_res, visual_res=visual_res)
 
     status_badge_map = {
         "HEALTHY": ("🟢 HOẠT ĐỘNG TỐT (HEALTHY)", "#10b981"),
@@ -284,21 +331,26 @@ def render_realtime_tab(selected_site):
     )
     
     # KPI 4: Đối soát Baseline
-    dns_match = not bool(dns_res.get("changes_detected"))
-    http_match = bool(http_res.get("is_expected_status"))
-    
-    if dns_match and http_match:
-        match_label = "Khớp Baseline"
-        match_delta = "Trùng khớp hoàn toàn"
-    elif not http_match and not dns_match:
-        match_label = "Lệch Baseline"
-        match_delta = "Sai mã HTTP & Lệch DNS"
-    elif not http_match:
-        match_label = "Lệch Baseline"
-        match_delta = f"Sai mã HTTP ({http_res.get('status_code') or http_res.get('error_title', 'Lỗi')})"
+    active_b = get_active_baseline(selected_site["id"])
+    if not active_b:
+        match_label = "⚪ Chưa có Baseline"
+        match_delta = "Cold-start (Chưa thiết lập mốc chuẩn)"
     else:
-        match_label = "Lệch Baseline"
-        match_delta = "Phát hiện thay đổi DNS"
+        dns_match = not bool(dns_res.get("changes_detected"))
+        http_match = bool(http_res.get("is_expected_status"))
+        
+        if dns_match and http_match:
+            match_label = "🟢 Khớp Baseline"
+            match_delta = "Trùng khớp hoàn toàn"
+        elif not http_match and not dns_match:
+            match_label = "🔴 Lệch Baseline"
+            match_delta = "Sai mã HTTP & Lệch DNS"
+        elif not http_match:
+            match_label = "🟡 Lệch Baseline"
+            match_delta = f"Sai mã HTTP ({http_res.get('status_code') or http_res.get('error_title', 'Lỗi')})"
+        else:
+            match_label = "🟡 Lệch Baseline"
+            match_delta = "Phát hiện thay đổi DNS"
 
     kpi4.metric(
         "🎯 Đối soát Baseline", 
@@ -319,6 +371,7 @@ def render_realtime_tab(selected_site):
         http_res=http_res,
         dns_res=dns_res,
         ssl_res=ssl_res,
+        dom_res=dom_res,
         visual_res=visual_res,
         history_latencies=lat_history
     )
@@ -381,8 +434,8 @@ def render_realtime_tab(selected_site):
 
     st.markdown("---")
 
-    # 2. Chi tiết 3 tín hiệu phân bổ 3 Cột chuyên biệt (KÈM TAG +ĐIỂM)
-    col_http, col_dns, col_ssl = st.columns(3)
+    # 2. Chi tiết 4 tín hiệu phân bổ 4 Cột chuyên biệt (KÈM TAG +ĐIỂM)
+    col_http, col_dns, col_ssl, col_dom = st.columns(4)
 
     # Cột 1: HTTP Monitoring (RFC 9110)
     with col_http:
@@ -503,6 +556,30 @@ def render_realtime_tab(selected_site):
                     "Untrusted CA": ssl_res.get("is_untrusted_ca")
                 })
 
+    # Cột 4: DOM Structural Integrity Monitoring
+    with col_dom:
+        st.markdown("#### 🧱 DOM (Structure)")
+        if not dom_res:
+            st.info("ℹ️ Chưa có dữ liệu kiểm tra DOM.")
+        elif dom_res.get("is_structure_valid"):
+            st.success("Cấu trúc DOM: **Toàn vẹn & Hợp lệ**")
+            st.markdown(f"- **Title:** `{dom_res.get('page_title') or 'Có'}`")
+            st.markdown(f"- **Body text:** `{dom_res.get('body_text_length', 0)} ký tự`")
+            st.markdown(f"- **Engine:** `{dom_res.get('monitoring_source', 'BS4')}`")
+        else:
+            st.error("Cấu trúc DOM: **Bất thường / Thiếu thành phần**")
+            st.markdown('<span style="background-color: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">+25 ĐIỂM (DOM Structural Corruption)</span>', unsafe_allow_html=True)
+            missing = dom_res.get("missing_critical_elements", [])
+            anomalies = dom_res.get("structural_anomalies", [])
+            if missing:
+                st.warning("**Thiếu thành phần cốt lõi:**\n" + "\n".join([f"- `{m}`" for m in missing]))
+            st.markdown(f"- **Title:** `{dom_res.get('page_title') or 'Trống'}`")
+            st.markdown(f"- **Body text:** `{dom_res.get('body_text_length', 0)} ký tự`")
+            if anomalies:
+                with st.expander("🔍 Chi tiết lỗi DOM"):
+                    for a in anomalies:
+                        st.markdown(f"- {a}")
+
     # 2.5. Khối Ảnh chụp màn hình giao diện (Playwright Screenshot & Visual Regression)
     st.markdown("---")
     st.markdown("### 📸 Ảnh chụp màn hình giao diện (Playwright Screenshot)")
@@ -570,26 +647,36 @@ def render_realtime_tab(selected_site):
                 </span>
             </div>
             """, unsafe_allow_html=True)
+        elif visual_res.get("status") == "NO_BASELINE" or not visual_res.get("baseline_image_path"):
+            c_v3.metric("⚪ Baseline", "Chưa có")
+            st.info("ℹ️ Website này thuộc nhóm **Cold-start / Unmanaged** (Chưa thiết lập ảnh Baseline chuẩn). Hệ thống chỉ hiển thị ảnh chụp thực tế và đối soát dựa trên phân tích cấu trúc DOM W3C.")
         elif visual_res.get("is_baseline_created"):
             c_v3.metric("🎯 Baseline", "Khởi tạo mới")
-            st.info("📌 Ảnh chụp đầu tiên đã được tự động lưu làm ảnh chuẩn (Baseline) cho website này.")
+            st.info("📌 Ảnh chụp đầu tiên đã được lưu làm ảnh chuẩn (Baseline) cho website này.")
         else:
             c_v3.metric("🟢 Độ khớp Baseline", f"100% (Lệch {diff_pct}%)")
 
-        if is_regr and visual_res.get("diff_image_path") and os.path.exists(visual_res["diff_image_path"]):
+        has_baseline_img = bool(visual_res.get("baseline_image_path") and os.path.exists(visual_res["baseline_image_path"]))
+        has_diff_img = bool(visual_res.get("diff_image_path") and os.path.exists(visual_res["diff_image_path"]))
+
+        if has_baseline_img:
+            # Hiển thị đối chiếu trực quan 3 cột (Baseline chuẩn - Hiện tại - Vùng sai khác)
             col_v_base, col_v_curr, col_v_diff = st.columns(3)
             with col_v_base:
-                st.markdown("**📌 1. Ảnh Baseline Chuẩn**")
-                if visual_res.get("baseline_image_path") and os.path.exists(visual_res["baseline_image_path"]):
-                    st.image(visual_res["baseline_image_path"], use_container_width=True)
+                st.markdown("**📌 1. Ảnh Baseline Chuẩn (Trước khi tiêm lỗi)**")
+                st.image(visual_res["baseline_image_path"], use_container_width=True)
             with col_v_curr:
-                st.markdown("**📸 2. Ảnh Chụp Hiện Tại**")
+                st.markdown("**📸 2. Ảnh Chụp Hiện Tại (Đã tiêm lỗi)**")
                 st.image(curr_path, use_container_width=True)
             with col_v_diff:
-                st.markdown("**🔴 3. Vùng Sai Khác (Diff Heatmap)**")
-                st.image(visual_res["diff_image_path"], use_container_width=True)
+                st.markdown(f"**🔴 3. Vùng Sai Khác Diff Heatmap ({diff_pct}%)**")
+                if has_diff_img:
+                    st.image(visual_res["diff_image_path"], use_container_width=True)
+                else:
+                    st.success("🟢 Khớp hoàn hảo (Không có pixel sai khác)")
         else:
-            st.image(curr_path, caption=f"📸 Ảnh chụp màn hình Playwright: {selected_site['name']} ({selected_site['url']})", use_container_width=True)
+            st.markdown("**📸 Ảnh Chụp Hiện Tại (Website chưa có mốc chuẩn Baseline)**")
+            st.image(curr_path, use_container_width=True)
     elif latest_img_path.exists():
         st.image(str(latest_img_path), caption=f"📸 Ảnh chụp màn hình gần nhất: {selected_site['name']} ({selected_site['url']})", use_container_width=True)
     else:
@@ -678,18 +765,24 @@ def render_history_tab(selected_site):
         
         rep_sites_df = pd.DataFrame(report_data["sites"])
         if not rep_sites_df.empty:
+            rep_sites_df["diagnostic_summary"] = rep_sites_df["diagnostic_summary"].fillna("—")
             rep_sites_df = rep_sites_df[[
-                "name", "current_status", "health_rate", 
+                "name", "current_status", "diagnostic_summary", "health_rate", 
                 "avg_http_latency_ms", "avg_dns_latency_ms", "ssl_days_remaining", "total_scans"
             ]]
             rep_sites_df.columns = [
-                "Website", "Hiện tại", "Healthy %", 
+                "Website", "Hiện tại", "Chẩn đoán / Ghi chú sự cố", "Healthy %", 
                 "Độ trễ HTTP (ms)", "Độ trễ DNS (ms)", "Hạn SSL (ngày)", "Số lần quét"
             ]
             st.dataframe(rep_sites_df, use_container_width=True)
             
         if report_data["incidents"]:
             st.warning(f"⚠️ Trong 24h qua có {len(report_data['incidents'])} sự cố/cảnh báo được ghi nhận.")
+            inc_df = pd.DataFrame(report_data["incidents"])
+            inc_df["timestamp"] = pd.to_datetime(inc_df["timestamp"], utc=True).dt.tz_convert(TIMEZONE_NAME).dt.strftime("%Y-%m-%d %H:%M:%S")
+            inc_display = inc_df[["timestamp", "website_name", "status", "details"]].copy()
+            inc_display.columns = ["Thời điểm (UTC+7)", "Website", "Mức độ", "Chi tiết Chẩn đoán Sự cố"]
+            st.dataframe(inc_display, use_container_width=True)
         else:
             st.success("🎉 Không ghi nhận sự cố gián đoạn dịch vụ nào trong 24 giờ qua!")
 
@@ -836,7 +929,6 @@ def render_benchmark_tab(selected_site):
 
     if run_all_bench:
         from agents.orchestrator import MonitoringOrchestratorAgent
-        from database.repository import get_website_latency_history, save_monitoring_log, calculate_overall_status, get_system_settings
         from tools.http_checker import check_http
         from tools.dns_checker import check_dns
         from tools.ssl_checker import check_ssl
@@ -860,6 +952,15 @@ def render_benchmark_tab(selected_site):
             # 2. Cấu hình 2
             dns_res = check_dns(selected_site["domain"], baseline=active_b.get("baseline_dns") if active_b else None, timeout=dns_timeout)
             ssl_res = check_ssl(selected_site["url"], timeout=ssl_timeout)
+            
+            from tools.dom_validator import validate_dom
+            dom_res = None
+            if trad_http.get("status_code") == 200:
+                try:
+                    dom_res = validate_dom(selected_site["url"], use_browser=False, timeout=5.0)
+                except Exception:
+                    dom_res = None
+
             visual_res = None
             if include_bench_visual:
                 try:
@@ -872,10 +973,20 @@ def render_benchmark_tab(selected_site):
                 except Exception as ex:
                     visual_res = {"error": str(ex), "status": "ERROR"}
 
-            save_monitoring_log(website_id=selected_site["id"], website_name=selected_site["name"], http_res=trad_http, dns_res=dns_res, ssl_res=ssl_res)
+            bench_overall_status = calculate_overall_status(trad_http, dns_res, ssl_res, dom_res=dom_res, visual_res=visual_res)
+            save_monitoring_log(
+                website_id=selected_site["id"],
+                website_name=selected_site["name"],
+                http_res=trad_http,
+                dns_res=dns_res,
+                ssl_res=ssl_res,
+                dom_res=dom_res,
+                visual_res=visual_res,
+                overall_status=bench_overall_status
+            )
             if "last_scan" not in st.session_state:
                 st.session_state["last_scan"] = {}
-            st.session_state["last_scan"][selected_site["id"]] = {"http": trad_http, "dns": dns_res, "ssl": ssl_res, "visual": visual_res}
+            st.session_state["last_scan"][selected_site["id"]] = {"http": trad_http, "dns": dns_res, "ssl": ssl_res, "dom": dom_res, "visual": visual_res}
 
             # 3. Cấu hình 3 (Agentic AI)
             orchestrator = MonitoringOrchestratorAgent()
@@ -896,13 +1007,14 @@ def render_benchmark_tab(selected_site):
     http_res = semi_scan.get("http") or trad_http
     dns_res = semi_scan.get("dns")
     ssl_res = semi_scan.get("ssl")
+    dom_res = semi_scan.get("dom")
+    visual_res = semi_scan.get("visual")
     cached_agent_res = st.session_state.get("last_agent_result")
 
     if not (http_res and dns_res and ssl_res):
         st.info("👉 Bạn có thể bấm nút **'⚖️ Chạy Đối Chứng Đồng Loạt Cả 3 Cấu Hình Cùng Lúc'** ở trên hoặc chạy từng cấu hình riêng lẻ tại các Tab tương ứng.")
         return
 
-    from database.repository import get_system_settings, get_website_latency_history, get_active_baseline
     from analytics.anomaly_detector import AnomalyDetectionOrchestrator
 
     sys_settings = get_system_settings()
@@ -916,6 +1028,8 @@ def render_benchmark_tab(selected_site):
         http_res=http_res,
         dns_res=dns_res,
         ssl_res=ssl_res,
+        dom_res=dom_res,
+        visual_res=visual_res,
         history_latencies=lat_history,
         active_baseline=active_b,
         latency_threshold_ms=latency_thresh,
@@ -944,13 +1058,12 @@ def render_benchmark_tab(selected_site):
 
     with col_cfg1:
         st.markdown("""
-        <div style="background: #fffbeb; padding: 16px; border-radius: 10px; border: 2px solid #f59e0b; min-height: 460px; box-shadow: 0 4px 6px -1px rgba(245,158,11,0.1);">
+        <div style="background: #fffbeb; padding: 16px; border-radius: 10px; border: 2px solid #f59e0b; box-shadow: 0 4px 6px -1px rgba(245,158,11,0.1);">
             <div style="margin-bottom: 8px;">
                 <span style="background-color: #d97706; color: #fff; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">HUMAN-DRIVEN</span>
             </div>
             <h4 style="margin-top:0; color: #b45309;">⚠️ CẤU HÌNH 1: Truyền thống</h4>
             <p style="font-size: 12px; color: #78350f; line-height: 1.4;"><i><b>Bản chất:</b> Con người gánh vác hoàn toàn (Detect & Alert). Chỉ quét HTTP thô và ngưỡng tĩnh, dễ dính bão cảnh báo (Alert Storm).</i></p>
-            <hr style="border: 0; border-top: 1px solid #fde68a; margin: 10px 0;">
         """, unsafe_allow_html=True)
         
         st.markdown(f"- **Trạng thái:** `{cfg1['overall_status']}`")
@@ -971,13 +1084,12 @@ def render_benchmark_tab(selected_site):
 
     with col_cfg2:
         st.markdown("""
-        <div style="background: #eff6ff; padding: 16px; border-radius: 10px; border: 2px solid #3b82f6; min-height: 460px; box-shadow: 0 4px 6px -1px rgba(59,130,246,0.1);">
+        <div style="background: #eff6ff; padding: 16px; border-radius: 10px; border: 2px solid #3b82f6; box-shadow: 0 4px 6px -1px rgba(59,130,246,0.1);">
             <div style="margin-bottom: 8px;">
                 <span style="background-color: #2563eb; color: #fff; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">HUMAN-IN-THE-LOOP</span>
             </div>
             <h4 style="margin-top:0; color: #1d4ed8;">🛡️ CẤU HÌNH 2: Bán tự động</h4>
             <p style="font-size: 12px; color: #1e40af; line-height: 1.4;"><i><b>Bản chất:</b> Máy gợi ý lỗi - Người phê chuẩn (Suggest & Approve). Dùng luật RFC & Z-Score lọc nhiễu, dừng ở mã lỗi thô.</i></p>
-            <hr style="border: 0; border-top: 1px solid #bfdbfe; margin: 10px 0;">
         """, unsafe_allow_html=True)
         
         st.markdown(f"- **Trạng thái:** `{cfg2['overall_status']}` (Score: **`{cfg2['anomaly_score']}/100`**)")
@@ -992,13 +1104,12 @@ def render_benchmark_tab(selected_site):
 
     with col_cfg3:
         st.markdown("""
-        <div style="background: #faf5ff; padding: 16px; border-radius: 10px; border: 2px solid #a855f7; min-height: 460px; box-shadow: 0 4px 6px -1px rgba(168,85,247,0.15);">
+        <div style="background: #faf5ff; padding: 16px; border-radius: 10px; border: 2px solid #a855f7; box-shadow: 0 4px 6px -1px rgba(168,85,247,0.15);">
             <div style="margin-bottom: 8px;">
                 <span style="background-color: #7c3aed; color: #fff; padding: 3px 8px; border-radius: 4px; font-weight: bold; font-size: 11px;">AGENT-DRIVEN</span>
             </div>
             <h4 style="margin-top:0; color: #6b21a8;">🧠 CẤU HÌNH 3: Agentic AI</h4>
             <p style="font-size: 12px; color: #581c87; line-height: 1.4;"><i><b>Bản chất:</b> Máy tự chủ toàn bộ vòng lặp (Autonomous Reasoning). Đồ thị đa tác tử tự lập kế hoạch, tự sửa sai, sinh RCA 8 phần.</i></p>
-            <hr style="border: 0; border-top: 1px solid #e9d5ff; margin: 10px 0;">
         """, unsafe_allow_html=True)
         
         st.markdown(f"- **Trạng thái:** `{cfg3.get('overall_severity')}` (Độ tin cậy: **98.8%**)")
@@ -1026,6 +1137,22 @@ def render_benchmark_tab(selected_site):
     ]
     st.dataframe(pd.DataFrame(benchmark_table), use_container_width=True, hide_index=True)
 
+    st.markdown("---")
+    # 4. Banner điều hướng tới Trang Nghiên Cứu Ablation Study chuyên sâu
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #f8fafc; padding: 18px 22px; border-radius: 12px; border-left: 5px solid #38bdf8; margin-top: 10px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+        <h4 style="margin: 0 0 6px 0; color: #38bdf8; font-size: 16px;">🔬 Phân Tích Bóc Tách Thực Nghiệm Chuyên Sâu (Ablation Study & IEEE Benchmark)</h4>
+        <p style="margin: 0; font-size: 13px; color: #94a3b8; line-height: 1.5;">
+            Đo lường định lượng đóng góp độc lập của từng module (Layered Correlation, Self-Correction, Visual DOM, Neuro-Symbolic) trên tập 200 websites chuẩn hóa kèm bộ mô phỏng tương tác và trích xuất mã LaTeX.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+    col_nav1, _ = st.columns([2, 3])
+    with col_nav1:
+        if st.button("📊 Mở Trang Nghiên Cứu & Ablation Study", key="btn_goto_ablation", use_container_width=True, type="primary"):
+            st.switch_page("pages/ablation_study.py")
+
 
 def render_agentic_studio_tab(selected_site, agent_result=None):
     """
@@ -1036,7 +1163,6 @@ def render_agentic_studio_tab(selected_site, agent_result=None):
     - Hỗ trợ tải Báo cáo Markdown chi tiết.
     """
     from agents.orchestrator import MonitoringOrchestratorAgent
-    from database.repository import get_active_baseline, get_website_latency_history
 
     # CONTEXT BADGE & BANNER WORKFLOW CHẾ ĐỘ AGENTIC AI (PURPLE/PINK THEME)
     st.markdown("""
@@ -1057,11 +1183,17 @@ def render_agentic_studio_tab(selected_site, agent_result=None):
 
     st.subheader(f"🧠 Agentic AI Operations Studio: {selected_site['name']}")
 
-    col_act1, col_act2 = st.columns([2, 3])
+    col_act1, col_act2, col_act3 = st.columns([2, 2, 2])
     with col_act1:
         run_agent_now = st.button("🚀 Chạy Chu trình Tác tử Agentic AI", use_container_width=True, type="primary")
     with col_act2:
-        include_visual = st.checkbox("📸 Kèm tác tử kiểm tra Visual / DOM (Playwright)", value=False)
+        include_visual = st.checkbox("📸 Kèm tác tử kiểm tra Visual / DOM (Playwright)", value=True)
+    with col_act3:
+        enable_alert = st.checkbox(
+            "🔔 Cho phép bắn cảnh báo Email (nếu có)", 
+            value=True, 
+            help="Khi phát hiện sự cố (CRITICAL hoặc WARNING), tác tử Reporting & Notification sẽ tự động kích hoạt gửi email cảnh báo tới danh sách kỹ sư SRE."
+        )
 
     cached_agent_res = st.session_state.get("last_agent_result")
     if run_agent_now or (agent_result is None and cached_agent_res and cached_agent_res.get("website_name") == selected_site["name"]):
@@ -1074,9 +1206,12 @@ def render_agentic_studio_tab(selected_site, agent_result=None):
                     website_info=selected_site,
                     active_baseline=active_b,
                     history_latencies=hist_lat,
-                    enable_visual=include_visual
+                    enable_visual=include_visual,
+                    enable_notifications=enable_alert
                 )
                 st.session_state["last_agent_result"] = agent_result
+                if agent_result.get("report_digest", {}).get("email_dispatched"):
+                    st.toast("Đã tự động bắn Email cảnh báo sự cố tới đội ngũ SRE!", icon="🚨")
                 
                 # Đồng bộ evidence vào session scan
                 ev = agent_result.get("evidence", {})
@@ -1086,12 +1221,27 @@ def render_agentic_studio_tab(selected_site, agent_result=None):
                     "http": ev.get("http"),
                     "dns": ev.get("dns"),
                     "ssl": ev.get("ssl"),
+                    "dom": ev.get("dom"),
                     "visual": ev.get("visual")
                 }
                 if "last_trad_scan" not in st.session_state:
                     st.session_state["last_trad_scan"] = {}
                 if ev.get("http"):
                     st.session_state["last_trad_scan"][selected_site["id"]] = ev.get("http")
+
+                # Lưu bản ghi Agentic vào CSDL để Báo cáo Sức khỏe Định kỳ 24h ghi nhận chính xác
+                agent_sev = agent_result.get("overall_severity", "HEALTHY")
+                save_monitoring_log(
+                    website_id=selected_site["id"],
+                    website_name=selected_site["name"],
+                    http_res=ev.get("http") or {},
+                    dns_res=ev.get("dns") or {},
+                    ssl_res=ev.get("ssl") or {},
+                    dom_res=ev.get("dom"),
+                    visual_res=ev.get("visual"),
+                    agent_res=agent_result,
+                    overall_status=agent_sev
+                )
                 st.toast("Tác tử Agentic AI đã hoàn tất điều tra & sinh báo cáo RCA!", icon="🧠")
                 st.rerun()
         else:
@@ -1109,6 +1259,13 @@ def render_agentic_studio_tab(selected_site, agent_result=None):
     k2.metric("Thời gian Xử lý Tác tử", f"{agent_result.get('total_execution_time_ms', 0)} ms")
     k3.metric("Số Bước Suy luận", f"{len(agent_result.get('execution_trace', []))} bước")
     k4.metric("Khử nhiễu Sự cố", f"{agent_result.get('correlation', {}).get('noise_reduction_pct', 0)}%")
+
+    # Thông báo trạng thái gửi Email cảnh báo khẩn cấp
+    rep_digest = agent_result.get("report_digest", {})
+    if rep_digest.get("email_dispatched"):
+        st.success(f"🚨 **Cảnh Báo Khẩn Cấp Đã Được Gửi Về Email Thành Công!** Tác tử Reporting & Notification đã chuyển phát báo cáo sự cố tới `{get_system_settings().get('recipient_emails')}`.", icon="📧")
+    elif enable_alert and sev in ["CRITICAL", "WARNING"]:
+        st.warning(f"⚠️ **Chưa gửi được email cảnh báo:** Vui lòng kiểm tra lại cấu hình tài khoản gửi/nhận SMTP (`{get_system_settings().get('recipient_emails')}`) tại trang Quản lý Cấu hình.", icon="⚠️")
 
     st.markdown("---")
 
@@ -1315,4 +1472,4 @@ def render_dashboard(selected_site):
         render_milestones_tab(selected_site)
 
 
-
+

@@ -18,26 +18,33 @@ class ReportingNotificationAgent:
         website_info: Dict[str, Any],
         analysis_result: Dict[str, Any],
         evidence_data: Dict[str, Any],
-        overall_severity: str = "HEALTHY"
+        overall_severity: str = "HEALTHY",
+        dispatch_alert: bool = True
     ) -> Dict[str, Any]:
         """
-        Định dạng báo cáo sự cố toàn diện 8 phần và kích hoạt cơ chế gửi cảnh báo Email/Webhook.
+        Định dạng báo cáo sự cố toàn diện 8 phần và kích hoạt cơ chế gửi cảnh báo Email/Webhook (nếu được cho phép).
         """
         http_res = evidence_data.get("http", {})
         dns_res = evidence_data.get("dns", {})
         ssl_res = evidence_data.get("ssl", {})
 
-        # Gửi cảnh báo qua Email nếu có sự cố và cấu hình email được bật
+        # Gửi cảnh báo qua Email nếu được cho phép và phát hiện sự cố (CRITICAL / WARNING)
         email_dispatched = False
-        try:
-            email_dispatched = check_and_send_alert(
-                site=website_info,
-                overall_status=overall_severity,
-                http_res=http_res,
-                dns_res=dns_res,
-                ssl_res=ssl_res
-            )
-        except Exception:
+        if dispatch_alert and overall_severity in ["CRITICAL", "WARNING"]:
+            try:
+                email_dispatched = bool(check_and_send_alert(
+                    site=website_info,
+                    overall_status=overall_severity,
+                    http_res=http_res,
+                    dns_res=dns_res,
+                    ssl_res=ssl_res,
+                    force_send=True,
+                    rca_report=analysis_result
+                ))
+            except Exception as e:
+                print(f"[!] ReportingNotificationAgent: Lỗi gửi email cảnh báo: {e}")
+                email_dispatched = False
+        else:
             email_dispatched = False
 
         # Chuẩn hóa Report Digest toàn diện
