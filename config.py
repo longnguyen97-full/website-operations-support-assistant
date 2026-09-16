@@ -79,5 +79,5 @@ DEFAULT_USER_AGENT = os.getenv("USER_AGENT", "WebsiteOperationsSupportAssistant/
 
 # ==================== 6. CẤU HÌNH AI & MÔ HÌNH NGÔN NGỮ LỚN (GEMINI LLM) ====================
 DEFAULT_GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "") or os.getenv("GOOGLE_API_KEY", "")
-DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+DEFAULT_GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
 DEFAULT_LLM_ENABLED = os.getenv("LLM_ENABLED", "false").lower() in ("true", "1", "yes")

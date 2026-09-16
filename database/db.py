@@ -126,6 +126,7 @@ def init_db() -> None:
         last_report_sent_at TEXT,
         -- Cấu hình Scheduler & Vận hành (Dynamic - Mặc định 4 tiếng = 14400s)
         scheduler_interval_seconds INTEGER DEFAULT 14400,
+        scheduler_enabled BOOLEAN DEFAULT 1,
         data_retention_days INTEGER DEFAULT 30,
         ssl_warning_days INTEGER DEFAULT 14,
         -- Cấu hình Timeout Mạng / Probes (Dynamic)
@@ -150,6 +151,7 @@ def init_db() -> None:
         ("daily_report_time", "TEXT DEFAULT '08:00'"),
         ("last_report_sent_at", "TEXT"),
         ("scheduler_interval_seconds", "INTEGER DEFAULT 14400"),
+        ("scheduler_enabled", "BOOLEAN DEFAULT 1"),
         ("data_retention_days", "INTEGER DEFAULT 30"),
         ("ssl_warning_days", "INTEGER DEFAULT 14"),
         ("http_timeout_seconds", "REAL DEFAULT 10.0"),

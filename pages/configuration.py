@@ -118,7 +118,7 @@ def render_configuration_page():
     c_s1, c_s2, c_s3 = st.columns(3)
     c_s1.metric(
         "Trạng thái Bộ lập lịch", 
-        "🟢 Đang Chạy Tự Động" if sched_info["is_running"] else "🔴 Đang Tạm Dừng"
+        "🟢 Đang Chạy Tự Động" if sched_info["is_running"] else "🔴 Đã Dừng Quét"
     )
     cur_sec = sched_info['interval_seconds']
     cur_display = (
@@ -128,8 +128,10 @@ def render_configuration_page():
     c_s2.metric("Chu kỳ quét hiện tại", cur_display)
     c_s3.metric("Tổng số lần quét nền", f"{sched_info['total_runs']} lần")
 
-    if sched_info.get("next_run_time"):
+    if sched_info["is_running"] and sched_info.get("next_run_time"):
         st.caption(f"🕒 **Lần quét tiếp theo (UTC+7):** `{sched_info['next_run_time']}`")
+    elif not sched_info["is_running"]:
+        st.caption("🛑 **Trạng thái:** Hệ thống đang dừng quét nền tự động. Nhấp '▶️ Bắt Đầu Quét' để tiếp tục giám sát theo chu kỳ.")
     if sched_info.get("last_run_time"):
         st.caption(f"✅ **Lần quét gần nhất:** `{str(sched_info['last_run_time']).replace('T', ' ')[:19]}`")
 
@@ -154,22 +156,31 @@ def render_configuration_page():
             "Thay đổi chu kỳ quét định kỳ:",
             options=sched_options,
             value=cur_val,
-            format_func=_fmt_interval
+            format_func=_fmt_interval,
+            key="sched_select_slider"
         )
         if new_sched_interval != sched_info["interval_seconds"]:
-            update_scheduler_interval(new_sched_interval)
-            st.toast(f"Đã đổi chu kỳ quét thành {_fmt_interval(new_sched_interval)} ({new_sched_interval}s)!", icon="⏱️")
+            update_scheduler_interval(new_sched_interval, persist_db=True)
+            st.toast(f"Đã đổi chu kỳ quét thành {_fmt_interval(new_sched_interval)} ({new_sched_interval}s) và lưu vào CSDL!", icon="⏱️")
+            st.rerun()
+
+        if st.button("💾 Lưu Chu Kỳ Quét Vào CSDL", use_container_width=True, type="secondary"):
+            update_scheduler_interval(new_sched_interval, persist_db=True)
+            st.success(f"✅ Đã lưu chu kỳ quét {_fmt_interval(new_sched_interval)} ({new_sched_interval:,} giây) vào CSDL thành công!")
+            st.toast("Đã lưu chu kỳ quét vào CSDL!", icon="💾")
             st.rerun()
 
     with col_ctl2:
         st.write("&nbsp;")
         if sched_info["is_running"]:
-            if st.button("⏸️ Tạm dừng Quét Nền", use_container_width=True):
+            if st.button("🛑 Dừng Quét", use_container_width=True, help="Dừng tiến trình quét nền tự động"):
                 stop_background_scheduler()
+                st.toast("Đã dừng quét nền tự động!", icon="🛑")
                 st.rerun()
         else:
-            if st.button("▶️ Tiếp tục Quét Nền", use_container_width=True, type="primary"):
+            if st.button("▶️ Bắt Đầu Quét", use_container_width=True, type="primary", help="Kích hoạt lại tiến trình quét tự động"):
                 resume_background_scheduler()
+                st.toast("Đã kích hoạt quét nền tự động!", icon="▶️")
                 st.rerun()
 
     with col_ctl3:
@@ -264,11 +275,13 @@ def render_configuration_page():
         # 4. Tham số Vận hành
         st.markdown("#### D. ⏱️ Tham số Vận hành & Lưu trữ Dữ liệu")
         c11, c12, c13 = st.columns(3)
+        active_sched_info = get_scheduler_info()
+        active_interval_val = int(active_sched_info.get("interval_seconds") or settings.get("scheduler_interval_seconds", config.DEFAULT_SCHEDULER_INTERVAL_SECONDS))
         sched_interval_val = c11.number_input(
             "Chu kỳ quét định kỳ mặc định (giây):", 
             min_value=10, max_value=86400, step=60,
-            value=int(settings.get("scheduler_interval_seconds", config.DEFAULT_SCHEDULER_INTERVAL_SECONDS)),
-            help="14400 giây = 4 tiếng; 3600 giây = 1 tiếng; 600 giây = 10 phút."
+            value=active_interval_val,
+            help="14400 giây = 4 tiếng; 86400 giây = 24 tiếng; 3600 giây = 1 tiếng; 600 giây = 10 phút. Đồng bộ cùng Mục 2."
         )
         retention_days = c12.number_input(
             "Số ngày lưu giữ lịch sử logs (Data Retention):", 
@@ -315,14 +328,21 @@ def render_configuration_page():
         )
 
         c_llm1, c_llm2 = st.columns([1, 2])
-        model_options = ["gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-2.5-flash"]
+        model_options = [
+            "gemini-flash-latest",
+            "gemini-flash-lite-latest",
+            "gemini-3.7-flash",
+            "gemini-3.6-flash",
+            "gemini-3.5-flash",
+            "gemini-3-flash-preview"
+        ]
         curr_model = settings.get("gemini_model", config.DEFAULT_GEMINI_MODEL)
         model_idx = model_options.index(curr_model) if curr_model in model_options else 0
         gemini_model_val = c_llm1.selectbox(
             "Chọn mô hình Gemini:",
             options=model_options,
             index=model_idx,
-            help="gemini-1.5-flash: Tốc độ phản hồi cực nhanh, chi phí thấp, tối ưu cho giám sát vận hành SRE."
+            help="gemini-flash-latest: Mô hình tự động trỏ tới bản Flash mới nhất của Google, tối ưu cho giám sát SRE."
         )
         gemini_key_val = c_llm2.text_input(
             "Gemini API Key:",
@@ -358,6 +378,7 @@ def render_configuration_page():
                 "enable_daily_report": enable_daily_report,
                 "daily_report_time": daily_report_time,
                 "scheduler_interval_seconds": sched_interval_val,
+                "scheduler_enabled": 1 if active_sched_info.get("is_running") else 0,
                 "data_retention_days": retention_days,
                 "ssl_warning_days": ssl_warn_days,
                 "http_timeout_seconds": http_timeout_val,
@@ -370,9 +391,10 @@ def render_configuration_page():
                 "llm_enabled": llm_enabled_val
             }
             update_system_settings(updated_data)
-            update_scheduler_interval(int(sched_interval_val))
+            update_scheduler_interval(int(sched_interval_val), persist_db=True)
             st.success("✅ Đã cập nhật và lưu cấu hình động thành công vào Database!")
             st.toast("Đã lưu cấu hình thành công!", icon="💾")
+            st.rerun()
 
     # Thao tác gửi email và kiểm thử
     st.markdown("#### 🚀 Thao tác Kiểm thử Nhanh")
@@ -523,7 +545,11 @@ def render_configuration_page():
                     "Thiết lập cơ chế Circuit Breaker & Retry có giới hạn đối với kết nối Database.",
                     "Tích hợp công cụ giám sát APM (OpenTelemetry) để tự động bắt Exception."
                 ],
-                "technical_standards": ["RFC 9110 (HTTP 500)", "RFC 1035 (DNS)", "SRE Golden Signals: Errors"]
+                "technical_standards": ["RFC 9110 (HTTP 500)", "RFC 1035 (DNS)", "SRE Golden Signals: Errors"],
+                "base_executive_summary": "Phát hiện sự cố nghiêm trọng tại tầng Backend: Máy chủ trả về HTTP 500 do Database Timeout. Hệ thống áp dụng quy tắc tất định theo chuẩn RFC 9110 để kích hoạt cảnh báo cấp độ CRITICAL.",
+                "llm_enhanced": True,
+                "gemini_model": "gemini-flash-lite-latest",
+                "llm_insights": "• Phân tích chuỗi nguyên nhân: Lỗi HTTP 500 bắt nguồn từ việc Connection Pool MySQL bị bão hòa trong đợt tải cao điểm, làm gián đoạn API gateway.\n• Đánh giá tương quan: Bằng chứng DNS và SSL đều hoàn hảo (Resolved 4.8ms, TLS 1.3 hợp lệ 89 ngày), xác nhận 100% sự cố cô lập tại cụm Application/DB nội bộ, không phải do hạ tầng mạng biên hay tấn công bên ngoài.\n• Đề xuất ưu tiên P0: Tạm thời scale up pool size lên 200 connection và kích hoạt Nginx rate limiting để giảm áp lực lên cụm DB trước khi khởi động lại dịch vụ."
             }
 
             with col_sc2:

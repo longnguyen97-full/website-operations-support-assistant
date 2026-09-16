@@ -16,6 +16,11 @@ from config import (
 # Lưu vết thời điểm gửi alert gần nhất cho từng website_id để áp dụng Cooldown
 # Format: { website_id: { "last_alert_time": datetime, "last_status": str } }
 _alert_tracker: Dict[int, Dict[str, Any]] = {}
+_last_dispatch_result: Dict[str, Any] = {"success": True, "message": ""}
+
+def get_last_dispatch_result() -> Dict[str, Any]:
+    """Lấy thông tin chi tiết kết quả của lần gửi email cảnh báo gần nhất."""
+    return _last_dispatch_result
 
 def parse_recipients(recipients_str: str) -> List[str]:
     """Tách danh sách email người nhận từ chuỗi phân tách bởi dấu phẩy hoặc chấm phẩy."""
@@ -224,6 +229,41 @@ def build_incident_alert_html(
     rfc_list = rca.get("technical_standards") or rca.get("rfc_citations") or []
     rfc_str = " | ".join(rfc_list) if rfc_list else "RFC 9110, RFC 1035, RFC 5280"
 
+    # Phân tích suy luận: Có Gemini vs Không Gemini (Dual-Engine Comparison)
+    llm_insights = rca.get("llm_insights")
+    gemini_model = rca.get("gemini_model") or "Gemini LLM"
+    is_llm = bool(rca.get("llm_enhanced") and llm_insights)
+    
+    # Base executive summary (Không dùng LLM)
+    base_summary = rca.get("base_executive_summary") or primary_cause
+
+    if is_llm:
+        gemini_box_html = f"""
+        <div style="background: #f0fdf4; border: 1px solid #86efac; border-left: 4px solid #16a34a; padding: 10px 14px; border-radius: 4px; margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 700; color: #15803d; font-size: 11.5px;">🤖 [LỰA CHỌN 2: CÓ AI] GOOGLE GEMINI SRE ({gemini_model})</span>
+                <span style="background: #dcfce7; color: #166534; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px;">LLM ACTIVE</span>
+            </div>
+            <div style="font-size: 12px; color: #14532d; line-height: 1.55; white-space: pre-line;">
+{llm_insights}
+            </div>
+            <div style="font-size: 10.5px; color: #15803d; margin-top: 6px; font-style: italic; border-top: 1px dashed #bbf7d0; padding-top: 4px;">
+                Đặc tính: Suy luận ngữ cảnh chuyên sâu, liên kết tín hiệu tương quan chéo, đề xuất chỉ thị SRE động.
+            </div>
+        </div>
+        """
+    else:
+        gemini_box_html = f"""
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #94a3b8; padding: 9px 12px; border-radius: 4px; margin-top: 10px;">
+            <div style="font-weight: 700; color: #64748b; font-size: 11.5px; margin-bottom: 3px;">
+                🤖 [LỰA CHỌN 2: CÓ AI] GOOGLE GEMINI SRE REASONING
+            </div>
+            <div style="font-size: 11.5px; color: #64748b; font-style: italic;">
+                Tính năng LLM hiện đang tắt hoặc không khả dụng. Hệ thống đã tự động kích hoạt chế độ dự phòng SRE Knowledge Base (Fallback 0ms), đảm bảo tính sẵn sàng 100%.
+            </div>
+        </div>
+        """
+
     html = f"""
     <!DOCTYPE html>
     <html>
@@ -263,11 +303,27 @@ def build_incident_alert_html(
                 <div class="section-label">[1] TÍN HIỆU CẢNH BÁO BẤT THƯỜNG (DETECTED ANOMALIES)</div>
                 <div class="alert-box" style="white-space: pre-line;">{issues_text}</div>
 
-                <!-- 2. Root Cause Analysis -->
-                <div class="section-label">[2] NGUYÊN NHÂN GỐC TÁC TỬ XÁC ĐỊNH (ROOT CAUSE ANALYSIS)</div>
+                <!-- 2. Dual-Engine Root Cause Analysis -->
+                <div class="section-label">[2] ĐỐI CHỨNG SUY LUẬN TÁC TỬ (DUAL-ENGINE RCA COMPARISON)</div>
                 <div class="box" style="line-height: 1.6;">
-                    <b>Primary Cause:</b> {primary_cause}
-                    {f'''<div style="margin-top: 6px; font-size: 12px; color: #475569;"><b>Contributing Factors:</b>\n{factors_text}</div>''' if factors_text else ''}
+                    <div style="background: #ffffff; border: 1px solid #cbd5e1; border-left: 4px solid #0284c7; padding: 10px 14px; border-radius: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                            <span style="font-weight: 700; color: #0369a1; font-size: 11.5px;">📚 [LỰA CHỌN 1: KHÔNG DÙNG AI] SRE KNOWLEDGE BASE</span>
+                            <span style="background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px;">DETERMINISTIC 0ms</span>
+                        </div>
+                        <div style="font-size: 12px; color: #0f172a; margin-bottom: 4px;">
+                            <b>Nguyên nhân cốt lõi:</b> {primary_cause}
+                        </div>
+                        <div style="font-size: 11.5px; color: #334155; margin-bottom: 6px; line-height: 1.5;">
+                            <b>Tóm tắt:</b> {base_summary}
+                        </div>
+                        {f'''<div style="font-size: 11.5px; color: #475569;"><b>Yếu tố tiềm ẩn:</b>\n{factors_text}</div>''' if factors_text else ''}
+                        <div style="font-size: 10.5px; color: #0284c7; margin-top: 6px; font-style: italic; border-top: 1px dashed #bae6fd; padding-top: 4px;">
+                            Đặc tính: Hoàn toàn tất định theo quy chuẩn RFC 9110/1035/5280 & SRE Runbook. Độ trễ 0ms, không ảo giác, chạy an toàn kể cả khi ngắt mạng.
+                        </div>
+                    </div>
+
+                    {gemini_box_html}
                 </div>
 
                 <!-- 3. Cross-Signal Diagnostic Telemetry -->
@@ -354,16 +410,22 @@ def check_and_send_alert(
     
     # Nếu không phải force_send thì bắt buộc settings is_enabled phải bật
     if not force_send and not settings.get("is_enabled"):
+        _last_dispatch_result["success"] = False
+        _last_dispatch_result["message"] = "Tính năng gửi email cảnh báo đang bị tắt trong Cấu hình (is_enabled = 0)."
         return False
 
     sender = str(settings.get("sender_email") or "").strip()
     password = str(settings.get("sender_password") or "").strip()
     if not sender or not password:
+        _last_dispatch_result["success"] = False
+        _last_dispatch_result["message"] = "Chưa cấu hình sender_email hoặc sender_password."
         print("[!] Không thể gửi cảnh báo: Chưa cấu hình sender_email hoặc sender_password.")
         return False
 
     recipients = parse_recipients(settings.get("recipient_emails", ""))
     if not recipients:
+        _last_dispatch_result["success"] = False
+        _last_dispatch_result["message"] = "Chưa có email người nhận (recipient_emails rỗng)."
         print("[!] Không thể gửi cảnh báo: Chưa có email người nhận (recipient_emails rỗng).")
         return False
 
@@ -376,8 +438,12 @@ def check_and_send_alert(
     # Kiểm tra loại cảnh báo được phép gửi (nếu force_send thì luôn cho phép gửi khi có sự cố)
     if not force_send:
         if overall_status == "CRITICAL" and not settings.get("notify_on_critical", True):
+            _last_dispatch_result["success"] = False
+            _last_dispatch_result["message"] = "Đã tắt thông báo cho sự cố CRITICAL trong Cấu hình."
             return False
         if overall_status == "WARNING" and not settings.get("notify_on_warning", True):
+            _last_dispatch_result["success"] = False
+            _last_dispatch_result["message"] = "Đã tắt thông báo cho sự cố WARNING trong Cấu hình."
             return False
 
     # Lấy thông tin lần alert trước
@@ -391,6 +457,8 @@ def check_and_send_alert(
             subject = f"✅ [Phục hồi] Website '{site_name}' đã hoạt động bình thường trở lại"
             html = build_incident_alert_html(site_name, site_url, "HEALTHY", http_res, dns_res, ssl_res, now.isoformat(), rca_report=rca_report)
             success, msg = send_email(recipients, subject, html, settings=settings)
+            _last_dispatch_result["success"] = bool(success)
+            _last_dispatch_result["message"] = msg
             if success:
                 _alert_tracker[site_id] = {"last_alert_time": now, "last_status": "HEALTHY"}
             return bool(success)
@@ -399,6 +467,8 @@ def check_and_send_alert(
     # Trường hợp có sự cố (CRITICAL hoặc WARNING): Kiểm tra Cooldown (nếu force_send=True thì bỏ qua cooldown)
     if not force_send and last_alert_time and (now - last_alert_time) < cooldown_delta and last_status == overall_status:
         # Đang trong thời gian Cooldown và trạng thái không đổi -> Bỏ qua để tránh spam
+        _last_dispatch_result["success"] = False
+        _last_dispatch_result["message"] = f"Đang trong thời gian Cooldown ({settings.get('cooldown_minutes', 15)} phút). Bỏ qua để tránh spam."
         return False
 
     # Gửi Alert Email khẩn cấp
@@ -407,6 +477,8 @@ def check_and_send_alert(
     html = build_incident_alert_html(site_name, site_url, overall_status, http_res, dns_res, ssl_res, now.isoformat(), rca_report=rca_report)
     
     success, msg = send_email(recipients, subject, html, settings=settings)
+    _last_dispatch_result["success"] = bool(success)
+    _last_dispatch_result["message"] = msg
     if success:
         _alert_tracker[site_id] = {"last_alert_time": now, "last_status": overall_status}
         print(f"[+] Đã gửi email cảnh báo khẩn cấp cho '{site_name}' tới {recipients} thành công!")

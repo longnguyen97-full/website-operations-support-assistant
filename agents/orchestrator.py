@@ -168,12 +168,24 @@ class MonitoringOrchestratorAgent:
             evidence_data=evidence
         )
 
+        rc_text = (
+            analysis_result.get("root_cause")
+            or analysis_result.get("root_cause_analysis", {}).get("primary_cause")
+            or "Không phát hiện dấu hiệu bất thường."
+        )
+        rfc_list = (
+            analysis_result.get("technical_standards")
+            or analysis_result.get("rfc_citations")
+            or []
+        )
+        rfc_str = ", ".join(rfc_list) if rfc_list else "Chuẩn SRE Golden Signals"
+
         execution_trace.append({
             "step": 6,
             "phase": "INCIDENT_ANALYSIS",
             "agent": self.analysis_agent.name,
             "action": "Root Cause Analysis (RCA) & Knowledge Retrieval",
-            "details": f"Nguyên nhân gốc: {analysis_result.get('root_cause')}. Trích dẫn chuẩn: {', '.join(analysis_result.get('rfc_citations', [])) or 'N/A'}.",
+            "details": f"Nguyên nhân gốc: {rc_text}. Trích dẫn chuẩn: {rfc_str}.",
             "executive_summary": analysis_result.get("executive_summary"),
             "timestamp": time.strftime("%H:%M:%S")
         })

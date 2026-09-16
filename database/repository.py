@@ -469,6 +469,7 @@ def get_system_settings() -> Dict[str, Any]:
         "enable_daily_report": settings.get("enable_daily_report", 1 if DEFAULT_ENABLE_DAILY_REPORT else 0),
         "daily_report_time": settings.get("daily_report_time") or DEFAULT_DAILY_REPORT_TIME,
         "scheduler_interval_seconds": settings.get("scheduler_interval_seconds") or DEFAULT_SCHEDULER_INTERVAL_SECONDS,
+        "scheduler_enabled": settings.get("scheduler_enabled", 1),
         "data_retention_days": settings.get("data_retention_days") or DATA_RETENTION_DAYS,
         "ssl_warning_days": settings.get("ssl_warning_days") or SSL_EXPIRY_WARNING_DAYS,
         "http_timeout_seconds": settings.get("http_timeout_seconds") or config.HTTP_TIMEOUT_SECONDS,
@@ -533,12 +534,12 @@ def update_system_settings(settings: Dict[str, Any]) -> bool:
             recipient_emails, use_tls, is_enabled, notify_on_critical,
             notify_on_warning, notify_on_recovery, cooldown_minutes,
             enable_daily_report, daily_report_time,
-            scheduler_interval_seconds, data_retention_days, ssl_warning_days,
+            scheduler_interval_seconds, scheduler_enabled, data_retention_days, ssl_warning_days,
             http_timeout_seconds, dns_timeout_seconds, ssl_timeout_seconds,
             monitoring_mode, latency_threshold_ms,
             gemini_api_key, gemini_model, llm_enabled,
             updated_at
-        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             smtp_server = excluded.smtp_server,
             smtp_port = excluded.smtp_port,
@@ -554,6 +555,7 @@ def update_system_settings(settings: Dict[str, Any]) -> bool:
             enable_daily_report = excluded.enable_daily_report,
             daily_report_time = excluded.daily_report_time,
             scheduler_interval_seconds = excluded.scheduler_interval_seconds,
+            scheduler_enabled = excluded.scheduler_enabled,
             data_retention_days = excluded.data_retention_days,
             ssl_warning_days = excluded.ssl_warning_days,
             http_timeout_seconds = excluded.http_timeout_seconds,
@@ -580,6 +582,7 @@ def update_system_settings(settings: Dict[str, Any]) -> bool:
         1 if settings.get("enable_daily_report", DEFAULT_ENABLE_DAILY_REPORT) else 0,
         str(settings.get("daily_report_time", DEFAULT_DAILY_REPORT_TIME)).strip(),
         int(settings.get("scheduler_interval_seconds", DEFAULT_SCHEDULER_INTERVAL_SECONDS)),
+        1 if settings.get("scheduler_enabled", 1) else 0,
         int(settings.get("data_retention_days", DATA_RETENTION_DAYS)),
         int(settings.get("ssl_warning_days", SSL_EXPIRY_WARNING_DAYS)),
         float(settings.get("http_timeout_seconds", 10.0)),
@@ -596,6 +599,30 @@ def update_system_settings(settings: Dict[str, Any]) -> bool:
     success = cursor.rowcount > 0
     conn.close()
     return success
+
+def update_scheduler_settings(interval_seconds: Optional[int] = None, is_enabled: Optional[bool] = None) -> bool:
+    """Cập nhật riêng lẻ cấu hình chu kỳ và trạng thái bộ lập lịch vào CSDL."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    updated_at = datetime.now(TZ_VN).isoformat()
+    if interval_seconds is not None and is_enabled is not None:
+        cursor.execute(
+            "UPDATE system_settings SET scheduler_interval_seconds = ?, scheduler_enabled = ?, updated_at = ? WHERE id = 1;",
+            (int(interval_seconds), 1 if is_enabled else 0, updated_at)
+        )
+    elif interval_seconds is not None:
+        cursor.execute(
+            "UPDATE system_settings SET scheduler_interval_seconds = ?, updated_at = ? WHERE id = 1;",
+            (int(interval_seconds), updated_at)
+        )
+    elif is_enabled is not None:
+        cursor.execute(
+            "UPDATE system_settings SET scheduler_enabled = ?, updated_at = ? WHERE id = 1;",
+            (1 if is_enabled else 0, updated_at)
+        )
+    conn.commit()
+    conn.close()
+    return True
 
 update_email_settings = update_system_settings
 

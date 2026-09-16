@@ -1265,7 +1265,17 @@ def render_agentic_studio_tab(selected_site, agent_result=None):
     if rep_digest.get("email_dispatched"):
         st.success(f"🚨 **Cảnh Báo Khẩn Cấp Đã Được Gửi Về Email Thành Công!** Tác tử Reporting & Notification đã chuyển phát báo cáo sự cố tới `{get_system_settings().get('recipient_emails')}`.", icon="📧")
     elif enable_alert and sev in ["CRITICAL", "WARNING"]:
-        st.warning(f"⚠️ **Chưa gửi được email cảnh báo:** Vui lòng kiểm tra lại cấu hình tài khoản gửi/nhận SMTP (`{get_system_settings().get('recipient_emails')}`) tại trang Quản lý Cấu hình.", icon="⚠️")
+        err_msg = rep_digest.get("dispatch_message") or ""
+        if "550" in err_msg or "Daily user sending limit exceeded" in err_msg:
+            st.error(
+                f"🚫 **Chưa gửi được email:** Tài khoản Gmail `{get_system_settings().get('sender_email')}` đã chạm **Giới hạn gửi trong ngày của Google (Gmail 550 Daily sending limit exceeded)** do hệ thống đã chạy ngầm và gửi nhiều email thử nghiệm trước đó.\n\n"
+                f"👉 **Khắc phục:** Vui lòng đổi sang một tài khoản Gmail khác (tạo Mật khẩu ứng dụng 16 ký tự) tại trang `/configuration` hoặc đợi Google reset hạn mức sau 24h.",
+                icon="🚫"
+            )
+        elif err_msg:
+            st.warning(f"⚠️ **Chưa gửi được email cảnh báo:** {err_msg} (Người nhận: `{get_system_settings().get('recipient_emails')}`). Vui lòng kiểm tra lại tại trang Quản lý Cấu hình.", icon="⚠️")
+        else:
+            st.warning(f"⚠️ **Chưa gửi được email cảnh báo:** Vui lòng kiểm tra lại cấu hình tài khoản gửi/nhận SMTP (`{get_system_settings().get('recipient_emails')}`) tại trang Quản lý Cấu hình.", icon="⚠️")
 
     st.markdown("---")
 
@@ -1289,13 +1299,77 @@ def render_agentic_studio_tab(selected_site, agent_result=None):
     </div>
     """, unsafe_allow_html=True)
 
-    # 2.2 Executive Summary & Root Cause
+    # 2.2 Dual-Engine Comparison: Có Gemini vs Không Có Gemini
+    st.markdown("#### ⚖️ Đối Chứng Suy Luận Tác Tử: Có Gemini vs Không Có Gemini (Dual-Engine Reasoning)")
+    st.caption("Đối chứng năng lực suy luận giữa hai cơ chế: Quy tắc tất định (SRE Knowledge Base - 0ms) vs Mô hình ngôn ngữ lớn (Google Gemini AI SRE).")
+
+    is_llm = bool(rca.get("llm_enhanced") and rca.get("llm_insights"))
+    gemini_model = rca.get("gemini_model") or "Gemini LLM"
+    base_summary = rca.get("base_executive_summary") or rca.get("executive_summary", "Hệ thống áp dụng các quy tắc tất định theo tiêu chuẩn SRE.")
+    primary_cause_val = rca.get("root_cause_analysis", {}).get("primary_cause", rca.get("root_cause", "Không có lỗi."))
+    llm_insights_val = rca.get("llm_insights", "")
+
+    col_de1, col_de2 = st.columns(2)
+    with col_de1:
+        st.markdown(f"""
+        <div style="background: #0f172a; border: 1px solid #38bdf8; border-radius: 6px; padding: 14px; margin-bottom: 12px; height: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-weight: bold; color: #38bdf8; font-size: 13.5px;">📚 LỰA CHỌN 1: SRE KNOWLEDGE BASE</span>
+                <span style="background: #0284c7; color: #ffffff; font-size: 10.5px; font-weight: bold; padding: 2px 8px; border-radius: 4px;">KHÔNG DÙNG AI (0ms)</span>
+            </div>
+            <div style="font-size: 12.5px; color: #e2e8f0; margin-bottom: 8px;">
+                <b>Nguyên nhân cốt lõi (Rule-based):</b><br>
+                {primary_cause_val}
+            </div>
+            <div style="background: #1e293b; border-radius: 4px; padding: 10px; font-size: 12px; color: #cbd5e1; line-height: 1.5; margin-bottom: 8px;">
+                <b>Tóm tắt tất định:</b><br>
+                {base_summary}
+            </div>
+            <div style="font-size: 11px; color: #38bdf8; font-style: italic; border-top: 1px dashed #334155; padding-top: 6px;">
+                ⚡ <b>Đặc tính:</b> 100% tất định (Deterministic), độ trễ 0ms, chuẩn RFC 9110/1035/5280, không tốn quota API, chạy an toàn kể cả khi ngắt kết nối mạng.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_de2:
+        if is_llm:
+            st.markdown(f"""
+            <div style="background: #052e16; border: 1px solid #22c55e; border-radius: 6px; padding: 14px; margin-bottom: 12px; height: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-weight: bold; color: #4ade80; font-size: 13.5px;">🤖 LỰA CHỌN 2: GOOGLE GEMINI SRE</span>
+                    <span style="background: #16a34a; color: #ffffff; font-size: 10.5px; font-weight: bold; padding: 2px 8px; border-radius: 4px;">{gemini_model}</span>
+                </div>
+                <div style="background: #14532d; border-radius: 4px; padding: 10px; font-size: 12px; color: #dcfce7; line-height: 1.55; white-space: pre-line; margin-bottom: 8px;">
+{llm_insights_val}
+                </div>
+                <div style="font-size: 11px; color: #86efac; font-style: italic; border-top: 1px dashed #166534; padding-top: 6px;">
+                    🧠 <b>Đặc tính:</b> Suy luận ngữ cảnh đa chiều (Context-aware), liên kết chéo các chỉ số bất thường, sinh chỉ thị ứng cứu tức thời bằng văn phong SRE tự nhiên.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div style="background: #1e1e24; border: 1px solid #475569; border-radius: 6px; padding: 14px; margin-bottom: 12px; height: 100%;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-weight: bold; color: #94a3b8; font-size: 13.5px;">🤖 LỰA CHỌN 2: GOOGLE GEMINI SRE</span>
+                    <span style="background: #475569; color: #cbd5e1; font-size: 10.5px; font-weight: bold; padding: 2px 8px; border-radius: 4px;">OFFLINE / DISABLED</span>
+                </div>
+                <div style="background: #27272a; border-radius: 4px; padding: 10px; font-size: 12px; color: #94a3b8; line-height: 1.5; margin-bottom: 8px;">
+                    Tính năng Gemini LLM hiện đang tắt hoặc không khả dụng. Hệ thống tự động chuyển đổi sang <b>SRE Knowledge Base (Fallback 0ms)</b>, bảo đảm tiến trình giám sát và cảnh báo không bị gián đoạn.
+                </div>
+                <div style="font-size: 11px; color: #94a3b8; font-style: italic; border-top: 1px dashed #3f3f46; padding-top: 6px;">
+                    🛡️ <b>Cơ chế Fallback:</b> Tự động dự phòng 100% khi mất mạng hoặc cạn kiệt hạn mức API token.
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+    # 2.3 Executive Summary & Root Cause
     col_rca_l, col_rca_r = st.columns([3, 2])
     with col_rca_l:
-        st.markdown("#### 🎙️ Bản Tóm Tắt Quản Trị (Executive Summary)")
+        st.markdown("#### 🎙️ Bản Tóm Tắt Quản Trị Hợp Nhất (Executive Summary)")
         st.info(rca.get('executive_summary', 'Hệ thống vận hành bình thường.'))
 
-        st.markdown("#### 🔍 Phân Tích Nguyên Nhân Gốc (Root Cause Analysis)")
+        st.markdown("#### 🔍 Chi Tiết Nguyên Nhân Gốc (Root Cause Details)")
         rca_detail = rca.get("root_cause_analysis", {})
         st.error(f"**Nguyên nhân cốt lõi:** {rca_detail.get('primary_cause', rca.get('root_cause', 'Không có lỗi.'))}")
         
@@ -1347,35 +1421,49 @@ def render_agentic_studio_tab(selected_site, agent_result=None):
 
 ---
 
-## 2. Phân Tích Nguyên Nhân Gốc (Root Cause Analysis)
+## 2. Đối Chứng Suy Luận Tác Tử (Dual-Engine Reasoning: Có vs Không Dùng Gemini)
+### 2.1 Lựa chọn 1: SRE Knowledge Base (Không Dùng AI)
+* **Nguyên nhân gốc (Rule-based):** {primary_cause_val}
+* **Tóm tắt tất định:** {base_summary}
+* **Đặc tính:** 100% tất định (Deterministic), độ trễ 0ms, tuân thủ RFC 9110/1035/5280, an toàn tuyệt đối khi offline.
+
+### 2.2 Lựa chọn 2: Google Gemini AI SRE ({gemini_model})
+* **Trạng thái:** {"✅ Đang hoạt động (Active)" if is_llm else "⚠️ Ngoại tuyến / Đang tắt (Tự động Fallback 0ms sang Knowledge Base)"}
+* **Suy luận ngữ cảnh chuyên sâu:**
+{llm_insights_val if is_llm else "Chưa kích hoạt hoặc API không khả dụng."}
+* **Đặc tính:** Suy luận ngữ cảnh đa chiều, liên kết chéo các tín hiệu dị thường, sinh khuyến nghị SRE tự nhiên.
+
+---
+
+## 3. Phân Tích Chi Tiết Nguyên Nhân Gốc (Root Cause Details)
 * **Nguyên nhân cốt lõi:** {rca_detail.get('primary_cause', rca.get('root_cause'))}
 * **Bằng chứng kỹ thuật đối soát:**
 {chr(10).join([f"  - **[{k}]**: {v}" for k, v in rca_detail.get('cross_signal_evidence', {}).items()])}
 
 ---
 
-## 3. Đánh Giá Mức Độ Ảnh Hưởng (Impact Assessment)
+## 4. Đánh Giá Mức Độ Ảnh Hưởng (Impact Assessment)
 * **Người dùng:** {impact.get('user_experience', rca.get('user_impact'))}
 * **Khả dụng nghiệp vụ:** {impact.get('business_availability')}
 
 ---
 
-## 4. Kế Hoạch Khắc Phục Đề Xuất (Action Plan)
+## 5. Kế Hoạch Khắc Phục Đề Xuất (Action Plan)
 {chr(10).join([f"- [ ] {a}" for a in rca.get('immediate_action_plan', rca.get('action_plan', []))])}
 
 ---
 
-## 5. Sổ Tay Điều Tra Kỹ Thuật (SRE Runbook)
+## 6. Sổ Tay Điều Tra Kỹ Thuật (SRE Runbook)
 {chr(10).join([f"- {s}" for s in rca.get('investigation_runbook', rca.get('investigation_steps', []))])}
 
 ---
 
-## 6. Chiến Lược Phòng Ngừa Dài Hạn (Prevention Strategy)
+## 7. Chiến Lược Phòng Ngừa Dài Hạn (Prevention Strategy)
 {chr(10).join([f"- {p}" for p in rca.get('prevention_strategy', [])])}
 
 ---
 
-## 7. Trích Dẫn Tiêu Chuẩn Kỹ Thuật
+## 8. Trích Dẫn Tiêu Chuẩn Kỹ Thuật (Technical RFC Standards)
 {chr(10).join([f"- {r}" for r in rca.get('technical_standards', rca.get('rfc_citations', []))])}
 """
     st.download_button(

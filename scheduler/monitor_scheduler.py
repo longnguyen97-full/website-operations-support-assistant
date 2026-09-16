@@ -13,7 +13,8 @@ from database.repository import (
     save_monitoring_log,
     calculate_overall_status,
     purge_old_logs,
-    get_system_settings
+    get_system_settings,
+    update_scheduler_settings
 )
 from notifications.email_service import check_and_send_alert
 from config import (
@@ -33,7 +34,8 @@ _scheduler_state = {
     "interval_seconds": DEFAULT_SCHEDULER_INTERVAL_SECONDS,
     "last_run_time": None,
     "last_run_summary": None,
-    "total_runs": 0
+    "total_runs": 0,
+    "is_paused": False
 }
 
 def execute_single_website_check(site: dict, sys_settings: Optional[dict] = None) -> dict:
@@ -183,8 +185,12 @@ def get_scheduler() -> BackgroundScheduler:
         _scheduler = BackgroundScheduler(daemon=True, timezone=TZ_VN)
     return _scheduler
 
-def start_background_scheduler(interval_seconds: int = DEFAULT_SCHEDULER_INTERVAL_SECONDS):
-    """Bắt đầu chạy scheduler định kỳ với khoảng thời gian (giây) - Mặc định 4 tiếng = 14400s."""
+def start_background_scheduler(interval_seconds: Optional[int] = None):
+    """Bắt đầu chạy scheduler định kỳ với khoảng thời gian (giây) - Mặc định lấy từ CSDL."""
+    sys_settings = get_system_settings()
+    if interval_seconds is None:
+        interval_seconds = int(sys_settings.get("scheduler_interval_seconds") or DEFAULT_SCHEDULER_INTERVAL_SECONDS)
+    
     sched = get_scheduler()
     _scheduler_state["interval_seconds"] = interval_seconds
 
@@ -214,26 +220,82 @@ def start_background_scheduler(interval_seconds: int = DEFAULT_SCHEDULER_INTERVA
     if not sched.running:
         sched.start()
 
+    # Kiểm tra cấu hình trạng thái bật/tắt (scheduler_enabled) từ CSDL
+    is_enabled = bool(sys_settings.get("scheduler_enabled", 1))
+    job = sched.get_job(JOB_ID)
+    if not is_enabled:
+        if job:
+            job.pause()
+        _scheduler_state["is_paused"] = True
+    else:
+        if job and job.next_run_time is None:
+            job.resume()
+        _scheduler_state["is_paused"] = False
+
 def stop_background_scheduler():
-    """Tạm dừng / Dừng background scheduler."""
+    """Dừng quét nền định kỳ (Dừng quét)."""
     sched = get_scheduler()
-    if sched.running:
-        sched.pause()
+    job = sched.get_job(JOB_ID) if sched else None
+    if job:
+        job.pause()
+    _scheduler_state["is_paused"] = True
+    try:
+        update_scheduler_settings(is_enabled=False)
+    except Exception as e:
+        print(f"Warning: Không thể lưu trạng thái dừng quét vào CSDL: {e}")
 
 def resume_background_scheduler():
-    """Tiếp tục chạy scheduler nếu đang pause."""
+    """Bắt đầu / Tiếp tục quét nền định kỳ."""
     sched = get_scheduler()
-    if sched.running:
-        sched.resume()
+    if not sched.running:
+        sched.start()
+    job = sched.get_job(JOB_ID) if sched else None
+    if job:
+        job.resume()
     else:
-        start_background_scheduler(_scheduler_state["interval_seconds"])
+        trigger = IntervalTrigger(seconds=_scheduler_state["interval_seconds"], timezone=TZ_VN)
+        sched.add_job(
+            run_all_monitors_job,
+            trigger=trigger,
+            id=JOB_ID,
+            name="Website Periodic Probes Monitoring",
+            replace_existing=True
+        )
+    _scheduler_state["is_paused"] = False
+    try:
+        update_scheduler_settings(is_enabled=True)
+    except Exception as e:
+        print(f"Warning: Không thể lưu trạng thái tiếp tục quét vào CSDL: {e}")
 
-def update_scheduler_interval(interval_seconds: int):
-    """Cập nhật tần suất quét (interval) của scheduler."""
+def update_scheduler_interval(interval_seconds: int, persist_db: bool = True):
+    """Cập nhật tần suất quét (interval) của scheduler và lưu bền vững vào CSDL."""
     _scheduler_state["interval_seconds"] = interval_seconds
     sched = get_scheduler()
-    if sched.get_job(JOB_ID):
+    job = sched.get_job(JOB_ID) if sched else None
+    if job:
         sched.reschedule_job(JOB_ID, trigger=IntervalTrigger(seconds=interval_seconds, timezone=TZ_VN))
+        # Nếu đang trong trạng thái dừng quét thì giữ nguyên pause
+        if _scheduler_state.get("is_paused"):
+            job.pause()
+    else:
+        trigger = IntervalTrigger(seconds=interval_seconds, timezone=TZ_VN)
+        sched.add_job(
+            run_all_monitors_job,
+            trigger=trigger,
+            id=JOB_ID,
+            name="Website Periodic Probes Monitoring",
+            replace_existing=True
+        )
+        if _scheduler_state.get("is_paused"):
+            new_job = sched.get_job(JOB_ID)
+            if new_job:
+                new_job.pause()
+
+    if persist_db:
+        try:
+            update_scheduler_settings(interval_seconds=interval_seconds)
+        except Exception as e:
+            print(f"Warning: Không thể lưu chu kỳ quét mới vào CSDL: {e}")
 
 def run_monitors_now():
     """Kích hoạt quét toàn bộ website ngay lập tức ngoài chu kỳ."""
@@ -249,9 +311,14 @@ def get_scheduler_info() -> Dict[str, Any]:
     sched = get_scheduler()
     job = sched.get_job(JOB_ID) if sched else None
     
-    is_active = sched.running and (job is not None)
+    is_paused = _scheduler_state.get("is_paused", False)
+    if not is_paused and job is not None and job.next_run_time is None:
+        is_paused = True
+
+    is_active = sched.running and (job is not None) and (not is_paused) and (job.next_run_time is not None)
+    
     next_run = None
-    if job and job.next_run_time:
+    if is_active and job and job.next_run_time:
         next_run = job.next_run_time.astimezone(TZ_VN).strftime("%Y-%m-%d %H:%M:%S")
 
     return {

@@ -79,30 +79,30 @@ def render_ablation_page():
         with c_rq1:
             st.markdown("""
             <div class="rq-box">
-                <strong style="color: #4338ca;">RQ1: Tác động của Tương quan phân tầng (Correlation)</strong><br>
+                <strong style="color: #4338ca;">RQ1: Hiệu quả Kết hợp Đa Tín hiệu vs Ngưỡng Đơn lẻ</strong><br>
                 <span style="font-size: 13px; color: #475569;">
-                Nếu không có thuật toán duyệt cây phụ thuộc (Layered Dependency Matrix), hiện tượng bão cảnh báo (Alert Storm) sẽ bùng nổ ở mức độ nào khi xảy ra sự cố tầng cơ sở (DNS/TLS)?
+                Việc kết hợp nhiều tín hiệu như HTTP, DNS, SSL/TLS và hiệu năng có giúp phát hiện và phân loại sự cố chính xác hơn so với cơ chế cảnh báo dựa trên từng ngưỡng riêng lẻ hay không?
                 </span>
             </div>
             <div class="rq-box">
-                <strong style="color: #4338ca;">RQ2: Hiệu quả Khử Báo Động Giả của Tự Sửa Sai (Self-Correction)</strong><br>
+                <strong style="color: #4338ca;">RQ2: Cơ chế Chủ động Lựa chọn & Phối hợp Công cụ</strong><br>
                 <span style="font-size: 13px; color: #475569;">
-                Cơ chế Re-probe kiểm chứng thích ứng 2 bước đóng góp bao nhiêu phần trăm vào việc đưa tỷ lệ False Alarm Rate (do mạng chập chờn / flapping) về ngưỡng 0%?
+                Agentic AI có thể chủ động lựa chọn và phối hợp các công cụ giám sát để thu thập đủ bằng chứng cho một sự cố website như thế nào?
                 </span>
             </div>
             """, unsafe_allow_html=True)
         with c_rq2:
             st.markdown("""
             <div class="rq-box">
-                <strong style="color: #4338ca;">RQ3: Sự cần thiết của Tác tử Kiểm tra Visual / DOM</strong><br>
+                <strong style="color: #4338ca;">RQ3: Giảm Cảnh báo Trùng lặp & Báo động Giả</strong><br>
                 <span style="font-size: 13px; color: #475569;">
-                Các công cụ APM truyền thống (chỉ đo HTTP 200) mù hoàn toàn trước các lỗi ngữ nghĩa giao diện (Missing DOM / UI deformation). Tác tử Semantic Observer cải thiện độ nhạy (Recall) thế nào?
+                Cơ chế tương quan sự kiện và suy luận dựa trên bằng chứng có giúp giảm số lượng cảnh báo trùng lặp và cảnh báo sai hay không?
                 </span>
             </div>
             <div class="rq-box">
-                <strong style="color: #4338ca;">RQ4: Tối ưu Chi phí & Độ trễ của Neuro-Symbolic vs Pure LLM</strong><br>
+                <strong style="color: #4338ca;">RQ4: Năng lực Hỗ trợ Kỹ sư của Báo cáo Agentic AI</strong><br>
                 <span style="font-size: 13px; color: #475569;">
-                Việc kết hợp Luật tất định (RFC Rules) trước khi gọi LLM giúp tiết kiệm bao nhiêu Token và giảm bao nhiêu độ trễ (MTTD) so với việc ném toàn bộ HTML thô cho LLM?
+                Báo cáo do Agentic AI sinh ra có hỗ trợ kỹ sư xác định nguyên nhân tiềm năng và hướng xử lý nhanh hơn so với cảnh báo kỹ thuật thông thường hay không?
                 </span>
             </div>
             """, unsafe_allow_html=True)

@@ -11,7 +11,7 @@ import httpx
 
 GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 
-def test_gemini_connection(api_key: str, model: str = "gemini-1.5-flash") -> Dict[str, Any]:
+def test_gemini_connection(api_key: str, model: str = "gemini-flash-latest") -> Dict[str, Any]:
     """
     Kiểm tra tính hợp lệ của Gemini API Key và khả năng kết nối tới máy chủ Google AI.
     
@@ -37,19 +37,19 @@ def test_gemini_connection(api_key: str, model: str = "gemini-1.5-flash") -> Dic
         "contents": [
             {
                 "parts": [
-                    {"text": "Xin chào, phản hồi ngắn gọn 'OK'."}
+                    {"text": "Xin chào, hãy phản hồi ngắn gọn đúng 2 từ: OK Ready"}
                 ]
             }
         ],
         "generationConfig": {
-            "maxOutputTokens": 15,
+            "maxOutputTokens": 250,
             "temperature": 0.1
         }
     }
 
     start_time = time.perf_counter()
     try:
-        with httpx.Client(timeout=12.0) as client:
+        with httpx.Client(timeout=15.0) as client:
             resp = client.post(
                 url,
                 json=payload,
@@ -63,8 +63,7 @@ def test_gemini_connection(api_key: str, model: str = "gemini-1.5-flash") -> Dic
                 reply_text = ""
                 if candidates:
                     parts = candidates[0].get("content", {}).get("parts", [])
-                    if parts:
-                        reply_text = parts[0].get("text", "").strip()
+                    reply_text = "".join([p.get("text", "") for p in parts if "text" in p]).strip()
 
                 return {
                     "success": True,
@@ -106,7 +105,7 @@ def test_gemini_connection(api_key: str, model: str = "gemini-1.5-flash") -> Dic
 def generate_gemini_analysis(
     prompt: str,
     api_key: str,
-    model: str = "gemini-1.5-flash",
+    model: str = "gemini-flash-latest",
     system_instruction: Optional[str] = None,
     timeout: float = 20.0
 ) -> Optional[str]:
@@ -128,7 +127,7 @@ def generate_gemini_analysis(
             }
         ],
         "generationConfig": {
-            "temperature": 0.3,
+            "temperature": 0.2,
             "maxOutputTokens": 1024
         }
     }
@@ -152,8 +151,9 @@ def generate_gemini_analysis(
                 candidates = data.get("candidates", [])
                 if candidates:
                     parts = candidates[0].get("content", {}).get("parts", [])
-                    if parts:
-                        return parts[0].get("text", "").strip()
+                    extracted_text = "".join([p.get("text", "") for p in parts if "text" in p]).strip()
+                    if extracted_text:
+                        return extracted_text
             else:
                 print(f"[!] Gemini API Error ({resp.status_code}): {resp.text[:200]}")
                 return None

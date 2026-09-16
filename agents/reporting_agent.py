@@ -5,7 +5,7 @@ và phân phối thông báo qua Email SMTP hoặc Webhook.
 """
 
 from typing import Dict, Any, Optional
-from notifications.email_service import check_and_send_alert
+from notifications.email_service import check_and_send_alert, get_last_dispatch_result
 
 class ReportingNotificationAgent:
     """Tác tử tạo lập báo cáo và gửi thông báo cảnh báo."""
@@ -30,6 +30,7 @@ class ReportingNotificationAgent:
 
         # Gửi cảnh báo qua Email nếu được cho phép và phát hiện sự cố (CRITICAL / WARNING)
         email_dispatched = False
+        dispatch_msg = ""
         if dispatch_alert and overall_severity in ["CRITICAL", "WARNING"]:
             try:
                 email_dispatched = bool(check_and_send_alert(
@@ -41,11 +42,14 @@ class ReportingNotificationAgent:
                     force_send=True,
                     rca_report=analysis_result
                 ))
+                dispatch_msg = get_last_dispatch_result().get("message", "")
             except Exception as e:
                 print(f"[!] ReportingNotificationAgent: Lỗi gửi email cảnh báo: {e}")
                 email_dispatched = False
+                dispatch_msg = str(e)
         else:
             email_dispatched = False
+            dispatch_msg = "Không kích hoạt gửi cảnh báo."
 
         # Chuẩn hóa Report Digest toàn diện
         report_digest = {
@@ -65,6 +69,7 @@ class ReportingNotificationAgent:
             "prevention_strategy": analysis_result.get("prevention_strategy", []),
             "rfc_citations": analysis_result.get("technical_standards", []),
             "email_dispatched": email_dispatched,
+            "dispatch_message": dispatch_msg,
             "full_rca_report": analysis_result
         }
 

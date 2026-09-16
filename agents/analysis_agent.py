@@ -92,6 +92,12 @@ class IncidentAnalysisAgent:
                     "RFC 9110: HTTP Semantics (Status 200 OK)",
                     "RFC 1035: Domain Names Implementation (NOERROR)",
                     "RFC 5280: X.509 PKI Certificate Profile (Valid Chain)"
+                ],
+                "root_cause": "Không phát hiện bất kỳ dấu hiệu bất thường hoặc sự cố kỹ thuật nào.",
+                "rfc_citations": [
+                    "RFC 9110: HTTP Semantics (Status 200 OK)",
+                    "RFC 1035: Domain Names Implementation (NOERROR)",
+                    "RFC 5280: X.509 PKI Certificate Profile (Valid Chain)"
                 ]
             }
 
@@ -372,16 +378,18 @@ class IncidentAnalysisAgent:
             action_plan = ["Tiến hành kiểm tra chi tiết các tín hiệu lỗi và khôi phục dịch vụ."]
             runbook_steps = ["1. Kiểm tra trạng thái toàn bộ dịch vụ phụ thuộc.", "2. Kiểm tra error log hệ thống."]
             prevention = ["Tăng cường giám sát thời gian thực và tự động hồi phục."]
+        base_exec_summary = exec_summary
         # =========================================================================
         # TÍCH HỢP LLM-POWERED REASONING (GOOGLE GEMINI AI SRE)
         # =========================================================================
         llm_insights = None
         is_llm_enhanced = False
+        gemini_model = "gemini-flash-lite-latest"
         try:
             sys_settings = get_system_settings()
             gemini_key = (sys_settings.get("gemini_api_key") or "").strip()
             llm_enabled = bool(sys_settings.get("llm_enabled", 0))
-            gemini_model = sys_settings.get("gemini_model") or "gemini-1.5-flash"
+            gemini_model = sys_settings.get("gemini_model") or "gemini-flash-lite-latest"
 
             if llm_enabled and gemini_key:
                 prompt = (
@@ -404,7 +412,7 @@ class IncidentAnalysisAgent:
                     api_key=gemini_key,
                     model=gemini_model,
                     system_instruction=system_instruction,
-                    timeout=15.0
+                    timeout=25.0
                 )
                 if llm_resp:
                     llm_insights = llm_resp
@@ -424,8 +432,26 @@ class IncidentAnalysisAgent:
             "confidence_score": 98.8,
             "incident_title": incident_title,
             "executive_summary": exec_summary,
+            "base_executive_summary": base_exec_summary,
             "llm_enhanced": is_llm_enhanced,
             "llm_insights": llm_insights,
+            "gemini_model": gemini_model if is_llm_enhanced else None,
+            "dual_engine_comparison": {
+                "option_without_ai": {
+                    "mode": "SRE_KNOWLEDGE_BASE",
+                    "title": "📚 SRE Knowledge Base (Không dùng AI)",
+                    "summary": base_exec_summary,
+                    "primary_cause": primary_cause,
+                    "description": "Suy luận tất định dựa trên bộ luật RFC và SRE Runbook tiêu chuẩn. Không phụ thuộc LLM, độ trễ 0ms, không ảo giác."
+                },
+                "option_with_ai": {
+                    "mode": "GEMINI_AI_REASONING",
+                    "title": f"🤖 Google Gemini AI ({gemini_model if is_llm_enhanced else 'Đang tắt'})",
+                    "is_available": is_llm_enhanced,
+                    "summary": llm_insights if is_llm_enhanced else "Chưa kích hoạt hoặc API không khả dụng (Hệ thống tự động sử dụng SRE Knowledge Base).",
+                    "description": "Suy luận ngữ cảnh chuyên sâu, phân tích rủi ro dây chuyền và khuyến nghị chỉ thị khẩn cấp P0."
+                }
+            },
             "root_cause_analysis": {
                 "primary_cause": primary_cause,
                 "contributing_factors": potential_causes,
@@ -438,5 +464,7 @@ class IncidentAnalysisAgent:
             "immediate_action_plan": action_plan,
             "investigation_runbook": runbook_steps,
             "prevention_strategy": prevention,
-            "technical_standards": rfc_refs
+            "technical_standards": rfc_refs,
+            "root_cause": primary_cause,
+            "rfc_citations": rfc_refs
         }
