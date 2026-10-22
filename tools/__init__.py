@@ -15,7 +15,8 @@ from tools.ssl_checker import check_ssl
 from tools.performance_checker import check_performance
 from tools.dom_validator import validate_dom
 from tools.visual_checker import check_visual_regression, capture_screenshot
-from tools.gemini_client import test_gemini_connection, generate_gemini_analysis
+from tools.gemini_client import test_gemini_connection, generate_gemini_analysis, generate_gemini_analysis_with_telemetry
+from tools.tech_detector import detect_technology_stack
 
 __all__ = [
     "check_http",
@@ -27,6 +28,8 @@ __all__ = [
     "check_visual_regression",
     "capture_screenshot",
     "test_gemini_connection",
-    "generate_gemini_analysis"
+    "generate_gemini_analysis",
+    "generate_gemini_analysis_with_telemetry",
+    "detect_technology_stack"
 ]
 

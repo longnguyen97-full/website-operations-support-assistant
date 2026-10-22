@@ -131,7 +131,7 @@ def send_test_email(settings: Dict[str, Any]) -> Tuple[bool, str]:
                 <p style="margin-top: 20px;">Kể từ bây giờ, các cảnh báo sự cố gián đoạn dịch vụ, hết hạn SSL hoặc sai lệch DNS sẽ được gửi tự động tới hòm thư này.</p>
             </div>
             <div class="footer">
-                Đồ án Tốt nghiệp - Website Operations Support Assistant
+                SRE Agentic System - Enterprise Website Operations & Monitoring Platform
             </div>
         </div>
     </body>
@@ -229,7 +229,7 @@ def build_incident_alert_html(
     rfc_list = rca.get("technical_standards") or rca.get("rfc_citations") or []
     rfc_str = " | ".join(rfc_list) if rfc_list else "RFC 9110, RFC 1035, RFC 5280"
 
-    # Phân tích suy luận: Có Gemini vs Không Gemini (Dual-Engine Comparison)
+    # Phân tích suy luận: Tự động kích hoạt Gemini LLM nếu có API key, ngược lại dùng SRE Knowledge Base
     llm_insights = rca.get("llm_insights")
     gemini_model = rca.get("gemini_model") or "Gemini LLM"
     is_llm = bool(rca.get("llm_enhanced") and llm_insights)
@@ -238,31 +238,60 @@ def build_incident_alert_html(
     base_summary = rca.get("base_executive_summary") or primary_cause
 
     if is_llm:
-        gemini_box_html = f"""
-        <div style="background: #f0fdf4; border: 1px solid #86efac; border-left: 4px solid #16a34a; padding: 10px 14px; border-radius: 4px; margin-top: 10px;">
+        reasoning_box_html = f"""
+        <div style="background: #ffffff; border: 1px solid #86efac; border-left: 4px solid #16a34a; padding: 12px 14px; border-radius: 4px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                <span style="font-weight: 700; color: #15803d; font-size: 11.5px;">🤖 [LỰA CHỌN 2: CÓ AI] GOOGLE GEMINI SRE ({gemini_model})</span>
+                <span style="font-weight: 700; color: #15803d; font-size: 11.5px;">🤖 TRỢ LÝ SRE AI (GOOGLE GEMINI - {gemini_model})</span>
                 <span style="background: #dcfce7; color: #166534; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px;">LLM ACTIVE</span>
             </div>
-            <div style="font-size: 12px; color: #14532d; line-height: 1.55; white-space: pre-line;">
+            <div style="font-size: 12px; color: #0f172a; margin-bottom: 6px;">
+                <b>Nguyên nhân cốt lõi kỹ thuật:</b> {primary_cause}
+            </div>
+            <div style="font-size: 12px; color: #14532d; line-height: 1.55; white-space: pre-line; background: #f0fdf4; padding: 8px 10px; border-radius: 4px; margin-bottom: 6px;">
 {llm_insights}
             </div>
+            {factors_text and f'<div style="font-size: 11.5px; color: #475569; margin-bottom: 4px;"><b>Yếu tố tiềm ẩn:</b><br>{factors_text}</div>' or ''}
             <div style="font-size: 10.5px; color: #15803d; margin-top: 6px; font-style: italic; border-top: 1px dashed #bbf7d0; padding-top: 4px;">
-                Đặc tính: Suy luận ngữ cảnh chuyên sâu, liên kết tín hiệu tương quan chéo, đề xuất chỉ thị SRE động.
+                Cơ chế: Tác tử tự động phân tích ngữ cảnh chéo giữa các tín hiệu và sinh chỉ thị ứng cứu tức thời bằng LLM.
             </div>
         </div>
         """
     else:
-        gemini_box_html = f"""
-        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #94a3b8; padding: 9px 12px; border-radius: 4px; margin-top: 10px;">
-            <div style="font-weight: 700; color: #64748b; font-size: 11.5px; margin-bottom: 3px;">
-                🤖 [LỰA CHỌN 2: CÓ AI] GOOGLE GEMINI SRE REASONING
+        reasoning_box_html = f"""
+        <div style="background: #ffffff; border: 1px solid #cbd5e1; border-left: 4px solid #0284c7; padding: 12px 14px; border-radius: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-weight: 700; color: #0369a1; font-size: 11.5px;">📚 SRE KNOWLEDGE BASE (TIÊU CHUẨN TẤT ĐỊNH RFC)</span>
+                <span style="background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px;">RFC RUNBOOK 0ms</span>
             </div>
-            <div style="font-size: 11.5px; color: #64748b; font-style: italic;">
-                Tính năng LLM hiện đang tắt hoặc không khả dụng. Hệ thống đã tự động kích hoạt chế độ dự phòng SRE Knowledge Base (Fallback 0ms), đảm bảo tính sẵn sàng 100%.
+            <div style="font-size: 12px; color: #0f172a; margin-bottom: 4px;">
+                <b>Nguyên nhân cốt lõi:</b> {primary_cause}
+            </div>
+            <div style="font-size: 11.5px; color: #334155; margin-bottom: 6px; line-height: 1.5;">
+                <b>Tóm tắt:</b> {base_summary}
+            </div>
+            {factors_text and f'<div style="font-size: 11.5px; color: #475569; margin-bottom: 4px;"><b>Yếu tố tiềm ẩn:</b><br>{factors_text}</div>' or ''}
+            <div style="font-size: 10.5px; color: #0284c7; margin-top: 6px; font-style: italic; border-top: 1px dashed #bae6fd; padding-top: 4px;">
+                Cơ chế: Suy luận tất định theo tiêu chuẩn RFC 9110/1035/5280 & SRE Runbook. Độ trễ 0ms, không phụ thuộc API ngoài.
             </div>
         </div>
         """
+
+    factors_html = f'<div style="font-size: 11.5px; color: #475569;"><b>Yếu tố tiềm ẩn:</b><br>{factors_text}</div>' if factors_text else ''
+
+    cross_ev_html = f'''
+    <div class="section-label">[3] ĐỐI SOÁT BẰNG CHỨNG ĐA TÍN HIỆU (CROSS-SIGNAL TELEMETRY)</div>
+    <div class="cli-code" style="background: #1e293b; color: #e2e8f0;">{cross_ev_block}</div>
+    ''' if cross_ev_block else ''
+
+    runbook_cli_html = f'''
+    <div class="section-label">[6] LỆNH ĐIỀU TRA NHANH (SRE RUNBOOK CLI)</div>
+    <div class="cli-code">{runbook_cli_block}</div>
+    ''' if runbook_cli_block else ''
+
+    prevention_html = f'''
+    <div class="section-label">[8] CHIẾN LƯỢC PHÒNG NGỪA TÁI DIỄN (PREVENTION)</div>
+    <div class="box" style="white-space: pre-line; font-size: 12px; color: #334155; line-height: 1.5;">{prevention_text}</div>
+    ''' if prevention_text else ''
 
     html = f"""
     <!DOCTYPE html>
@@ -303,34 +332,14 @@ def build_incident_alert_html(
                 <div class="section-label">[1] TÍN HIỆU CẢNH BÁO BẤT THƯỜNG (DETECTED ANOMALIES)</div>
                 <div class="alert-box" style="white-space: pre-line;">{issues_text}</div>
 
-                <!-- 2. Dual-Engine Root Cause Analysis -->
-                <div class="section-label">[2] ĐỐI CHỨNG SUY LUẬN TÁC TỬ (DUAL-ENGINE RCA COMPARISON)</div>
-                <div class="box" style="line-height: 1.6;">
-                    <div style="background: #ffffff; border: 1px solid #cbd5e1; border-left: 4px solid #0284c7; padding: 10px 14px; border-radius: 4px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                            <span style="font-weight: 700; color: #0369a1; font-size: 11.5px;">📚 [LỰA CHỌN 1: KHÔNG DÙNG AI] SRE KNOWLEDGE BASE</span>
-                            <span style="background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 3px;">DETERMINISTIC 0ms</span>
-                        </div>
-                        <div style="font-size: 12px; color: #0f172a; margin-bottom: 4px;">
-                            <b>Nguyên nhân cốt lõi:</b> {primary_cause}
-                        </div>
-                        <div style="font-size: 11.5px; color: #334155; margin-bottom: 6px; line-height: 1.5;">
-                            <b>Tóm tắt:</b> {base_summary}
-                        </div>
-                        {f'''<div style="font-size: 11.5px; color: #475569;"><b>Yếu tố tiềm ẩn:</b>\n{factors_text}</div>''' if factors_text else ''}
-                        <div style="font-size: 10.5px; color: #0284c7; margin-top: 6px; font-style: italic; border-top: 1px dashed #bae6fd; padding-top: 4px;">
-                            Đặc tính: Hoàn toàn tất định theo quy chuẩn RFC 9110/1035/5280 & SRE Runbook. Độ trễ 0ms, không ảo giác, chạy an toàn kể cả khi ngắt mạng.
-                        </div>
-                    </div>
-
-                    {gemini_box_html}
+                <!-- 2. Agentic Root Cause Analysis -->
+                <div class="section-label">[2] PHÂN TÍCH SUY LUẬN NGUYÊN NHÂN GỐC (SRE RCA REASONING)</div>
+                <div class="box" style="line-height: 1.6; padding: 0; background: transparent; border: none;">
+                    {reasoning_box_html}
                 </div>
 
                 <!-- 3. Cross-Signal Diagnostic Telemetry -->
-                {f'''
-                <div class="section-label">[3] ĐỐI SOÁT BẰNG CHỨNG ĐA TÍN HIỆU (CROSS-SIGNAL TELEMETRY)</div>
-                <div class="cli-code" style="background: #1e293b; color: #e2e8f0;">{cross_ev_block}</div>
-                ''' if cross_ev_block else ''}
+                {cross_ev_html}
 
                 <!-- 4. Impact Assessment -->
                 <div class="section-label">[4] ĐÁNH GIÁ TÁC ĐỘNG VẬN HÀNH (IMPACT ASSESSMENT)</div>
@@ -345,10 +354,7 @@ def build_incident_alert_html(
                 <div class="box" style="white-space: pre-line; line-height: 1.6;">{actions_text}</div>
 
                 <!-- 6. Investigation CLI Runbook -->
-                {f'''
-                <div class="section-label">[6] LỆNH ĐIỀU TRA NHANH (SRE RUNBOOK CLI)</div>
-                <div class="cli-code">{runbook_cli_block}</div>
-                ''' if runbook_cli_block else ''}
+                {runbook_cli_html}
 
                 <!-- 7. Technical Standards & Telemetry Table -->
                 <div class="section-label">[7] THÔNG SỐ ĐO LƯỜNG VÀ TIÊU CHUẨN KỸ THUẬT (METRICS & RFC)</div>
@@ -376,10 +382,7 @@ def build_incident_alert_html(
                 </table>
 
                 <!-- 8. Prevention & Remediation -->
-                {f'''
-                <div class="section-label">[8] CHIẾN LƯỢC PHÒNG NGỪA TÁI DIỄN (PREVENTION)</div>
-                <div class="box" style="white-space: pre-line; font-size: 12px; color: #334155; line-height: 1.5;">{prevention_text}</div>
-                ''' if prevention_text else ''}
+                {prevention_html}
 
                 <div style="margin-top: 15px; font-size: 12px;">
                     &rarr; Dashboard trung tâm điều hành: <a href="http://localhost:8501" class="btn-link">http://localhost:8501</a>

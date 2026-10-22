@@ -1,6 +1,8 @@
 import os
+import time
 import json
 import sqlite3
+from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any
 from database.db import get_db_connection
@@ -199,7 +201,7 @@ def sync_websites_from_json_file(file_path: Optional[str] = None, replace_all: b
         return {
             "success": True, 
             "count": synced_count, 
-            "message": f"Đã đồng bộ thành công {synced_count} website từ dataset_200_websites vào CSDL SQLite!"
+            "message": f"Đã đồng bộ thành công {synced_count} website từ target_websites.json vào CSDL SQLite!"
         }
     except Exception as e:
         return {"success": False, "count": 0, "message": f"Lỗi trong quá trình đồng bộ website: {e}"}
@@ -324,15 +326,54 @@ def get_website_latency_history(website_id: int, limit: int = 50) -> List[float]
     latencies.reverse()
     return latencies
 
+def purge_old_artifacts(days_to_keep: int = 30) -> Dict[str, Any]:
+    """
+    Dọn dẹp rò rỉ dung lượng đĩa: Xóa các file ảnh chụp màn hình và visual diffs cũ
+    vượt quá số ngày quy định, bảo toàn các file *_latest.png và baseline chuẩn.
+    """
+    from config import DATA_DIR
+    cutoff_ts = time.time() - (days_to_keep * 86400)
+    screenshots_dir = Path(DATA_DIR) / "screenshots"
+    diffs_dir = Path(DATA_DIR) / "visual_diffs"
+    
+    deleted_files = 0
+    freed_bytes = 0
+    
+    for folder in [screenshots_dir, diffs_dir]:
+        if folder.exists():
+            for p in folder.glob("*.png"):
+                if p.name.endswith("_latest.png"):
+                    continue
+                try:
+                    st_val = p.stat()
+                    if st_val.st_mtime < cutoff_ts:
+                        freed_bytes += st_val.st_size
+                        p.unlink(missing_ok=True)
+                        deleted_files += 1
+                except Exception:
+                    pass
+
+    return {
+        "deleted_files": deleted_files,
+        "freed_mb": round(freed_bytes / (1024 * 1024), 2)
+    }
+
 def purge_old_logs(days_to_keep: int = 30) -> int:
-    """Dọn dẹp các bản ghi log quá cũ theo chính sách Data Retention trong RULE_DESIGN_DB.md."""
+    """Dọn dẹp các bản ghi log và file artifacts quá cũ theo chính sách Data Retention."""
     cutoff_time = (datetime.now(TZ_VN) - timedelta(days=days_to_keep)).isoformat()
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("DELETE FROM monitoring_logs WHERE timestamp < ?;", (cutoff_time,))
     deleted_count = cursor.rowcount
+    try:
+        cursor.execute("DELETE FROM system_telemetry_logs WHERE timestamp < ?;", (cutoff_time,))
+    except Exception:
+        pass
     conn.commit()
     conn.close()
+    
+    # Tự động dọn dẹp file ảnh artifacts cũ tránh phình đĩa
+    purge_old_artifacts(days_to_keep=days_to_keep)
     return deleted_count
 
 # ==================== 3. QUẢN LÝ MỐC CHUẨN (MILESTONE BASELINES) ====================
@@ -753,4 +794,242 @@ def record_report_sent_time():
     cursor.execute("UPDATE system_settings SET last_report_sent_at = ? WHERE id = 1;", (now_iso,))
     conn.commit()
     conn.close()
+
+
+# ==================== 5. GIÁM SÁT HIỆU NĂNG HỆ THỐNG & CHI PHÍ LLMOPS (OBSERVABILITY & COST) ====================
+
+USD_TO_VND_RATE = 25400.0
+
+def calculate_llm_cost(model: Optional[str], prompt_tokens: int, completion_tokens: int) -> float:
+    """
+    Tính toán chi phí LLM ước tính ($ USD) dựa trên biểu giá Google Gemini:
+    - gemini-1.5-flash / gemini-flash-latest:
+        Input: $0.075 / 1M tokens ($0.000000075 / token)
+        Output: $0.30 / 1M tokens ($0.00000030 / token)
+    - gemini-1.5-pro / gemini-pro-latest:
+        Input: $1.25 / 1M tokens ($0.00000125 / token)
+        Output: $5.00 / 1M tokens ($0.00000500 / token)
+    """
+    if not model or (prompt_tokens <= 0 and completion_tokens <= 0):
+        return 0.0
+
+    m_low = str(model).lower()
+    if "pro" in m_low:
+        rate_in = 1.25 / 1_000_000
+        rate_out = 5.00 / 1_000_000
+    else:
+        # Flash rates (mặc định)
+        rate_in = 0.075 / 1_000_000
+        rate_out = 0.30 / 1_000_000
+
+    cost = (prompt_tokens * rate_in) + (completion_tokens * rate_out)
+    return round(cost, 6)
+
+def save_system_telemetry(
+    workflow_type: str,
+    website_id: Optional[int] = None,
+    website_name: Optional[str] = None,
+    total_latency_ms: float = 0.0,
+    probes_latency_ms: float = 0.0,
+    llm_latency_ms: float = 0.0,
+    llm_model: Optional[str] = None,
+    llm_status: Optional[str] = None,
+    prompt_tokens: int = 0,
+    completion_tokens: int = 0,
+    total_tokens: int = 0,
+    fallback_to_kb: bool = False,
+    self_correction_executed: bool = False,
+    suppressed_alerts_count: int = 0,
+    overall_severity: str = "HEALTHY"
+) -> int:
+    """Ghi nhận một bản ghi đo lường hiệu năng hệ thống, độ trễ và chi phí token vào system_telemetry_logs."""
+    timestamp = datetime.now(TZ_VN).isoformat()
+    estimated_cost = calculate_llm_cost(llm_model, prompt_tokens, completion_tokens)
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO system_telemetry_logs (
+            timestamp, workflow_type, website_id, website_name,
+            total_latency_ms, probes_latency_ms, llm_latency_ms,
+            llm_model, llm_status, prompt_tokens, completion_tokens,
+            total_tokens, estimated_cost_usd, fallback_to_kb,
+            self_correction_executed, suppressed_alerts_count, overall_severity
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        timestamp, workflow_type, website_id, website_name,
+        round(total_latency_ms, 2), round(probes_latency_ms, 2), round(llm_latency_ms, 2),
+        llm_model or "None", llm_status or "NONE",
+        prompt_tokens, completion_tokens, total_tokens,
+        estimated_cost, 1 if fallback_to_kb else 0,
+        1 if self_correction_executed else 0,
+        suppressed_alerts_count, overall_severity
+    ))
+    row_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return row_id
+
+def get_telemetry_metrics_summary(hours: int = 24) -> Dict[str, Any]:
+    """
+    Truy vấn và tổng hợp các chỉ số hiệu năng và chi phí của hệ thống trong khoảng thời gian:
+    - Độ trễ P50, P95, Max (Workflow, Probes, LLM)
+    - Tiêu thụ Token (Prompt, Completion, Total)
+    - Chi phí ước tính ($ USD & VNĐ)
+    - Tỷ lệ Fallback 0ms KB vs LLM Reasoning
+    - Lịch sử chạy đo lường gần nhất
+    """
+    cutoff_time = (datetime.now(TZ_VN) - timedelta(hours=hours)).isoformat()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT * FROM system_telemetry_logs
+        WHERE timestamp >= ?
+        ORDER BY id DESC
+    """, (cutoff_time,))
+    rows = cursor.fetchall()
+    conn.close()
+
+    total_runs = len(rows)
+    if total_runs == 0:
+        return {
+            "period_hours": hours,
+            "total_runs": 0,
+            "avg_workflow_latency_ms": 0.0,
+            "p95_workflow_latency_ms": 0.0,
+            "max_workflow_latency_ms": 0.0,
+            "avg_probes_latency_ms": 0.0,
+            "avg_llm_latency_ms": 0.0,
+            "total_prompt_tokens": 0,
+            "total_completion_tokens": 0,
+            "total_tokens": 0,
+            "total_cost_usd": 0.0,
+            "total_cost_vnd": 0.0,
+            "llm_success_count": 0,
+            "fallback_count": 0,
+            "fallback_rate_pct": 0.0,
+            "self_correction_count": 0,
+            "total_suppressed_alerts": 0,
+            "recent_logs": [],
+            "models_breakdown": {},
+            "websites_cost_breakdown": {}
+        }
+
+    total_latencies = [float(r["total_latency_ms"] or 0) for r in rows]
+    probes_latencies = [float(r["probes_latency_ms"] or 0) for r in rows]
+    llm_latencies = [float(r["llm_latency_ms"] or 0) for r in rows if r["llm_latency_ms"] and r["llm_latency_ms"] > 0]
+
+    total_latencies_sorted = sorted(total_latencies)
+    p95_idx = int(0.95 * len(total_latencies_sorted))
+    p95_latency = total_latencies_sorted[min(p95_idx, len(total_latencies_sorted) - 1)]
+
+    total_prompt_tokens = sum(int(r["prompt_tokens"] or 0) for r in rows)
+    total_completion_tokens = sum(int(r["completion_tokens"] or 0) for r in rows)
+    total_tokens = sum(int(r["total_tokens"] or 0) for r in rows)
+    total_cost_usd = sum(float(r["estimated_cost_usd"] or 0) for r in rows)
+
+    fallback_count = sum(1 for r in rows if r["fallback_to_kb"])
+    fallback_rate_pct = round((fallback_count / total_runs) * 100, 1)
+    llm_success_count = sum(1 for r in rows if r["llm_status"] == "SUCCESS")
+    self_correction_count = sum(1 for r in rows if r["self_correction_executed"])
+    suppressed_count = sum(int(r["suppressed_alerts_count"] or 0) for r in rows)
+
+    # Phân bổ theo Model
+    models_breakdown: Dict[str, Dict[str, Any]] = {}
+    websites_cost: Dict[str, Dict[str, Any]] = {}
+
+    for r in rows:
+        m = r["llm_model"] or "None"
+        if m not in models_breakdown:
+            models_breakdown[m] = {"calls": 0, "tokens": 0, "cost_usd": 0.0}
+        models_breakdown[m]["calls"] += 1
+        models_breakdown[m]["tokens"] += int(r["total_tokens"] or 0)
+        models_breakdown[m]["cost_usd"] += float(r["estimated_cost_usd"] or 0.0)
+
+        site_name = r["website_name"] or "Unknown"
+        if site_name not in websites_cost:
+            websites_cost[site_name] = {"scans": 0, "tokens": 0, "cost_usd": 0.0, "avg_latency_ms": 0.0, "_latencies": []}
+        websites_cost[site_name]["scans"] += 1
+        websites_cost[site_name]["tokens"] += int(r["total_tokens"] or 0)
+        websites_cost[site_name]["cost_usd"] += float(r["estimated_cost_usd"] or 0.0)
+        websites_cost[site_name]["_latencies"].append(float(r["total_latency_ms"] or 0))
+
+    for s_info in websites_cost.values():
+        lats = s_info.pop("_latencies")
+        s_info["avg_latency_ms"] = round(sum(lats) / len(lats), 1) if lats else 0.0
+        s_info["cost_usd"] = round(s_info["cost_usd"], 6)
+
+    for m_info in models_breakdown.values():
+        m_info["cost_usd"] = round(m_info["cost_usd"], 6)
+
+    recent_logs = [dict(r) for r in rows[:50]]
+
+    return {
+        "period_hours": hours,
+        "total_runs": total_runs,
+        "avg_workflow_latency_ms": round(sum(total_latencies) / total_runs, 1),
+        "p95_workflow_latency_ms": round(p95_latency, 1),
+        "max_workflow_latency_ms": round(max(total_latencies), 1),
+        "avg_probes_latency_ms": round(sum(probes_latencies) / total_runs, 1),
+        "avg_llm_latency_ms": round(sum(llm_latencies) / len(llm_latencies), 1) if llm_latencies else 0.0,
+        "total_prompt_tokens": total_prompt_tokens,
+        "total_completion_tokens": total_completion_tokens,
+        "total_tokens": total_tokens,
+        "total_cost_usd": round(total_cost_usd, 6),
+        "total_cost_vnd": round(total_cost_usd * USD_TO_VND_RATE, 0),
+        "llm_success_count": llm_success_count,
+        "fallback_count": fallback_count,
+        "fallback_rate_pct": fallback_rate_pct,
+        "self_correction_count": self_correction_count,
+        "total_suppressed_alerts": suppressed_count,
+        "recent_logs": recent_logs,
+        "models_breakdown": models_breakdown,
+        "websites_cost_breakdown": websites_cost
+    }
+
+def get_storage_metrics() -> Dict[str, Any]:
+    """Thống kê dung lượng lưu trữ thực tế của hệ thống (CSDL, Ảnh chụp, Diffs, Backups)."""
+    from config import DB_PATH, DATA_DIR
+    
+    db_size_bytes = DB_PATH.stat().st_size if DB_PATH.exists() else 0
+    
+    screenshots_dir = Path(DATA_DIR) / "screenshots"
+    diffs_dir = Path(DATA_DIR) / "visual_diffs"
+    baselines_dir = Path(DATA_DIR) / "visual_baselines"
+    backups_dir = Path(DATA_DIR) / "backups"
+
+    def dir_stats(folder: Path):
+        count = 0
+        total_bytes = 0
+        if folder.exists():
+            for p in folder.glob("*"):
+                if p.is_file():
+                    count += 1
+                    try:
+                        total_bytes += p.stat().st_size
+                    except Exception:
+                        pass
+        return count, round(total_bytes / (1024 * 1024), 2)
+
+    sc_count, sc_mb = dir_stats(screenshots_dir)
+    diff_count, diff_mb = dir_stats(diffs_dir)
+    base_count, base_mb = dir_stats(baselines_dir)
+    bak_count, bak_mb = dir_stats(backups_dir)
+
+    total_storage_mb = round((db_size_bytes / (1024 * 1024)) + sc_mb + diff_mb + base_mb + bak_mb, 2)
+
+    return {
+        "db_size_mb": round(db_size_bytes / (1024 * 1024), 2),
+        "db_size_bytes": db_size_bytes,
+        "screenshots_count": sc_count,
+        "screenshots_size_mb": sc_mb,
+        "visual_diffs_count": diff_count,
+        "visual_diffs_size_mb": diff_mb,
+        "baselines_count": base_count,
+        "baselines_size_mb": base_mb,
+        "backups_count": bak_count,
+        "backups_size_mb": bak_mb,
+        "total_storage_mb": total_storage_mb
+    }
 

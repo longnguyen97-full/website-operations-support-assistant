@@ -1,6 +1,0 @@
-site_id,domain,url,ground_truth_category,detected_category,incident_type,is_correct,anomaly_score,http_status,response_time_ms,dns_resolved,ssl_valid,scan_duration_ms
-site_001,site-001.test,https://site-001.test,BACKEND_500,BACKEND_500,BACKEND_500,True,35,500,50.32,True,True,209.19
-site_002,site-002.test,https://site-002.test,HIGH_LATENCY,HIGH_LATENCY,HIGH_LATENCY,True,35,,0.0,True,True,12096.9
-site_003,site-003.test,https://site-003.test,MISSING_DOM,MISSING_DOM,MISSING_DOM,True,25,200,14.9,True,True,226.26
-site_004,site-004.test,https://site-004.test,SERVER_DOWN,SERVER_DOWN,SERVER_DOWN,True,40,502,8.93,True,True,82.91
-site_005,site-005.test,https://site-005.test,REDIRECT_LOOP,REDIRECT_LOOP,REDIRECT_LOOP,True,40,,0.0,True,True,116.98

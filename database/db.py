@@ -34,16 +34,13 @@ def get_db_connection(timeout: float = 30.0) -> sqlite3.Connection:
     """
     Tạo kết nối tới cơ sở dữ liệu SQLite:
     - row_factory hỗ trợ truy xuất theo tên cột (sqlite3.Row).
-    - Chế độ WAL (Write-Ahead Logging) cho phép đọc và ghi đồng thời, triệt tiêu lỗi 'database is locked'.
-    - busy_timeout 30s giúp tự động xếp hàng và chờ các giao dịch ghi khi tải cao.
+    - busy_timeout 5s giúp tự động xếp hàng và chờ các giao dịch ghi khi tải cao.
     """
     os.makedirs(DATA_DIR, exist_ok=True)
     conn = sqlite3.connect(str(DB_PATH), timeout=timeout)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON;")
-    conn.execute("PRAGMA journal_mode = WAL;")
-    conn.execute("PRAGMA busy_timeout = 30000;")
-    conn.execute("PRAGMA synchronous = NORMAL;")
+    conn.execute("PRAGMA busy_timeout = 5000;")
     return conn
 
 def init_db() -> None:
@@ -55,6 +52,8 @@ def init_db() -> None:
     os.makedirs(DATA_DIR, exist_ok=True)
     conn = get_db_connection()
     cursor = conn.cursor()
+    cursor.execute("PRAGMA journal_mode = WAL;")
+    cursor.execute("PRAGMA synchronous = NORMAL;")
 
     # 1. Bảng websites (Master entity)
     cursor.execute("""
@@ -206,10 +205,38 @@ def init_db() -> None:
             1 if DEFAULT_LLM_ENABLED else 0
         ))
 
+    # 5. Bảng system_telemetry_logs (Giám sát vận hành nền tảng: Latency, Tokens, Cost & Fallback)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS system_telemetry_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT NOT NULL,
+        workflow_type TEXT NOT NULL,
+        website_id INTEGER,
+        website_name TEXT,
+        total_latency_ms REAL,
+        probes_latency_ms REAL,
+        llm_latency_ms REAL,
+        llm_model TEXT,
+        llm_status TEXT,
+        prompt_tokens INTEGER DEFAULT 0,
+        completion_tokens INTEGER DEFAULT 0,
+        total_tokens INTEGER DEFAULT 0,
+        estimated_cost_usd REAL DEFAULT 0.0,
+        fallback_to_kb BOOLEAN DEFAULT 0,
+        self_correction_executed BOOLEAN DEFAULT 0,
+        suppressed_alerts_count INTEGER DEFAULT 0,
+        overall_severity TEXT DEFAULT 'HEALTHY',
+        FOREIGN KEY (website_id) REFERENCES websites(id) ON DELETE CASCADE
+    );
+    """)
+
     # Tạo indexes để tăng tốc truy vấn lịch sử theo website và thời gian
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_logs_website_id ON monitoring_logs(website_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_logs_timestamp ON monitoring_logs(timestamp);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_baselines_website_id ON milestone_baselines(website_id);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_telemetry_timestamp ON system_telemetry_logs(timestamp);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_telemetry_workflow_type ON system_telemetry_logs(workflow_type);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_telemetry_website_id ON system_telemetry_logs(website_id);")
 
     # Seed dữ liệu ban đầu nếu chưa có website nào trong DB
     cursor.execute("SELECT COUNT(*) FROM websites;")

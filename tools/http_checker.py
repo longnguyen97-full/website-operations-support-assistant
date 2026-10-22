@@ -36,6 +36,7 @@ def check_http(url: str, method: str = "GET", expected_status: int = 200, timeou
         "redirect_chain": [],
         "response_time_ms": 0.0,
         "headers": {},
+        "cookies": [],
         "error": None,
         "error_type": None
     }
@@ -68,12 +69,16 @@ def check_http(url: str, method: str = "GET", expected_status: int = 200, timeou
             result["is_server_error"] = (500 <= response.status_code <= 599)
             result["response_time_ms"] = round(response.elapsed.total_seconds() * 1000, 2)
             
-            # Lọc các header liên quan đến caching, retry và server response theo RFC 9110
+            # Lọc các header liên quan đến caching, retry, server response và tech stack fingerprinting
             relevant_headers = [
                 "cache-control", "retry-after", "server", "content-type", 
-                "age", "etag", "expires", "last-modified", "via"
+                "age", "etag", "expires", "last-modified", "via",
+                "x-powered-by", "x-generator", "cf-ray", "cf-cache-status",
+                "x-amz-cf-id", "x-varnish", "x-cache", "x-aspnet-version",
+                "x-litespeed-cache", "x-drupal-cache", "x-redirect-by"
             ]
             result["headers"] = {k: response.headers.get(k) for k in relevant_headers if k in response.headers}
+            result["cookies"] = list(response.cookies.keys())
 
     except httpx.TimeoutException as e:
         err_detail = str(e) or f"Request timed out after waiting {timeout} seconds."

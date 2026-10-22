@@ -9,7 +9,7 @@ from scheduler import start_background_scheduler
 from config import DEFAULT_SCHEDULER_INTERVAL_SECONDS
 
 # --- Cấu hình trang ---
-st.set_page_config(layout="wide", page_title="Agentic AI Monitoring Dashboard", page_icon="🛡️")
+st.set_page_config(layout="wide", page_title="SRE Agentic System - Enterprise Website Operations Platform", page_icon="🛡️")
 
 @st.cache_resource
 def setup_background_monitoring():
@@ -26,7 +26,7 @@ def main():
     init_db()
     setup_background_monitoring()
     
-    st.title("🛡️ Agentic AI Monitoring Dashboard")
+    st.title("🛡️ SRE Agentic System - Enterprise Website Operations Platform")
     
     # 2. Lấy danh sách website từ CSDL
     websites = get_all_websites()
@@ -66,21 +66,19 @@ def main():
             st.sidebar.warning("⚪ **Baseline:** Chưa có (Cold-start / Unmanaged)")
         
         st.sidebar.markdown("---")
-        st.sidebar.info("💡 **Ghi chú:** Mỗi Cấu hình Giám sát có nút thực thi độc lập bên trong từng Tab tương ứng.")
+        st.sidebar.info("💡 **Ghi chú:** Chọn website mục tiêu và chuyển đổi giữa các Tab để xem Telemetry hoặc kích hoạt Tác tử SRE.")
     else:
         st.sidebar.warning("⚠️ Chưa có website nào trong hệ thống CSDL.")
         st.sidebar.info("👉 Vui lòng cấu hình thêm website tại trang `/configuration`.")
         selected_site = None
 
-    # 4. Trạng thái session state cho kết quả quét từng cấu hình
-    if "last_trad_scan" not in st.session_state:
-        st.session_state["last_trad_scan"] = {}
+    # 4. Trạng thái session state cho kết quả quét
     if "last_scan" not in st.session_state:
         st.session_state["last_scan"] = {}
     if "last_agent_result" not in st.session_state:
         st.session_state["last_agent_result"] = None
 
-    # 5. Hiển thị Dashboard phân tách rạch ròi 6 Tabs
+    # 5. Hiển thị Dashboard Vận hành Production
     if selected_site:
         render_dashboard(selected_site=selected_site)
 

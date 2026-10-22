@@ -189,6 +189,7 @@ class RuleBasedAnomalyEngine:
         is_self_signed = ssl_res.get("is_self_signed", False)
         is_untrusted_ca = ssl_res.get("is_untrusted_ca", False)
         hostname_matched = ssl_res.get("hostname_matched", False)
+        hostname = str(ssl_res.get("hostname") or "")
 
         # 1. Chứng chỉ hết hạn
         if is_expired or days < 0:

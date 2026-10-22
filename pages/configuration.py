@@ -40,7 +40,7 @@ from scheduler.monitor_scheduler import resume_background_scheduler
 # --- Cấu hình trang ---
 st.set_page_config(
     layout="wide",
-    page_title="Quản lý Cấu hình - Agentic AI Monitoring Assistant",
+    page_title="Cấu hình Hệ thống - SRE Agentic Platform",
     page_icon="⚙️"
 )
 

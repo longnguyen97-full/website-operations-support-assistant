@@ -173,20 +173,24 @@ def check_performance(
     baseline_metrics: Optional[Dict[str, Any]] = None,
     warning_threshold_ms: float = DEFAULT_WARNING_THRESHOLD_MS,
     critical_threshold_ms: float = DEFAULT_CRITICAL_THRESHOLD_MS,
-    use_browser: bool = True,
-    timeout: float = 15.0
+    use_browser: bool = False,
+    timeout: float = 15.0,
+    timeout_seconds: Optional[float] = None
 ) -> Dict[str, Any]:
     """
-    Công cụ Performance Monitoring dựa trên chuẩn SRE & Synthetic Monitoring (RULE_BUILD_TOOLS.md mục 4).
+    Công cụ Performance Monitoring dựa trên chuẩn SRE & Synthetic Monitoring.
     
     Tham số:
     - url: Địa chỉ website cần đo lường.
     - baseline_metrics: Dữ liệu baseline lịch sử (chứa baseline_total_time_ms hoặc baseline_ttfb_ms).
     - warning_threshold_ms: Ngưỡng cảnh báo hiệu năng suy giảm (mặc định 2000ms).
     - critical_threshold_ms: Ngưỡng sự cố hiệu năng nghiêm trọng (mặc định 5000ms).
-    - use_browser: Có sử dụng Playwright để đo thời gian tải trang thực tế hay không.
+    - use_browser: Có sử dụng Playwright để đo thời gian tải trang thực tế hay không (mặc định False cho tốc độ cao qua Socket/HTTPX).
     - timeout: Thời gian chờ tối đa.
+    - timeout_seconds: Alias tương thích ngược cho timeout.
     """
+    if timeout_seconds is not None:
+        timeout = float(timeout_seconds)
     result = {
         "url": url,
         "total_time_ms": 0.0,

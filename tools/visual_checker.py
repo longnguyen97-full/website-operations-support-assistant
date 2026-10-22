@@ -96,6 +96,7 @@ def capture_screenshot(
         "website_identifier": website_identifier,
         "success": False,
         "screenshot_path": str(target_path),
+        "current_image_path": str(target_path),
         "latest_path": str(latest_path),
         "capture_time_ms": 0.0,
         "viewport": vp,
@@ -256,7 +257,10 @@ def check_visual_regression(
         "is_baseline_created": False,
         "baseline_image_path": str(target_baseline_path) if target_baseline_path.exists() else None,
         "current_image_path": str(current_img_path),
+        "screenshot_path": str(current_img_path),
+        "latest_path": str(SCREENSHOTS_DIR / f"{safe_name}_latest.png"),
         "diff_image_path": None,
+        "diff_heatmap_path": None,
         "masked_selectors": mask_selectors or [],
         "viewport": DEFAULT_VIEWPORT,
         "capture_time_ms": 0.0,
@@ -311,6 +315,7 @@ def check_visual_regression(
         result["is_regression_detected"] = is_regr
         result["baseline_image_path"] = str(target_baseline_path)
         result["diff_image_path"] = str(diff_img_path)
+        result["diff_heatmap_path"] = str(diff_img_path)
 
         if is_regr:
             result["status"] = "VISUAL_REGRESSION_DETECTED"

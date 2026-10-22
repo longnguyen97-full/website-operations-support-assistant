@@ -76,3 +76,8 @@ logs/
 *~
 .DS_Store
 Thumbs.db
+
+# ==========================================
+# 8. Temporary Benchmark Outputs
+# ==========================================
+benchmark_report_[0-9]*.csv

@@ -11,7 +11,7 @@ from typing import Dict, Any, Optional, List
 from agents.knowledge_base import OperationalKnowledgeBase
 from config import TZ_VN
 from database.repository import get_system_settings
-from tools.gemini_client import generate_gemini_analysis
+from tools.gemini_client import generate_gemini_analysis, generate_gemini_analysis_with_telemetry
 
 class IncidentAnalysisAgent:
     """Tác tử phân tích nguyên nhân gốc và đề xuất giải pháp toàn diện 8 phần."""
@@ -43,6 +43,7 @@ class IncidentAnalysisAgent:
         ssl_evidence = evidence_data.get("ssl", {})
         perf_evidence = evidence_data.get("performance", {})
         dom_evidence = evidence_data.get("dom", {})
+        tech_stack = evidence_data.get("tech_stack", {})
 
         status_code = http_evidence.get("status_code")
         response_time = http_evidence.get("response_time_ms", 0.0)
@@ -59,10 +60,23 @@ class IncidentAnalysisAgent:
                 "fault_category": "HEALTHY",
                 "confidence_score": 99.5,
                 "incident_title": "Báo cáo Vận hành Định kỳ: Hệ thống Hoạt động Tốt",
+                "tech_stack": tech_stack,
                 "executive_summary": (
                     f"Website '{site_name}' ({site_url}) đang vận hành trong trạng thái hoàn hảo. "
                     f"Mọi tín hiệu kiểm định (HTTP {status_code or 200} OK, DNS Resolved, SSL Hợp lệ) đều đạt 100% SLA."
                 ),
+                "llm_telemetry": {
+                    "enabled": False,
+                    "model": "None (System Healthy)",
+                    "status": "HEALTHY_SKIPPED",
+                    "is_success": True,
+                    "latency_ms": 0.0,
+                    "prompt_tokens": 0,
+                    "completion_tokens": 0,
+                    "total_tokens": 0,
+                    "fallback_to_kb": False,
+                    "fallback_reason": "Hệ thống hoạt động ổn định, tự động tối ưu không tiêu tốn token LLM."
+                },
                 "root_cause_analysis": {
                     "primary_cause": "Không phát hiện bất kỳ dấu hiệu bất thường hoặc sự cố kỹ thuật nào.",
                     "contributing_factors": ["Hạ tầng mạng và ứng dụng duy trì ổn định."],
@@ -131,8 +145,51 @@ class IncidentAnalysisAgent:
         if dom_evidence and dom_evidence.get("missing_critical_elements"):
             cross_evidence["DOM"] = f"Thiếu thành phần cốt lõi: {', '.join(dom_evidence.get('missing_critical_elements', []))}"
 
-        # Xác định nội dung chi tiết theo từng loại kịch bản lỗi
-        if "HTTP_5" in incident_type or (status_code and status_code >= 500):
+        # Xác định nội dung chi tiết theo từng loại kịch bản lỗi (ưu tiên theo cây phụ thuộc và incident_type)
+        is_multi_fault = correlation_data.get("is_multi_fault", False) or incident_type == "MULTI_FAULT_INCIDENT"
+        dag_root_causes = correlation_data.get("root_causes", [])
+        other_critical_keys = ["SSL", "DNS", "SERVER_DOWN", "SERVER_PROCESS_DOWN", "REDIRECT", "DOM", "MISSING_DOM"]
+        is_backend_500 = ("HTTP_5" in incident_type or "BACKEND" in incident_type or status_code == 500) and not any(k in incident_type for k in other_critical_keys)
+        
+        if is_multi_fault and dag_root_causes:
+            fault_layer = "⚡ Multi-Layer Outage (Đa Tầng Hạ Tầng & Ứng Dụng)"
+            rc_names = [rc.get("label", "Root Cause") for rc in dag_root_causes]
+            incident_title = f"Sự cố Đa Lỗi Độc Lập Đồng Thời ({len(dag_root_causes)} Root Causes: {', '.join(rc_names)})"
+            
+            bullet_causes = []
+            action_plan = []
+            runbook_steps = []
+            prevention = []
+            rfc_refs = []
+            
+            for idx, rc in enumerate(dag_root_causes, 1):
+                rc_lbl = rc.get("label", "")
+                pv = rc.get("primary_violation", {})
+                bullet_causes.append(f"{idx}. [{rc_lbl} - {rc.get('layer')}]: {pv.get('title')} ({pv.get('description')})")
+                action_plan.append(f"Khắc phục sự cố tại {rc_lbl}: Xử lý vi phạm '{pv.get('title')}'.")
+                runbook_steps.append(f"{idx}. Kiểm tra {rc_lbl} theo tiêu chuẩn {rc.get('rfc_standard') or 'SRE'}.")
+                if rc.get("rfc_standard"):
+                    rfc_refs.append(f"{rc.get('rfc_standard')}: Tiêu chuẩn đối soát cho {rc_lbl}")
+
+            primary_cause = "\n".join(bullet_causes)
+            exec_summary = (
+                f"Phát hiện {len(dag_root_causes)} sự cố độc lập xảy ra đồng thời trên website '{site_name}' "
+                f"được cô lập bởi Đồ thị Causal DAG. Các nguyên nhân gốc phân bổ trên nhiều tầng hạ tầng:\n"
+                + "\n".join([f"- {bc}" for bc in bullet_causes])
+            )
+            potential_causes = [
+                "Nhiều thành phần hạ tầng gặp sự cố độc lập cùng thời điểm (vd: DNS/SSL drift song song với lỗi Backend).",
+                "Đợt triển khai mã nguồn mới kết hợp thay đổi cấu hình mạng hạ tầng chưa đồng bộ.",
+                "Tấn công từ chối dịch vụ hoặc sự cố nghẽn đa điểm."
+            ]
+            user_impact = "Người dùng bị ảnh hưởng đa chiều: vừa gặp lỗi kết nối/bảo mật, vừa bị gián đoạn tính năng hoặc giao diện."
+            biz_impact = "Tác động nghiêm trọng tới SLA và độ khả dụng của toàn bộ dịch vụ web."
+            prevention = [
+                "Áp dụng quy trình kiểm thử phân tầng tự động (Pre-flight Multi-layer CI/CD Validation).",
+                "Giám sát liên tục các nút độc lập trên đồ thị DAG để phát hiện sớm lỗi đơn lẻ trước khi chồng lấn."
+            ]
+
+        elif is_backend_500:
             incident_title = "Sự cố Máy Chủ Backend: HTTP 500 Server Error"
             exec_summary = (
                 f"Phát hiện sự cố sập ứng dụng hoặc lỗi xử lý nội bộ tại máy chủ Backend (HTTP {status_code}) trên website '{site_name}'. "
@@ -378,48 +435,99 @@ class IncidentAnalysisAgent:
             action_plan = ["Tiến hành kiểm tra chi tiết các tín hiệu lỗi và khôi phục dịch vụ."]
             runbook_steps = ["1. Kiểm tra trạng thái toàn bộ dịch vụ phụ thuộc.", "2. Kiểm tra error log hệ thống."]
             prevention = ["Tăng cường giám sát thời gian thực và tự động hồi phục."]
+            rfc_refs = [
+                "RFC 9110: HTTP Semantics and Content",
+                "SRE Golden Signals: Latency, Traffic, Errors, and Saturation"
+            ]
         base_exec_summary = exec_summary
         # =========================================================================
         # TÍCH HỢP LLM-POWERED REASONING (GOOGLE GEMINI AI SRE)
         # =========================================================================
         llm_insights = None
         is_llm_enhanced = False
-        gemini_model = "gemini-flash-lite-latest"
+        gemini_model = "gemini-flash-latest"
+        llm_telemetry = {
+            "enabled": False,
+            "model": gemini_model,
+            "status": "DISABLED",
+            "is_success": False,
+            "latency_ms": 0.0,
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "total_tokens": 0,
+            "fallback_to_kb": True,
+            "fallback_reason": "Chưa kích hoạt AI trong Cấu hình (Hệ thống chạy SRE Knowledge Base RFC chuẩn)."
+        }
+
         try:
             sys_settings = get_system_settings()
             gemini_key = (sys_settings.get("gemini_api_key") or "").strip()
             llm_enabled = bool(sys_settings.get("llm_enabled", 0))
-            gemini_model = sys_settings.get("gemini_model") or "gemini-flash-lite-latest"
+            gemini_model = sys_settings.get("gemini_model") or "gemini-flash-latest"
+            llm_telemetry["model"] = gemini_model
+            llm_telemetry["enabled"] = llm_enabled
 
             if llm_enabled and gemini_key:
+                tech_summary_str = tech_stack.get("one_line_summary", "Chưa rõ") if tech_stack else "Chưa rõ"
                 prompt = (
                     f"Bạn là Chuyên gia Site Reliability Engineer (Senior SRE / DevOps) phân tích sự cố website.\n"
                     f"Thông tin website: {site_name} ({site_url}, domain: {site_domain})\n"
+                    f"Hệ sinh thái công nghệ (Tech Stack): {tech_summary_str}\n"
                     f"Sự cố ghi nhận: {incident_title} (Mức độ: {severity})\n"
                     f"Phân tầng lỗi: {fault_layer} | Loại sự cố: {incident_type}\n"
                     f"Nguyên nhân gốc sơ bộ: {primary_cause}\n"
                     f"Bằng chứng tín hiệu kỹ thuật: {cross_evidence}\n\n"
                     f"Yêu cầu:\n"
                     f"1. Nhận định chuyên sâu về nguyên nhân gốc và rủi ro chuỗi (2-3 câu súc tích).\n"
-                    f"2. Đề xuất hành động khắc phục khẩn cấp ưu tiên số 1 cho kỹ sư vận hành."
+                    f"2. Đề xuất hành động khắc phục khẩn cấp ưu tiên số 1 cho kỹ sư vận hành tương thích với Tech Stack {tech_stack.get('web_server') or 'của hệ thống'}."
                 )
                 system_instruction = (
                     "Bạn là Trợ lý Vận hành Hệ thống AI (AI SRE Assistant). "
                     "Hãy phản hồi bằng tiếng Việt chuyên nghiệp, ngắn gọn, chuẩn thuật ngữ SRE/DevOps quốc tế."
                 )
-                llm_resp = generate_gemini_analysis(
+                llm_raw = generate_gemini_analysis_with_telemetry(
                     prompt=prompt,
                     api_key=gemini_key,
                     model=gemini_model,
                     system_instruction=system_instruction,
                     timeout=25.0
                 )
-                if llm_resp:
-                    llm_insights = llm_resp
+                llm_telemetry.update({
+                    "status": llm_raw.get("status", "API_ERROR"),
+                    "is_success": llm_raw.get("is_success", False),
+                    "latency_ms": llm_raw.get("latency_ms", 0.0),
+                    "prompt_tokens": llm_raw.get("prompt_tokens", 0),
+                    "completion_tokens": llm_raw.get("completion_tokens", 0),
+                    "total_tokens": llm_raw.get("total_tokens", 0),
+                    "fallback_to_kb": not llm_raw.get("is_success", False),
+                    "fallback_reason": llm_raw.get("error_message") if not llm_raw.get("is_success") else None
+                })
+
+                if llm_raw.get("is_success") and llm_raw.get("text"):
+                    llm_insights = llm_raw["text"]
                     is_llm_enhanced = True
-                    exec_summary = f"{exec_summary}\n\n🤖 [AI SRE Reasoning - {gemini_model}]:\n{llm_resp}"
+                    exec_summary = f"{exec_summary}\n\n🤖 [AI SRE Reasoning - {gemini_model}]:\n{llm_insights}"
+            elif llm_enabled and not gemini_key:
+                llm_telemetry["status"] = "MISSING_KEY"
+                llm_telemetry["fallback_reason"] = "Đã bật AI nhưng chưa nhập Gemini API Key trong trang Cấu hình."
         except Exception as e:
             print(f"[!] Warning: IncidentAnalysisAgent LLM enrichment failed: {e}")
+            llm_telemetry["status"] = "EXCEPTION"
+            llm_telemetry["fallback_reason"] = str(e)
+
+        # Bổ sung các lệnh điều tra SRE đặc thù theo Tech Stack phát hiện được
+        stack_cmds = tech_stack.get("recommended_sre_commands", []) if tech_stack else []
+        final_runbook_steps = list(runbook_steps)
+        if stack_cmds:
+            server_tag = tech_stack.get("web_server") or "Hệ Thống"
+            for cmd in stack_cmds[:3]:
+                final_runbook_steps.append(f"[{server_tag}] {cmd}")
+
+        stack_sec = tech_stack.get("security_warnings", []) if tech_stack else []
+        final_prevention = list(prevention)
+        if stack_sec:
+            for w in stack_sec:
+                final_prevention.append(f"Bảo Mật Hardening: {w}")
 
         return {
             "agent_name": self.name,
@@ -431,11 +539,13 @@ class IncidentAnalysisAgent:
             "fault_category": incident_type,
             "confidence_score": 98.8,
             "incident_title": incident_title,
+            "tech_stack": tech_stack,
             "executive_summary": exec_summary,
             "base_executive_summary": base_exec_summary,
             "llm_enhanced": is_llm_enhanced,
             "llm_insights": llm_insights,
             "gemini_model": gemini_model if is_llm_enhanced else None,
+            "llm_telemetry": llm_telemetry,
             "dual_engine_comparison": {
                 "option_without_ai": {
                     "mode": "SRE_KNOWLEDGE_BASE",
@@ -462,8 +572,8 @@ class IncidentAnalysisAgent:
                 "business_availability": biz_impact
             },
             "immediate_action_plan": action_plan,
-            "investigation_runbook": runbook_steps,
-            "prevention_strategy": prevention,
+            "investigation_runbook": final_runbook_steps,
+            "prevention_strategy": final_prevention,
             "technical_standards": rfc_refs,
             "root_cause": primary_cause,
             "rfc_citations": rfc_refs
