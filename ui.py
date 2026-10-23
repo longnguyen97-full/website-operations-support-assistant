@@ -1056,12 +1056,127 @@ def render_milestones_tab(selected_site):
                     st.rerun()
 
 
+def render_system_observability_tab():
+    """
+    GIÁM SÁT CHÍNH HỆ THỐNG (Monitoring the Monitor):
+    Latency workflow (avg/P95/max), Probes vs LLM, Token & Chi phí LLM, Fallback rate, Dung lượng lưu trữ.
+    """
+    import plotly.express as px
+
+    st.subheader("📊 Giám Sát Hệ Thống (Platform Observability: Latency, Cost & Storage)")
+
+    col_p1, col_p2 = st.columns([1, 3])
+    with col_p1:
+        period_label = st.selectbox(
+            "Khoảng thời gian:",
+            ["1 giờ", "24 giờ", "7 ngày", "30 ngày"],
+            index=1,
+            key="obs_period"
+        )
+    hours = {"1 giờ": 1, "24 giờ": 24, "7 ngày": 168, "30 ngày": 720}[period_label]
+    m = get_telemetry_metrics_summary(hours=hours)
+
+    # --- 1. Latency KPIs ---
+    st.markdown("#### ⏱️ Độ Trễ Xử Lý (Workflow Latency)")
+    k1, k2, k3, k4, k5 = st.columns(5)
+    k1.metric("Tổng lượt chạy", f"{m['total_runs']:,}")
+    k2.metric("Latency TB", f"{m['avg_workflow_latency_ms']:,.0f} ms")
+    k3.metric("Latency P95", f"{m['p95_workflow_latency_ms']:,.0f} ms")
+    k4.metric("Probes TB", f"{m['avg_probes_latency_ms']:,.0f} ms")
+    k5.metric("LLM TB", f"{m['avg_llm_latency_ms']:,.0f} ms")
+
+    # --- 2. Cost KPIs ---
+    st.markdown("#### 💰 Chi Phí & Token LLM (LLMOps Cost)")
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.metric("Tổng chi phí (USD)", f"${m['total_cost_usd']:.4f}")
+    c2.metric("Tổng chi phí (VNĐ)", f"{m['total_cost_vnd']:,.0f} ₫")
+    c3.metric("Tổng tokens", f"{m['total_tokens']:,}")
+    c4.metric("LLM thành công", f"{m['llm_success_count']:,}")
+    c5.metric("Tỷ lệ Fallback KB", f"{m['fallback_rate_pct']}%")
+    st.caption(
+        "Chi phí là **ước tính** theo bảng giá Gemini (Flash: $0.075/1M input, $0.30/1M output; "
+        "Pro: $1.25/1M input, $5.00/1M output). Tỷ giá quy đổi: 25,400 ₫/USD. "
+        "Hãy điều chỉnh trong `calculate_llm_cost()` nếu bảng giá thay đổi."
+    )
+
+    if m["total_runs"] == 0:
+        st.info("Chưa có dữ liệu telemetry trong khoảng thời gian này. Hãy chạy 'Full SRE Workflow' hoặc chờ Scheduler quét định kỳ.")
+    else:
+        df = pd.DataFrame(m["recent_logs"])
+        df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+        df = df.sort_values("timestamp")
+
+        g1, g2 = st.columns(2)
+        with g1:
+            fig_lat = px.line(
+                df, x="timestamp",
+                y=["total_latency_ms", "probes_latency_ms", "llm_latency_ms"],
+                markers=True, title="Biến thiên độ trễ (ms) - 50 lượt gần nhất"
+            )
+            fig_lat.update_layout(height=340, legend_title_text="", margin=dict(l=10, r=10, t=40, b=10))
+            st.plotly_chart(fig_lat, use_container_width=True)
+        with g2:
+            fig_cost = px.bar(
+                df, x="timestamp", y="estimated_cost_usd", color="workflow_type",
+                title="Chi phí LLM theo lượt chạy (USD)"
+            )
+            fig_cost.update_layout(height=340, legend_title_text="", margin=dict(l=10, r=10, t=40, b=10))
+            st.plotly_chart(fig_cost, use_container_width=True)
+
+        b1, b2 = st.columns(2)
+        with b1:
+            st.markdown("**🤖 Phân bổ theo Model**")
+            mb = pd.DataFrame([
+                {"Model": k, "Lượt gọi": v["calls"], "Tokens": v["tokens"], "Chi phí (USD)": v["cost_usd"]}
+                for k, v in m["models_breakdown"].items()
+            ])
+            st.dataframe(mb, use_container_width=True, hide_index=True)
+        with b2:
+            st.markdown("**🌐 Phân bổ theo Website**")
+            wb = pd.DataFrame([
+                {"Website": k, "Lượt quét": v["scans"], "Latency TB (ms)": v["avg_latency_ms"],
+                 "Tokens": v["tokens"], "Chi phí (USD)": v["cost_usd"]}
+                for k, v in m["websites_cost_breakdown"].items()
+            ]).sort_values("Chi phí (USD)", ascending=False)
+            st.dataframe(wb, use_container_width=True, hide_index=True)
+
+        with st.expander("📜 Nhật ký telemetry chi tiết (50 lượt gần nhất)"):
+            show_cols = [
+                "timestamp", "workflow_type", "website_name", "overall_severity",
+                "total_latency_ms", "probes_latency_ms", "llm_latency_ms", "llm_model",
+                "llm_status", "total_tokens", "estimated_cost_usd", "fallback_to_kb",
+                "self_correction_executed"
+            ]
+            st.dataframe(df[show_cols].sort_values("timestamp", ascending=False), use_container_width=True, hide_index=True)
+
+    # --- 3. Storage ---
+    st.markdown("#### 💾 Dung Lượng Lưu Trữ (Storage)")
+    s = get_storage_metrics()
+    s1, s2, s3, s4, s5 = st.columns(5)
+    s1.metric("Tổng dung lượng", f"{s['total_storage_mb']} MB")
+    s2.metric("CSDL SQLite", f"{s['db_size_mb']} MB")
+    s3.metric("Screenshots", f"{s['screenshots_size_mb']} MB", f"{s['screenshots_count']} file", delta_color="off")
+    s4.metric("Visual Diffs", f"{s['visual_diffs_size_mb']} MB", f"{s['visual_diffs_count']} file", delta_color="off")
+    s5.metric("Backups", f"{s['backups_size_mb']} MB", f"{s['backups_count']} file", delta_color="off")
+
+    retention_days = int(get_system_settings().get("data_retention_days") or 30)
+    if st.button(
+        f"🧹 Dọn dẹp log & ảnh cũ hơn {retention_days} ngày",
+        key="btn_purge_artifacts",
+        help="Xóa monitoring_logs, system_telemetry_logs và ảnh screenshots/diffs cũ hơn số ngày Retention. Giữ lại *_latest.png và baseline."
+    ):
+        deleted_logs = purge_old_logs(days_to_keep=retention_days)
+        st.success(f"Đã xóa {deleted_logs} bản ghi log cũ và dọn dẹp ảnh cũ hơn {retention_days} ngày.")
+        st.rerun()
+
+
 def render_dashboard(selected_site):
     """Giao diện Dashboard Giám sát SRE Vận hành Production Thống Nhất."""
-    tab1, tab2, tab3 = st.tabs([
+    tab1, tab2, tab3, tab4 = st.tabs([
         "🎯 Trung Tâm Điều Hành SRE (Unified Operations & RCA)", 
         "📈 Lịch Sử & Xu Hướng (Telemetry History & Trends)", 
-        "🏷️ Quản Lý Mốc Chuẩn (Milestone Baselines)"
+        "🏷️ Quản Lý Mốc Chuẩn (Milestone Baselines)",
+        "📊 Giám Sát Hệ Thống (Latency & Cost)"
     ])
     
     with tab1:
@@ -1072,3 +1187,6 @@ def render_dashboard(selected_site):
         
     with tab3:
         render_milestones_tab(selected_site)
+
+    with tab4:
+        render_system_observability_tab()
